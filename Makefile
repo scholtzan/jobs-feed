@@ -1,9 +1,9 @@
 .PHONY: server client
 
-run: server client
+run: client server
 
 client:
-	cd client/ && pnpm run dev
+	cd client/ && pnpm run build
 
 server:
 	cd server/ && cargo run

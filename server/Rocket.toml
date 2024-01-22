@@ -1,2 +1,7 @@
 [default]
 port = 3000
+dist_dir = "dist/"
+
+[default.database]
+name = "jobs_feed"
+url = "postgres://postgres:postgres@localhost:5432"
