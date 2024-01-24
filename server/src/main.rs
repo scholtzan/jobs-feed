@@ -47,7 +47,7 @@ async fn sources(db: &State<DatabaseConnection>) -> Result<Json<Vec<source::Mode
 
 #[get("/<file..>", rank = 1)]
 async fn static_files(file: PathBuf) -> Option<NamedFile> {
-    NamedFile::open(Path::new(DIST).join("assets/").join(file))
+    NamedFile::open(Path::new(DIST).join("_app/").join(file))
         .await
         .ok()
 }
@@ -81,7 +81,7 @@ async fn rocket() -> _ {
 
     rocket::build()
         .manage(db)
-        .mount("/assets", routes![static_files])
+        .mount("/_app", routes![static_files])
         .mount(
             "/",
             routes![sources],

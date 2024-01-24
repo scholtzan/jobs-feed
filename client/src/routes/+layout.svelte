@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy } from "svelte";
-    import Sidebar from "./components/Sidebar.svelte";
-    import Toolbar from "./components/Toolbar.svelte";
-    import PostingsContainer from "./components/PostingsContainer.svelte";
-    import SourceDrawer from "./components/SourceDrawer.svelte";
+    import Sidebar from "../components/Sidebar.svelte";
+    import Toolbar from "../components/Toolbar.svelte";
+    import PostingsContainer from "../components/PostingsContainer.svelte";
+    import SourceDrawer from "../components/SourceDrawer.svelte";
 
 	onMount(async () => {
 		
@@ -27,6 +27,6 @@
 	</div>
 
     <div>
-        <SourceDrawer></SourceDrawer>
+        <slot></slot>
     </div>
 </div>
