@@ -5,10 +5,10 @@
     import PostingsContainer from "../lib/components/PostingsContainer.svelte";
     import SourceDrawer from "../lib/components/SourceDrawer.svelte";
     import type { PageData } from "./$types";
+    import { sources } from "../lib/store"; 
 
 	export let data: PageData;
-    let sources = data.sources;
-    console.log(sources);
+    sources.set(data.sources);
 </script>
 
 <div class="flex flex-column">

@@ -1,7 +1,5 @@
 mod entities;
-mod migration;
 mod routes;
-mod setup;
 
 #[macro_use]
 extern crate rocket;
@@ -14,7 +12,6 @@ use rocket::{
 use futures::executor::block_on;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use setup::set_up_db;
 use sea_orm::*;
 use sea_orm::{entity::*, error::*, query::*, FromQueryResult};
 use entities::{prelude::*, *};
@@ -53,17 +50,15 @@ async fn rocket() -> _ {
     #[derive(Deserialize)]
     #[serde(crate = "rocket::serde")]
     struct DatabaseConfig {
-        name: String,
         url: String,
     }
 
     let config: DatabaseConfig = figment.extract_inner::<DatabaseConfig>("database")
         .unwrap();
-    
-    let db = match set_up_db(&config.url, &config.name,).await {
-        Ok(db) => db,
-        Err(err) => panic!("{}", err),
-    };
+
+    let db = Database::connect(config.url)
+    .await
+    .unwrap();
 
     rocket::build()
         .manage(db)

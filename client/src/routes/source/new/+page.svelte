@@ -1,7 +1,9 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { Source } from "../../../lib/types";
-    import { getContext } from 'svelte';
+    import { page } from '$app/stores';
+    import { writable, get } from 'svelte/store';
+    import { sources } from "../../../lib/store"; 
 
     let drawerOpen = true;
     let newSource = new Source();
@@ -28,11 +30,12 @@
                 body: JSON.stringify(newSource)
             }).then((response) => {
                 if (response.status == 200) {
-                    const sourceJson = res.json()
-                    let storedSource: Source = Object.assign(new Source(), JSON.parse(sourceJson));
-                    const sources = getContext('sources');
-                    sources.set(sources + [storedSource])
-                    goto("/")
+                    const sourceJson = response.json().then((json) => {
+                        let storedSource: Source = Object.assign(new Source(), json);                        
+                        sources.set([ ...get(sources), storedSource]);
+                        goto("/");
+                    })
+                    
                 } else {
                     // todo: error
                     console.log("Cannot add source");

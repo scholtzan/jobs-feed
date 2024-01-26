@@ -2,7 +2,7 @@ use rocket::{
     fs::{relative, NamedFile},
     shield::Shield,
 };
-
+use chrono::{DateTime, Local, FixedOffset, Utc};
 use futures::executor::block_on;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -38,8 +38,10 @@ pub async fn add_source(
     input: Json<source::Model>,
 ) -> Result<Json<source::Model>, Status> {
     let db = db as &DatabaseConnection;
+
     let mut new_source: source::ActiveModel = input.into_inner().into();
-    new_source.set(source::Column::CreatedAt, chrono::offset::Utc::now().into());
+    new_source.id = NotSet;
+    new_source.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east(0))));
     let inserted_source: source::Model = new_source.insert(db).await.expect("Could not insert source");
     Ok(
         Json(
