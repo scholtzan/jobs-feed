@@ -1,17 +1,14 @@
 <script lang="ts">
 	import { onMount, onDestroy } from "svelte";
-    import Sidebar from "../components/Sidebar.svelte";
-    import Toolbar from "../components/Toolbar.svelte";
-    import PostingsContainer from "../components/PostingsContainer.svelte";
-    import SourceDrawer from "../components/SourceDrawer.svelte";
+    import Sidebar from "../lib/components/Sidebar.svelte";
+    import Toolbar from "../lib/components/Toolbar.svelte";
+    import PostingsContainer from "../lib/components/PostingsContainer.svelte";
+    import SourceDrawer from "../lib/components/SourceDrawer.svelte";
+    import type { PageData } from "./$types";
 
-	onMount(async () => {
-		
-	});
-
-	onDestroy(() => {
-
-	});
+	export let data: PageData;
+    let sources = data.sources;
+    console.log(sources);
 </script>
 
 <div class="flex flex-column">

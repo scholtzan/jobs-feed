@@ -1,5 +1,6 @@
 use sea_orm::*;
-
+use sea_orm_migration::prelude::*;
+use crate::migration;
 
 pub(super) async fn set_up_db(database_url: &str, database_name: &str) -> Result<DatabaseConnection, DbErr> {
     let db = Database::connect(database_url).await?;
@@ -28,6 +29,8 @@ pub(super) async fn set_up_db(database_url: &str, database_name: &str) -> Result
                     format!("CREATE DATABASE \"{}\";", database_name),
                 ))
                 .await?;
+
+                migration::Migrator::refresh(&db).await?;
             }
 
             let url = format!("{}/{}", database_url, database_name);

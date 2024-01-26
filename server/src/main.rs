@@ -1,5 +1,6 @@
 mod entities;
 mod migration;
+mod routes;
 mod setup;
 
 #[macro_use]
@@ -29,21 +30,6 @@ use rocket::http::ContentType;
 // todo: make configurable
 const DIST: &str = relative!("dist");
 
-
-#[get("/sources")]
-async fn sources(db: &State<DatabaseConnection>) -> Result<Json<Vec<source::Model>>, Status> {
-    let db = db as &DatabaseConnection;
-
-    Ok(Json(
-        Source::find()
-            .all(db)
-            .await
-            .expect("could not retrieve cakes")
-            .into_iter()
-            .collect::<Vec<_>>(),
-    ))
-
-}
 
 #[get("/<file..>", rank = 1)]
 async fn static_files(file: PathBuf) -> Option<NamedFile> {
@@ -84,7 +70,10 @@ async fn rocket() -> _ {
         .mount("/_app", routes![static_files])
         .mount(
             "/",
-            routes![sources],
+            routes![
+                routes::sources::sources,
+                routes::sources::add_source
+            ],
         )
         .mount("/", routes![index])
 }

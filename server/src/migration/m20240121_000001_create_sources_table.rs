@@ -20,7 +20,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Source::Name).string().not_null())
                     .col(ColumnDef::new(Source::Url).string().not_null())
-                    .col(ColumnDef::new(Source::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
+                    .col(ColumnDef::new(Source::CreatedAt).timestamp_with_time_zone().default(Expr::current_timestamp()))
                     .col(ColumnDef::new(Source::Selector).string())
                     .col(ColumnDef::new(Source::Pagination).string())
                     .col(ColumnDef::new(Source::Content).text())

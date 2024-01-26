@@ -11,7 +11,7 @@ pub struct Model {
 	pub id: i32,
 	pub name: String,
 	pub url: String,
-	pub created_at: DateTimeWithTimeZone,
+	pub created_at: Option<DateTimeWithTimeZone>,
 	pub selector: Option<String>,
 	pub pagination: Option<String>,
 	#[sea_orm(column_type = "Text", nullable)]
