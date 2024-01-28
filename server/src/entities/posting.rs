@@ -12,9 +12,9 @@ pub struct Model {
 	pub title: String,
 	pub description: String,
 	pub url: Option<String>,
-	pub created_at: DateTimeWithTimeZone,
+	pub created_at: Option<DateTimeWithTimeZone>,
 	pub seen: bool,
-	pub source_id: i32,
+	pub source_id: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

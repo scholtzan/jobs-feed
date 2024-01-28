@@ -23,9 +23,9 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Posting::Title).string().not_null())
                     .col(ColumnDef::new(Posting::Description).string().not_null())
                     .col(ColumnDef::new(Posting::Url).string())
-                    .col(ColumnDef::new(Posting::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
+                    .col(ColumnDef::new(Posting::CreatedAt).timestamp_with_time_zone().default(Expr::current_timestamp()))
                     .col(ColumnDef::new(Posting::Seen).boolean().not_null().default(false))
-                    .col(ColumnDef::new(Posting::SourceId).integer().not_null())
+                    .col(ColumnDef::new(Posting::SourceId).integer())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-posting-source_id")
