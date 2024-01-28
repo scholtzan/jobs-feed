@@ -20,8 +20,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Filter::Name).string().not_null())
                     .col(ColumnDef::new(Filter::Value).string().not_null())
-                    .col(ColumnDef::new(Filter::CreatedAt).timestamp_with_time_zone().not_null().default(Expr::current_timestamp()))
-                    .col(ColumnDef::new(Filter::Type).string().not_null().default("string"))
+                    .col(ColumnDef::new(Filter::CreatedAt).timestamp_with_time_zone().default(Expr::current_timestamp()))
                     .to_owned(),
             )
             .await
@@ -40,6 +39,5 @@ enum Filter {
     Id,
     Name,
     Value,
-    CreatedAt,
-    Type
+    CreatedAt
 }

@@ -67,7 +67,9 @@ async fn rocket() -> _ {
             "/",
             routes![
                 routes::sources::sources,
-                routes::sources::add_source
+                routes::sources::add_source,
+                routes::filters::filters,
+                routes::filters::update_filters
             ],
         )
         .mount("/", routes![index])

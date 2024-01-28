@@ -5,3 +5,9 @@ export class Source {
     pagination: string | null = null;
     selector: string | null = null;
 }
+
+export class Filter {
+    id: number | null = null;
+    name: string = "";
+    value: string = "";
+}
