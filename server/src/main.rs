@@ -25,6 +25,10 @@ use std::{
     path::{Path, PathBuf},
 };
 use rocket::http::ContentType;
+use crate::extract::PostingsExtractorHandler;
+use std::sync::{Arc};
+use futures::lock::Mutex;
+
 
 // todo: make configurable
 const DIST: &str = relative!("dist");
@@ -44,6 +48,7 @@ async fn index() -> Option<NamedFile> {
         .ok()
 }
 
+
 #[launch]
 async fn rocket() -> _ {
     let rocket = rocket::build();
@@ -62,8 +67,11 @@ async fn rocket() -> _ {
     .await
     .unwrap();
 
+    let postings_extractor_handler = PostingsExtractorHandler::new();
+
     rocket::build()
         .manage(db)
+        .manage(Arc::new(Mutex::new(postings_extractor_handler)))
         .mount("/_app", routes![static_files])
         .mount(
             "/",
@@ -71,7 +79,9 @@ async fn rocket() -> _ {
                 routes::sources::sources,
                 routes::sources::add_source,
                 routes::filters::filters,
-                routes::filters::update_filters
+                routes::filters::update_filters,
+                routes::postings::unread_postings,
+                routes::postings::refresh_postings,
             ],
         )
         .mount("/", routes![index])

@@ -5,11 +5,12 @@
     import PostingsContainer from "../lib/components/PostingsContainer.svelte";
     import SourceDrawer from "../lib/components/SourceDrawer.svelte";
     import type { PageData } from "./$types";
-    import { sources, filters } from "../lib/store"; 
+    import { sources, filters, postings } from "../lib/store"; 
 
 	export let data: PageData;
-    sources.set(data.sources);
+    sources.set(data.sources);  // todo: move to layout.ts
     filters.set(data.filters);
+    postings.set(data.postings);
 </script>
 
 <div class="flex flex-column">

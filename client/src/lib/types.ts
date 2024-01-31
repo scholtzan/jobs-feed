@@ -11,3 +11,12 @@ export class Filter {
     name: string = "";
     value: string = "";
 }
+
+export class Posting {
+    id: number | null = null;
+    title: string = "";
+    description: string = "";
+    url: string = "";
+    seen: boolean = false;
+    source_id: number | null = null;
+}

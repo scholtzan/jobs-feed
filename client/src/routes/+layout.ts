@@ -10,5 +10,6 @@ export const load: PageLoad = async () => {
   return {
     sources: (await fetch("/sources").then((data) => data.json())) as Source[],
     filters: (await fetch("/filters").then((data) => data.json())) as Filter[],
+    postings: (await fetch("/postings/unread").then((data) => data.json())) as Posting[],
   };
 };

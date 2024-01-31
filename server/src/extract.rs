@@ -10,11 +10,102 @@ use url::Url;
 use serde::Deserialize;
 use chatgpt::prelude::*;
 use std::time::Duration;
+use sea_orm::entity::prelude::*;
+use sea_orm::*;
+use chrono::{DateTime, Local, FixedOffset, Utc};
 
 const MESSAGE_MAX_CHARS: usize = 7000;
 const CONTEXT_MAX_CHARS: usize = 15000;
 const CONTEXT_OVERLAP: usize = 200;
 const MAX_REQUESTS_PER_SITE: usize = 3; // needed?
+
+pub struct PostingsExtractorHandler {
+    extractors: Vec<PostingsExtractor>
+}
+
+impl PostingsExtractorHandler {
+    pub fn new() -> Self {
+        PostingsExtractorHandler {
+            extractors: vec![]
+        }
+    }
+
+    pub async fn refresh(&mut self, db: &DatabaseConnection) -> Result<Vec<posting::Model>> {
+        self.fetch(db).await
+    }
+
+    async fn fetch(&mut self, db: &DatabaseConnection) -> Result<Vec<posting::Model>> {
+        let sources = Source::find().all(db).await?;
+        let settings = Settings::find().one(db).await?.expect("No settings stored");
+        let filters = Filter::find().all(db).await?;
+
+        let tasks: Vec<_> = sources
+        .into_iter()
+        .map( |source: source::Model| {
+            let settings = settings.clone();
+            let filters = filters.clone();
+            
+            tokio::spawn(async move {
+                let mut extractor = PostingsExtractor::new(
+                    source.url.clone(), 
+                    source.id,
+                    settings,
+                    source.selector.clone(), 
+                    source.pagination.clone(),
+                    filters,
+                    source.content.clone(),
+                );
+
+                extractor.extract().await;
+                extractor
+            })
+        })
+        .collect();
+
+        let res = futures::future::join_all(tasks).await;
+
+        self.extractors = res.into_iter().flat_map(|e| {
+            match e {
+                Ok(r) => Some(r),
+                _ => None
+            }
+        }).collect();
+
+        let postings: Vec<posting::Model> = self.extractors.iter().map(|e| {
+            e.extracted_postings.clone()
+        }).flatten().flatten().collect();
+
+        Ok(postings)
+    }
+
+    pub async fn save(&self, db: &DatabaseConnection) -> Result<()> {
+        let postings: Vec<posting::ActiveModel> = self.extractors.iter().flat_map(|e| {
+            let active_postings: Vec<posting::ActiveModel> = e.extracted_postings.clone().unwrap_or(vec![]).into_iter().map(|p| {
+                let mut active_posting: posting::ActiveModel = p.into();
+                active_posting.id = NotSet;
+                active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east(0))));
+                active_posting.seen = Set(false);
+                active_posting.source_id = Set(Some(e.source_id));
+                active_posting
+            }).collect();
+
+            active_postings
+        }).collect();
+
+        Posting::insert_many(postings).exec(db).await;
+
+        for extractor in &self.extractors {
+            Source::update_many()
+            .col_expr(source::Column::Content, Expr::value(extractor.parsed_content.clone()))
+            .filter(source::Column::Id.eq(extractor.source_id))
+            .exec(db)
+            .await;
+        }
+
+        Ok(())
+    }
+}
+
 
 
 #[derive(Deserialize, Debug)]
@@ -25,43 +116,50 @@ struct ExtractResponse {
 
 
 #[derive(Clone)]
-pub struct JobExtractor {
+pub struct PostingsExtractor {
     url: String,
+    source_id: i32,
     selector: Option<String>,
     pagination: Option<String>,
     filters: Vec<filter::Model>,
     settings: settings::Model,
 
     parsed_content: Option<String>,
-    cached_content: Option<String>
+    cached_content: Option<String>,
+    extracted_postings: Option<Vec<posting::Model>>
 }
 
-impl JobExtractor {
+impl PostingsExtractor {
     pub fn new(
         url: String, 
+        source_id: i32,
         settings: settings::Model, 
         selector: Option<String>, 
         pagination: Option<String>, 
         filters: Vec<filter::Model>,
         cached_content: Option<String>,
     ) -> Self {
-        JobExtractor {
+        PostingsExtractor {
             url,
+            source_id,
             selector,
             pagination,
             cached_content,
             filters,
             settings,
-            parsed_content: None
+            parsed_content: None,
+            extracted_postings: None
         }
     }
 
-    pub async fn extract(mut self) -> Result<Vec<posting::Model>> {
+    pub async fn extract(&mut self) -> Result<Vec<posting::Model>> {
         self.parsed_content = Some(self.parse_source_content().await?);
         let content_diff = self.new_source_content();
 
         if let Some(content_diff) = content_diff {
-            return self.extract_postings(&content_diff).await
+            let postings = self.extract_postings(&content_diff).await?;
+            self.extracted_postings = Some(postings.clone());
+            return Ok(postings)
         }
 
         return Ok(vec![])
