@@ -1,21 +1,24 @@
 <script lang="ts">
   import { get } from 'svelte/store';
   import { sources, postings } from "../store"; 
+	import { goto } from '$app/navigation';
 
   let storedPostings = get(postings);
 
   postings.subscribe((_) => {
     storedPostings = get(postings);
-  })
+  });
 </script>
 
-<div>
+<div class="w-3/4">
   {#each storedPostings as posting}
-    <div class="card w-96 ">
-      <div class="card-body items-left text-left">
-        <h2 class="card-title">{posting.title}</h2>
-        <p>{posting.description}</p>
+    <a href="/posting/{posting.id}">
+      <div class="card w-full">
+        <div class="card-body items-left text-left">
+          <h2 class="card-title">{posting.title}</h2>
+          <p>{posting.description}</p>
+        </div>
       </div>
-    </div>
+    </a>
   {/each}
 </div>

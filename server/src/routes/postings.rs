@@ -51,3 +51,19 @@ pub async fn refresh_postings(
 
     unread_postings(db).await
 }
+
+#[get("/postings/<id>")]
+pub async fn posting_by_id(
+    db: &State<DatabaseConnection>,
+    id: i32
+) -> Result<Json<Option<posting::Model>>, Status> {
+    let db = db as &DatabaseConnection;
+
+    Ok(Json(
+        Posting::find()
+            .filter(posting::Column::Id.eq(id))
+            .one(db)
+            .await
+            .expect("Could not retrieve posting"),
+    ))
+}
