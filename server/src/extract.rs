@@ -56,7 +56,7 @@ impl PostingsExtractorHandler {
                     source.content.clone(),
                 );
 
-                extractor.extract().await;
+                let _ = extractor.extract().await;
                 extractor
             })
         })
@@ -84,7 +84,7 @@ impl PostingsExtractorHandler {
                 let mut active_posting: posting::ActiveModel = p.into();
                 active_posting.id = NotSet;
                 active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east(0))));
-                active_posting.seen = Set(false);
+                active_posting.seen = Set(Some(false));
                 active_posting.source_id = Set(Some(e.source_id));
                 active_posting
             }).collect();
@@ -110,8 +110,7 @@ impl PostingsExtractorHandler {
 
 #[derive(Deserialize, Debug)]
 struct ExtractResponse {
-    postings: Vec<posting::Model>,
-    last_posting: String
+    postings: Vec<posting::Model>
 }
 
 
@@ -273,10 +272,12 @@ impl PostingsExtractor {
                 start = end;
             }
 
-            let response: ExtractResponse = serde_json::from_str(&(self.chatgpt_extract_postings(&message_parts).await?))?;
+            let chatgpt_result = self.chatgpt_extract_postings(&message_parts).await?;
+            let response: ExtractResponse = serde_json::from_str(&chatgpt_result)?;
             postings.extend(response.postings);
             let message = message_parts.join("");
-            let (last_index, _) = message.match_indices(&response.last_posting).last().unwrap_or((message.len() - CONTEXT_OVERLAP, ""));
+            // let (last_index, _) = message.match_indices(&response.last_posting).last().unwrap_or((message.len() - CONTEXT_OVERLAP, ""));
+            let last_index = message.len() - CONTEXT_OVERLAP;
             start = message_start + last_index;
             message_start = start;
         }
@@ -304,13 +305,12 @@ impl PostingsExtractor {
             Return the job postings matching the provided criteria as 'postings'. \
             Criteria: {{{criteria}}} \
             Expected Return Format: JSON
-            Expected Return Structure: {{ postings: [{{title: '', description: ''}}], last_posting: '' }}
+            Expected Return Structure: {{ postings: [{{title: '', description: ''}}] }}
             If no matching results return: []
-            Return the title of the last job posting that does not match the criteria as 'last_posting'. \
             Return actual results based on the input provided, do not return code examples. \
         ");
     
-        let message_end = format!("All parts have been sent. Process the request and return the results. Expected Return Structure: {{ postings: [{{title: '', description: ''}}], last_posting: '' }}");
+        let message_end = format!("All parts have been sent. Process the request and return the results. Expected Return Structure: {{ postings: [{{title: '', description: ''}}] }}");
     
         let message_to_be_continued = format!("Do not answer yet. This is just another part of the input. \
             Just receive and aknowledge with 'Part received'. And wait for the next part of the input.
@@ -340,7 +340,8 @@ impl PostingsExtractor {
     
             response = client.send_message(message).await?.message().content.to_string();
         }
-    
+
+        eprintln!("{:?}", response);
         Ok(response)
     }
 }

@@ -13,7 +13,7 @@ pub struct Model {
 	pub description: String,
 	pub url: Option<String>,
 	pub created_at: Option<DateTimeWithTimeZone>,
-	pub seen: bool,
+	pub seen: Option<bool>,
 	pub source_id: Option<i32>,
 }
 
