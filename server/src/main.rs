@@ -1,3 +1,4 @@
+mod assistant;
 mod entities;
 mod extract;
 mod routes;
@@ -28,6 +29,7 @@ use rocket::http::ContentType;
 use crate::extract::PostingsExtractorHandler;
 use std::sync::{Arc};
 use futures::lock::Mutex;
+use crate::assistant::Assistant;
 
 
 // todo: make configurable

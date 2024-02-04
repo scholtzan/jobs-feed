@@ -1,5 +1,5 @@
 
-use crate::entities::{prelude::*, *};
+use crate::{assistant::Assistant, entities::{prelude::*, *}};
 use headless_chrome::{Browser, Tab};
 use similar::{ChangeTag, TextDiff};
 use thiserror::Error;
@@ -286,15 +286,7 @@ impl PostingsExtractor {
     }
 
     async fn chatgpt_extract_postings(&self, message_parts: &Vec<String>) -> Result<String> {  
-        let client = ChatGPT::new_with_config(
-            &self.settings.api_key,
-            ModelConfigurationBuilder::default()
-                .engine(ChatGPTEngine::Gpt35Turbo)
-                .timeout(Duration::new(60, 0))
-                .temperature(0.01)
-                .build()
-                .unwrap(),
-        ).unwrap();
+        let assistant = Assistant::new(&self.settings.api_key).await?;
 
         let criteria = self.filters.iter().fold(
             "".to_string(),
@@ -310,36 +302,37 @@ impl PostingsExtractor {
             Return actual results based on the input provided, do not return code examples. \
         ");
     
-        let message_end = format!("All parts have been sent. Process the request and return the results. Expected Return Structure: {{ postings: [{{title: '', description: ''}}] }}");
+        // let message_end = format!("All parts have been sent. Process the request and return the results. Expected Return Structure: {{ postings: [{{title: '', description: ''}}] }}");
     
-        let message_to_be_continued = format!("Do not answer yet. This is just another part of the input. \
-            Just receive and aknowledge with 'Part received'. And wait for the next part of the input.
-        ");
+        // let message_to_be_continued = format!("Do not answer yet. This is just another part of the input. \
+        //     Just receive and aknowledge with 'Part received'. And wait for the next part of the input.
+        // ");
     
-        let total_parts = message_parts.len() - 1;
-        let mut response: String = "[]".to_string();
+        // let total_parts = message_parts.len() - 1;
+        // let mut response: String = "[]".to_string();
     
-        for (i, message_part) in message_parts.iter().enumerate() {
-            let formatted_part = format!("[INPUT START PART {i}/{total_parts}] \
-                {message_part}
-                [INPUT END PART {i}/{total_parts}]\
-            ");
+        // for (i, message_part) in message_parts.iter().enumerate() {
+        //     let formatted_part = format!("[INPUT START PART {i}/{total_parts}] \
+        //         {message_part}
+        //         [INPUT END PART {i}/{total_parts}]\
+        //     ");
     
-            let mut message: String = "".to_string();
-            if i == 0 {
-                message = message_start.clone();
-            }
+        //     let mut message: String = "".to_string();
+        //     if i == 0 {
+        //         message = message_start.clone();
+        //     }
     
-            message += &formatted_part;
+        //     message += &formatted_part;
     
-            if i == total_parts {
-                message += &message_end;
-            } else {
-                message += &message_to_be_continued;
-            }
+        //     if i == total_parts {
+        //         message += &message_end;
+        //     } else {
+        //         message += &message_to_be_continued;
+        //     }
     
-            response = client.send_message(message).await?.message().content.to_string();
-        }
+        //     response = client.send_message(message).await?.message().content.to_string();
+        // }
+        let response = assistant.run(message_parts).await?;
 
         eprintln!("{:?}", response);
         Ok(response)
