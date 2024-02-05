@@ -34,7 +34,7 @@
     }
 </script>
 
-<div class="w-3/4">
+<div class="max-w-[20em] min-w-[16em]">
     <aside class="h-screen sticky top-0 flex flex-col bg-base-200 overflow-y-auto">
         <!-- Header -->
         <div class="flex gap-x-20 justify-between p-2 px-4">

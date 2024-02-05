@@ -20,7 +20,7 @@
         <div>
             <Toolbar></Toolbar>
         </div>
-        <div class="p-8">
+        <div class="p-8 flex justify-center">
             <PostingsContainer></PostingsContainer>
         </div>
 	</div>

@@ -10,13 +10,13 @@
   });
 </script>
 
-<div class="w-3/4">
+<div class="w-2/3">
   {#each storedPostings as posting}
     <a href="/posting/{posting.id}">
       <div class="card w-full">
         <div class="card-body items-left text-left">
           <h2 class="card-title">{posting.title}</h2>
-          <p>{posting.description}</p>
+          <p class="text-justify">{posting.description}</p>
         </div>
       </div>
     </a>
