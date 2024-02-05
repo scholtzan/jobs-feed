@@ -67,7 +67,6 @@ impl Assistant {
     }
 
     async fn create(&self) -> Result<Option<String>> {
-        eprintln!("create");
         let url = format!("{BASE_URL}/assistants");
         let bearer = format!("Bearer {}", self.api_key);
         let mut headers = HeaderMap::new();
@@ -76,7 +75,10 @@ impl Assistant {
         headers.insert(HeaderName::from_static("openai-beta"), HeaderValue::from_static("assistants=v1"));
 
         let body = json!({
-            "instructions": "Extract a complete list of job posting titles from the provided inputs and return the results in a single response as a JSON list. Do not miss any posting! Response format: [\"Car Mechanic\", \"Secretary\"]",
+            "instructions": "Extract a complete list of job postings with descriptions from the provided inputs that match the provided criteria. \
+                Return the results in a single response as JSON. \
+                Extract the job descriptions and shorted to 200 characters. Do not miss any posting! \
+                Response format: [{{\"title\": \"\", \"description\": \"\"}}]",
             "name": "Jobs Feed",
             "model": "gpt-3.5-turbo"
         });
@@ -122,8 +124,6 @@ impl Assistant {
             })
         });
 
-        eprintln!("{:?}", body);
-
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(10))
             .build()?;
@@ -133,8 +133,6 @@ impl Assistant {
             .json(&body)
             .send()
             .await?;
-
-        eprintln!("{:?}", res);
 
         if res.status() != StatusCode::OK {
             return Err(anyhow!("Cannot create thread"));
@@ -146,7 +144,7 @@ impl Assistant {
 
         // todo: move to separate result() method?
         let _ = self.wait_for_run(thread_id, run_id, Duration::from_secs(30)).await;
-        self.get_run_result(thread_id, run_id, Duration::from_secs(30)).await
+        self.get_run_result(thread_id, run_id, Duration::from_secs(100)).await
     }
 
     async fn wait_for_run(&self, thread_id: &str, run_id: &str, timeout: Duration) -> Result<()> {
@@ -154,8 +152,6 @@ impl Assistant {
         let end = Instant::now() + timeout;
         let mut next_time = Instant::now() + interval;
         let mut finished = false;
-
-        eprintln!("wait");
 
         let url = format!("{BASE_URL}/threads/{thread_id}/runs/{run_id}");
         let bearer = format!("Bearer {}", self.api_key);
@@ -202,7 +198,6 @@ impl Assistant {
         let interval = Duration::from_secs(1);
         let end = Instant::now() + timeout;
         let mut next_time = Instant::now() + interval;
-        let mut non_empty = false;
 
         let url = format!("{BASE_URL}/threads/{thread_id}/messages");
         let bearer = format!("Bearer {}", self.api_key);
@@ -231,18 +226,13 @@ impl Assistant {
 
                 let total_messages = messages.len();
 
-                eprintln!("{:?}", messages);
-
                 for message in messages {
                     let content = message.get("content").unwrap().as_array().unwrap().first().unwrap().get("text").unwrap().get("value").unwrap().as_str().unwrap();
-                    non_empty = content != "";
-                    eprintln!("{}", content);
+                    
+                    if total_messages > 0 && content != "" {
+                        return Ok(content.to_string())
+                    }
                 }
-
-                if total_messages > 0 && non_empty {
-                    return Ok("".to_string())
-                }
-
             } else {
                 return Err(anyhow!("Cannot get run"));
             }

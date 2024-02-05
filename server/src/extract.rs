@@ -14,8 +14,8 @@ use sea_orm::entity::prelude::*;
 use sea_orm::*;
 use chrono::{DateTime, Local, FixedOffset, Utc};
 
-const MESSAGE_MAX_CHARS: usize = 7000;
-const CONTEXT_MAX_CHARS: usize = 15000;
+const MESSAGE_MAX_CHARS: usize = 32000;
+const CONTEXT_MAX_CHARS: usize = 100000;
 const CONTEXT_OVERLAP: usize = 200;
 const MAX_REQUESTS_PER_SITE: usize = 3; // needed?
 
@@ -91,6 +91,8 @@ impl PostingsExtractorHandler {
 
             active_postings
         }).collect();
+
+        eprintln!("{:?}", postings);
 
         Posting::insert_many(postings).exec(db).await;
 
@@ -272,9 +274,9 @@ impl PostingsExtractor {
                 start = end;
             }
 
-            let chatgpt_result = self.chatgpt_extract_postings(&message_parts).await?;
-            let response: ExtractResponse = serde_json::from_str(&chatgpt_result)?;
-            postings.extend(response.postings);
+            let chatgpt_result = self.chatgpt_extract_postings(&mut message_parts).await?;
+            let response: Vec<posting::Model> = serde_json::from_str(&chatgpt_result)?;
+            postings.extend(response);
             let message = message_parts.join("");
             // let (last_index, _) = message.match_indices(&response.last_posting).last().unwrap_or((message.len() - CONTEXT_OVERLAP, ""));
             let last_index = message.len() - CONTEXT_OVERLAP;
@@ -285,56 +287,22 @@ impl PostingsExtractor {
         Ok(postings)
     }
 
-    async fn chatgpt_extract_postings(&self, message_parts: &Vec<String>) -> Result<String> {  
+    async fn chatgpt_extract_postings(&self, message_parts: &mut Vec<String>) -> Result<String> {  
         let assistant = Assistant::new(&self.settings.api_key).await?;
 
         let criteria = self.filters.iter().fold(
             "".to_string(),
             |cur: String, next: &filter::Model| cur + &format!("{}: {}", next.name, next.value)
         );
-    
-        let message_start = format!("Extract job postings from the provided input. The input is split over multiple parts. \
-            Return the job postings matching the provided criteria as 'postings'. \
-            Criteria: {{{criteria}}} \
-            Expected Return Format: JSON
-            Expected Return Structure: {{ postings: [{{title: '', description: ''}}] }}
-            If no matching results return: []
-            Return actual results based on the input provided, do not return code examples. \
-        ");
-    
-        // let message_end = format!("All parts have been sent. Process the request and return the results. Expected Return Structure: {{ postings: [{{title: '', description: ''}}] }}");
-    
-        // let message_to_be_continued = format!("Do not answer yet. This is just another part of the input. \
-        //     Just receive and aknowledge with 'Part received'. And wait for the next part of the input.
-        // ");
-    
-        // let total_parts = message_parts.len() - 1;
-        // let mut response: String = "[]".to_string();
-    
-        // for (i, message_part) in message_parts.iter().enumerate() {
-        //     let formatted_part = format!("[INPUT START PART {i}/{total_parts}] \
-        //         {message_part}
-        //         [INPUT END PART {i}/{total_parts}]\
-        //     ");
-    
-        //     let mut message: String = "".to_string();
-        //     if i == 0 {
-        //         message = message_start.clone();
-        //     }
-    
-        //     message += &formatted_part;
-    
-        //     if i == total_parts {
-        //         message += &message_end;
-        //     } else {
-        //         message += &message_to_be_continued;
-        //     }
-    
-        //     response = client.send_message(message).await?.message().content.to_string();
-        // }
+
+        let last_message = format!("Criteria: {criteria} Provide a single response. \
+            Response format: [{{\"title\": \"\", \"description\": \"\"}}]. \
+            Description should not contain location"
+        );
+        message_parts.push(last_message);
+
         let response = assistant.run(message_parts).await?;
 
-        eprintln!("{:?}", response);
         Ok(response)
     }
 }
