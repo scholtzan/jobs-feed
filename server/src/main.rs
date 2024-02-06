@@ -85,6 +85,8 @@ async fn rocket() -> _ {
                 routes::postings::unread_postings,
                 routes::postings::refresh_postings,
                 routes::postings::posting_by_id,
+                routes::settings::settings,
+                routes::settings::update_settings,
             ],
         )
         .mount("/", routes![index])

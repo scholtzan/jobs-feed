@@ -20,3 +20,7 @@ export class Posting {
     seen: boolean = false;
     source_id: number | null = null;
 }
+
+export class Settings {
+    api_key: string | null = null;
+}
