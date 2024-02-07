@@ -2,6 +2,7 @@ export const ssr = false;
 export const csr = true;
 export const trailingSlash = 'always'; 
 
+
 import "../app.postcss";
 
 import type { PageLoad } from "./$types";

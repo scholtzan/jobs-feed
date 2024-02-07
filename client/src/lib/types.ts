@@ -19,6 +19,7 @@ export class Posting {
     url: string = "";
     seen: boolean = false;
     source_id: number | null = null;
+    created_at: Date = new Date();
 }
 
 export class Settings {
