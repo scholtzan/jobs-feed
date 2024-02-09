@@ -85,6 +85,7 @@ async fn rocket() -> _ {
                 routes::postings::unread_postings,
                 routes::postings::refresh_postings,
                 routes::postings::posting_by_id,
+                routes::postings::mark_postings_read,
                 routes::settings::settings,
                 routes::settings::update_settings,
             ],

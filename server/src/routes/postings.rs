@@ -6,7 +6,7 @@ use chrono::{DateTime, Local, FixedOffset, Utc};
 use futures::executor::block_on;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use sea_orm::*;
+use sea_orm::{sea_query::Expr, *};
 use sea_orm::{entity::*, error::*, query::*, FromQueryResult};
 use crate::entities::{prelude::*, *};
 use rocket::serde::json::Json;
@@ -66,4 +66,21 @@ pub async fn posting_by_id(
             .await
             .expect("Could not retrieve posting"),
     ))
+}
+
+#[put("/postings/mark_read", data = "<input>")]
+pub async fn mark_postings_read(
+    db: &State<DatabaseConnection>,
+    input: Json<Vec<i32>>
+) -> Result<(), Status> {
+    let db = db as &DatabaseConnection;
+
+    let _ = Posting::update_many()
+    .col_expr(posting::Column::Seen, Expr::value(true))
+    .filter(posting::Column::Id.is_in(input.into_inner()))
+    .exec(db)
+    .await
+    .expect("Could not mark posting as read");
+
+    Ok(())
 }
