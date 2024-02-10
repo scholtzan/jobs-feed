@@ -1,6 +1,6 @@
 
 use crate::{assistant::Assistant, entities::{prelude::*, *}};
-use headless_chrome::{Browser, Tab};
+use headless_chrome::{Browser, LaunchOptions, Tab};
 use similar::{ChangeTag, TextDiff};
 use thiserror::Error;
 use anyhow::Result;
@@ -32,6 +32,10 @@ impl PostingsExtractorHandler {
 
     pub async fn refresh(&mut self, db: &DatabaseConnection) -> Result<Vec<posting::Model>> {
         self.fetch(db).await
+    }
+
+    pub fn get_extractor_for_source(&self, id: i32) -> Option<&PostingsExtractor> {
+        self.extractors.iter().find(|e| e.source_id == id)
     }
 
     async fn fetch(&mut self, db: &DatabaseConnection) -> Result<Vec<posting::Model>> {
@@ -81,18 +85,28 @@ impl PostingsExtractorHandler {
     pub async fn save(&self, db: &DatabaseConnection) -> Result<()> {
         let postings: Vec<posting::ActiveModel> = self.extractors.iter().flat_map(|e| {
             let active_postings: Vec<posting::ActiveModel> = e.extracted_postings.clone().unwrap_or(vec![]).into_iter().map(|p| {
+                let title = p.title.clone();
                 let mut active_posting: posting::ActiveModel = p.into();
+
+                let extractor = self.get_extractor_for_source(e.source_id).unwrap();
+                let links = extractor.get_links_with_content(&title);
+
                 active_posting.id = NotSet;
                 active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east(0))));
                 active_posting.seen = Set(Some(false));
                 active_posting.source_id = Set(Some(e.source_id));
+
+                if links.is_empty() {
+                    active_posting.url = Set(Some(extractor.url.clone()))
+                } else {
+                    active_posting.url = Set(Some(links.first().unwrap().url.clone()))
+                }
+
                 active_posting
             }).collect();
 
             active_postings
         }).collect();
-
-        eprintln!("{:?}", postings);
 
         Posting::insert_many(postings).exec(db).await;
 
@@ -115,6 +129,12 @@ struct ExtractResponse {
     postings: Vec<posting::Model>
 }
 
+#[derive(Clone, Debug)]
+struct PageLink {
+    url: String,
+    content: String
+}
+
 
 #[derive(Clone)]
 pub struct PostingsExtractor {
@@ -127,7 +147,8 @@ pub struct PostingsExtractor {
 
     parsed_content: Option<String>,
     cached_content: Option<String>,
-    extracted_postings: Option<Vec<posting::Model>>
+    extracted_postings: Option<Vec<posting::Model>>,
+    extracted_links: Vec<PageLink>
 }
 
 impl PostingsExtractor {
@@ -149,12 +170,13 @@ impl PostingsExtractor {
             filters,
             settings,
             parsed_content: None,
-            extracted_postings: None
+            extracted_postings: None,
+            extracted_links: vec![]
         }
     }
 
     pub async fn extract(&mut self) -> Result<Vec<posting::Model>> {
-        self.parsed_content = Some(self.parse_source_content().await?);
+        self.parse_source_content().await?;
         let content_diff = self.new_source_content();
 
         if let Some(content_diff) = content_diff {
@@ -166,8 +188,10 @@ impl PostingsExtractor {
         return Ok(vec![])
     }
 
-    async fn parse_source_content(&self) -> Result<String> {
-        let browser = Browser::default()?;
+    async fn parse_source_content(&mut self) -> Result<()> {
+        let browser = Browser::new(LaunchOptions {
+            idle_browser_timeout: Duration::from_secs(60);
+        })?;
         let tab = browser.new_tab()?;
 
         tab.navigate_to(&self.url)?;
@@ -176,14 +200,21 @@ impl PostingsExtractor {
         let head = tab.wait_for_element("head")?.get_content()?;
         if head == "<head><meta name=\"color-scheme\" content=\"light dark\"></head>" {
             // raw JSON content, return as is
-            return tab.wait_for_element("body")?.get_inner_text();
+            self.parsed_content = Some(tab.wait_for_element("body")?.get_inner_text()?);
+            self.extracted_links = vec![]
         } else {
-            let content = self.parse_source_pages(tab, &"".to_string())?;
-            return Ok(content);
+            let r = self.parse_source_pages(tab, &"".to_string());
+            eprintln!("ddddd {:?}", r);
+            let (content, links) = r?;
+            eprintln!("cccccc {:?}", content);
+            self.parsed_content = Some(content);
+            self.extracted_links = links;
         }
+
+        return Ok(());
     }
 
-    fn parse_source_pages(&self, tab: Arc<Tab>, prev_content: &String) -> Result<String> {
+    fn parse_source_pages(&self, tab: Arc<Tab>, prev_content: &String) -> Result<(String, Vec<PageLink>)> {
         std::thread::sleep(std::time::Duration::from_secs(5)); // todo: needed?
 
         let selector = match &self.selector {
@@ -197,8 +228,27 @@ impl PostingsExtractor {
 
                 if &content == prev_content {
                     // current page has already been parsed; stop recursion
-                    return Ok("".to_string())
+                    return Ok(("".to_string(), vec![]))
                 }
+
+                let link_elements = el.find_elements("a")?;
+                let mut links: Vec<PageLink> = link_elements.into_iter().flat_map(|link| { 
+                    let link_attributes = link.attributes.clone().unwrap_or(vec![]);
+                    let href_index = link_attributes.clone().iter().position(move |r| *r == "href".to_string());
+                    if let Some(i) = href_index {
+                        let url = tab.get_url() + &link_attributes[i + 1].clone();
+                        let link_content = link.get_inner_text().unwrap_or("".to_string());
+
+                        return Some(PageLink {
+                            url,
+                            content: link_content
+                        })
+                    }
+
+                    return None
+                }).collect();
+
+                eprint!("{:?}", content);
 
                 if let Some(pagination_selector) = &self.pagination {
                     if let Ok(pagination_element) = tab.wait_for_element(pagination_selector) {
@@ -212,11 +262,13 @@ impl PostingsExtractor {
                                         let paginated_url = base_url.join(&a_attributes[next_page_url_index + 1])?;
                                         tab.navigate_to(paginated_url.as_str())?;
                                         tab.wait_until_navigated()?;
-                                        let parsed_page = self.parse_source_pages(tab, &content)?;
-                                        return Ok(content.clone() + "\n" + &parsed_page)
+                                        let (parsed_page, parsed_links) = self.parse_source_pages(tab, &content)?;
+                                        links.extend(parsed_links);
+                                        eprintln!("{:?}", content);
+                                        return Ok((content.clone() + "\n" + &parsed_page, links))
                                     }
                                 } else {
-                                    return Ok(content)
+                                    return Ok((content, links))
                                 }
                             },
                             _ => {
@@ -224,17 +276,18 @@ impl PostingsExtractor {
                                 // todo: not quite working
                                 if pagination_click.is_ok() {       
                                     std::thread::sleep(std::time::Duration::from_secs(5));
-                                    let parsed_page = self.parse_source_pages(tab, &content)?;
-                                    return Ok(content.clone() + "\n" + &parsed_page)
+                                    let (parsed_page, parsed_links) = self.parse_source_pages(tab, &content)?;
+                                    links.extend(parsed_links);
+                                    return Ok((content.clone() + "\n" + &parsed_page, links))
                                 }
                             }
                         }
                     }
                 }
 
-                return Ok(content)
+                return Ok((content, links))
             },
-            Err(_) => Ok("".to_string())  // todo: return some error
+            Err(_) => Ok(("".to_string(), vec![]))  // todo: return some error
         }
     }
 
@@ -304,5 +357,9 @@ impl PostingsExtractor {
         let response = assistant.run(message_parts).await?;
 
         Ok(response)
+    }
+
+    fn get_links_with_content(&self, content: &String) -> Vec<PageLink> {
+        return self.extracted_links.clone().into_iter().filter(|l| l.content.contains(content)).collect()
     }
 }

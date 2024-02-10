@@ -58,8 +58,7 @@
                 </p>
 
                 <div class="py-8 flex-none">
-                    <!-- todo -->
-                    <a href="/" class="btn btn-active w-full max-w">Go To Posting</a>
+                    <a href="{ posting.url }" target="_blank" class="btn btn-active w-full max-w">Go To Posting</a>
                 </div>
             </div>
         </div>

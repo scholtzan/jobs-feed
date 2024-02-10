@@ -230,6 +230,7 @@ impl Assistant {
                     let content = message.get("content").unwrap().as_array().unwrap().first().unwrap().get("text").unwrap().get("value").unwrap().as_str().unwrap();
                     
                     if total_messages > 0 && content != "" {
+                        eprintln!("{:?}", content);
                         return Ok(content.to_string())
                     }
                 }
