@@ -311,7 +311,7 @@ impl PostingsExtractor {
                                 let pagination_click = pagination_element.click();
                                 // todo: not quite working
                                 if pagination_click.is_ok() {       
-                                    std::thread::sleep(std::time::Duration::from_secs(5));
+                                    std::thread::sleep(std::time::Duration::from_secs(15));
                                     let mut parsed_pages = self.parse_source_pages(tab, &parsed_page)?;
                                     parsed_pages.insert(0, parsed_page);
                                     return Ok(parsed_pages)
