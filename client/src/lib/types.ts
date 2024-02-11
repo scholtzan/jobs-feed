@@ -23,5 +23,6 @@ export class Posting {
 }
 
 export class Settings {
+    id: number | null = null;
     api_key: string | null = null;
 }

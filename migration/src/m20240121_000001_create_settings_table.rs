@@ -10,7 +10,14 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Settings::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(Settings::ApiKey).string().not_null().primary_key())
+                    .col(
+                        ColumnDef::new(Settings::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(Settings::ApiKey).string())
                     .to_owned(),
             )
             .await
@@ -26,5 +33,6 @@ impl MigrationTrait for Migration {
 #[derive(Clone, Debug, PartialEq, Eq, Iden)]
 enum Settings {
     Table,
-    ApiKey
+    ApiKey,
+    Id
 }

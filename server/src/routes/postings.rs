@@ -38,6 +38,22 @@ pub async fn unread_postings(db: &State<DatabaseConnection>) -> Result<Json<Vec<
     ))
 }
 
+#[get("/postings/bookmarked")]
+pub async fn bookmarked_postings(db: &State<DatabaseConnection>) -> Result<Json<Vec<posting::Model>>, Status> {
+    let db = db as &DatabaseConnection;
+
+    Ok(Json(
+        Posting::find()
+            .filter(posting::Column::Bookmarked.eq(true))
+            .order_by_desc(posting::Column::CreatedAt)
+            .all(db)
+            .await
+            .expect("Could not retrieve postings")
+            .into_iter()
+            .collect::<Vec<_>>(),
+    ))
+}
+
 #[get("/postings/refresh")]
 pub async fn refresh_postings(
     db: &State<DatabaseConnection>,
@@ -83,4 +99,24 @@ pub async fn mark_postings_read(
     .expect("Could not mark posting as read");
 
     Ok(())
+}
+
+#[put("/postings/<id>", data = "<input>")]
+pub async fn update_posting(
+    db: &State<DatabaseConnection>,
+    id: i32,
+    input: Json<posting::Model>
+) -> Result<Json<posting::Model>, Status> {
+    let db = db as &DatabaseConnection;
+
+    let mut existing_posting = Posting::find_by_id(id).one(db).await.expect("Could not find posting");
+    let mut existing_posting: posting::ActiveModel = existing_posting.unwrap().into();
+    let mut updated_posting: posting::Model = input.into_inner();
+
+    existing_posting.seen = Set(updated_posting.seen);
+    existing_posting.bookmarked = Set(updated_posting.bookmarked);
+
+    let existing_posting: posting::Model = existing_posting.update(db).await.expect("Could not update posting");
+
+    Ok(Json(existing_posting))
 }

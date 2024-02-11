@@ -26,6 +26,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Posting::CreatedAt).timestamp_with_time_zone().default(Expr::current_timestamp()))
                     .col(ColumnDef::new(Posting::Seen).boolean().default(false))
                     .col(ColumnDef::new(Posting::SourceId).integer())
+                    .col(ColumnDef::new(Posting::Bookmarked).boolean().default(false))
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-posting-source_id")
@@ -53,5 +54,6 @@ enum Posting {
     Url,
     CreatedAt,
     Seen,
-    SourceId
+    SourceId,
+    Bookmarked
 }

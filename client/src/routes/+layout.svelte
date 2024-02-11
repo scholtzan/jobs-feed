@@ -12,6 +12,7 @@
     filters.set(data.filters);
     postings.set(data.postings);
     settings.set(data.settings);
+    console.log(data);
 
 </script>
 

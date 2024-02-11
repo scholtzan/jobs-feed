@@ -15,6 +15,7 @@ pub struct Model {
 	pub created_at: Option<DateTimeWithTimeZone>,
 	pub seen: Option<bool>,
 	pub source_id: Option<i32>,
+	pub bookmarked: Option<bool>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

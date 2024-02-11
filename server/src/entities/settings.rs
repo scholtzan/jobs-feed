@@ -6,9 +6,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "settings")]
 pub struct Model {
-	#[sea_orm(primary_key, auto_increment = false)]
+	#[sea_orm(primary_key)]
 	#[serde(skip_deserializing)]
-	pub api_key: String,
+	pub id: i32,
+	pub api_key: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -4,6 +4,7 @@
     import { page } from '$app/stores';
     import { writable, get } from 'svelte/store';
     import { settings } from "../../lib/store"; 
+    import { Settings } from "../../lib/types";
 
     let drawerOpen = true;
 
@@ -17,9 +18,10 @@
     }
 
     function updateSettings() {
+        console.log(JSON.stringify(storedSettings));
         const res = fetch('/settings', {
             method: 'PUT',
-            body: JSON.stringify(settings)
+            body: JSON.stringify(storedSettings)
         }).then((response) => {
             if (response.status == 200) {
                 response.json().then((json) => {
