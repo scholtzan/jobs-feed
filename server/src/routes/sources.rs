@@ -81,3 +81,35 @@ pub async fn source_by_id(
             .expect("Could not retrieve source"),
     ))
 }
+
+#[put("/sources/<id>", data = "<input>")]
+pub async fn update_source(
+    db: &State<DatabaseConnection>,
+    id: i32,
+    input: Json<source::Model>
+) -> Result<Json<source::Model>, Status> {
+    let db = db as &DatabaseConnection;
+
+    let mut existing_source = Source::find_by_id(id).one(db).await.expect("Could not find source").unwrap();
+    let mut updated_source: source::Model = input.into_inner();
+    let content_changed = existing_source.url != updated_source.url || 
+        existing_source.selector != updated_source.selector || 
+        existing_source.pagination != updated_source.pagination;
+
+    let mut existing_source_active: source::ActiveModel = existing_source.into();
+
+    if content_changed {
+        existing_source_active.content = Set(Some("".to_string()));
+    }
+
+    existing_source_active.name = Set(updated_source.name);
+    existing_source_active.url = Set(updated_source.url);
+    existing_source_active.selector = Set(updated_source.selector);
+    existing_source_active.pagination = Set(updated_source.pagination);
+
+
+
+    let existing_source: source::Model = existing_source_active.update(db).await.expect("Could not update source");
+
+    Ok(Json(existing_source))
+}

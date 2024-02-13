@@ -72,7 +72,7 @@
             method: 'DELETE'
         }).then((response) => {
             if (response.status == 200) {
-                storedSources = storedSources.filter((s) s.id != sourceId);
+                storedSources = storedSources.filter((s) => s.id != sourceId);
             } else {
                 // todo: error
                 console.log("Cannot delete source");

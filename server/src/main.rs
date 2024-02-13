@@ -82,6 +82,7 @@ async fn rocket() -> _ {
                 routes::sources::add_source,
                 routes::sources::source_by_id,
                 routes::sources::delete_source,
+                routes::sources::update_source,
                 routes::filters::filters,
                 routes::filters::update_filters,
                 routes::postings::unread_postings,

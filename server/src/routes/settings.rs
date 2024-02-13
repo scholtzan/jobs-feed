@@ -44,10 +44,7 @@ pub async fn update_settings(
     .exec(&txn)
     .await.expect("Could not delete settings.");
 
-    eprintln!("{:?}", input);
-
     let new_settings: entities::settings::ActiveModel = input.into_inner().into();
-    eprintln!("{:?}", &new_settings);
     Settings::insert(new_settings).exec(&txn).await.expect("Could not update settings");
 
     txn.commit().await.expect("Cannot commit transaction");
