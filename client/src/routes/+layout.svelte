@@ -17,7 +17,9 @@
 </script>
 
 <div class="flex flex-column">
-    <Sidebar></Sidebar>
+    <div class="static">
+        <Sidebar></Sidebar>
+    </div>
 
 	<div class="grow">
         <div>
