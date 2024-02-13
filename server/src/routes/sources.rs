@@ -49,3 +49,35 @@ pub async fn add_source(
         )
     )
 }
+
+#[delete("/sources/<id>")]
+pub async fn delete_source(
+    db: &State<DatabaseConnection>,
+    id: i32
+) -> Result<(), Status> {
+    let db = db as &DatabaseConnection;
+
+    let source: Option<source::Model> = Source::find_by_id(id).one(db).await.expect("Could not find source");
+    let source: source::Model = source.unwrap();
+
+    let res: DeleteResult = source.delete(db).await.expect("Cannot delete source");
+
+    Ok(())
+}
+
+
+#[get("/sources/<id>")]
+pub async fn source_by_id(
+    db: &State<DatabaseConnection>,
+    id: i32
+) -> Result<Json<Option<source::Model>>, Status> {
+    let db = db as &DatabaseConnection;
+
+    Ok(Json(
+        Source::find()
+            .filter(source::Column::Id.eq(id))
+            .one(db)
+            .await
+            .expect("Could not retrieve source"),
+    ))
+}
