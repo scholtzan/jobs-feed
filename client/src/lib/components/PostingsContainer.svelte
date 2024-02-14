@@ -3,41 +3,36 @@
   import { sources, postings, selectedSource } from "../store"; 
   import { todaysPostings, postingsForSource } from "../utils";
 	import { goto } from '$app/navigation';
+  import { Postings } from "../types/postings";
 
-  let storedPostings = get(postings);
+  let postingsHandler = new Postings();
   let sourceSelected = get(selectedSource);
   let storedSources = get(sources);
-  let shownPostings = storedPostings;
-  let readPostings = new Set();
+  let shownPostings = postingsHandler.postings;
 
-  postings.subscribe((_) => {
-    storedPostings = get(postings);
+  postingsHandler.subscribe((_) => {
+    shownPostings = postingsHandler.postings;
   });
 
   selectedSource.subscribe((_) => {
     sourceSelected = get(selectedSource);
     if (sourceSelected == "all") {
-      shownPostings = storedPostings;
+      shownPostings = postingsHandler.postings;
     } else if (sourceSelected == "today") {
-      shownPostings = todaysPostings(storedPostings);
+      shownPostings = postingsHandler.getTodaysPostings();
     } else if (sourceSelected == "bookmarked") {
-      const res = fetch("/postings/bookmarked", {
-        method: "GET"
-      }).then((response) => {
-        if (response.status == 200) {
-          response.json().then((json) => {
-            shownPostings = json as Posting[];
-          });
+      postingsHandler.getBookmarked().then((res) => {
+        if (res.isSuccessful) {
+          shownPostings = res.data;
         } else {
-          console.log("Could not get postings");
-          shownPostings = [];
+          console.log(res.message);
         }
-      })
+      });
     }
      else {
-      let postingsPerSource = postingsForSource(storedPostings);
+      let postingsPerSource = postingsHandler.postingsBySource();
       if (sourceSelected in postingsPerSource) {
-        shownPostings = postingsForSource(storedPostings)[sourceSelected];
+        shownPostings = postingsPerSource[sourceSelected];
       } else {
         shownPostings = [];
       }
@@ -49,36 +44,19 @@
   });
 
   function markAsRead(ids) {
-    const res = fetch('/postings/mark_read', {
-        method: 'PUT',
-        body: JSON.stringify(ids)
-    }).then((response) => {
-        if (response.status == 200) {
-          readPostings = new Set([...readPostings, ...ids]);
-        } else {
-            // todo: error
-            console.log("Cannot mark postings as read");
-        }
-    });
+    postingsHandler.markAsRead(ids).then((res) => {
+      if (!res.isSuccessful) {
+        console.log(res.message);
+      }
+    })
   }
 
   function bookmark(id) {
-    let posting = shownPostings.find((p) => p.id == id);
-    posting.bookmarked = !posting.bookmarked;
-    shownPostings = shownPostings;
-
-    const res = fetch('/postings/' + id, {
-        method: 'PUT',
-        body: JSON.stringify(posting)
-    }).then((response) => {
-        if (response.status == 200) {
-          console.log("updated bookmark")
-        } else {
-          console.log("Could not update bookmarking for posting");
-          posting.bookmarked = !posting.bookmarked;
-          shownPostings = shownPostings;
-        }
-    });
+    postingsHandler.bookmarkPosting(id).then((res) => {
+      if (!res.isSuccessful) {
+        console.log(res.message);
+      }
+    })
   }
 
 </script>
@@ -103,7 +81,7 @@
     {/if}
   </h1>
   {#each shownPostings as posting}
-    <div class="card card-compact w-full group {readPostings.has(posting.id) && selectedSource != "bookmarked" ? "text-slate-100" : ""}">
+    <div class="card card-compact w-full group {posting.seen && selectedSource != "bookmarked" ? "text-slate-100" : ""}">
       <div class="card-body items-left text-left">
         <div class="flex flex-row grow">
           <a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
