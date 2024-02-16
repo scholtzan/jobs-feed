@@ -2,15 +2,14 @@
     import { goto } from '$app/navigation';
     import { Source } from "../../lib/types";
     import { page } from '$app/stores';
-    import { writable, get } from 'svelte/store';
-    import { settings } from "../../lib/store"; 
-    import { Settings } from "../../lib/types";
+    import { Settings, SettingsHandler } from "../../lib/types/settings";
 
     let drawerOpen = true;
 
-    let storedSettings = get(settings);
-    settings.subscribe((value) => {
-        storedSettings = get(settings);
+    let settingsHandler = new SettingsHandler();
+    let settings = settingsHandler.settings;
+    settingsHandler.subscribe((value) => {
+        settings = settingsHandler.settings;
     });
 
     function closeDrawer(e) {
@@ -18,23 +17,13 @@
     }
 
     function updateSettings() {
-        console.log(JSON.stringify(storedSettings));
-        const res = fetch('/settings', {
-            method: 'PUT',
-            body: JSON.stringify(storedSettings)
-        }).then((response) => {
-            if (response.status == 200) {
-                response.json().then((json) => {
-                    let newSettings: Settings = Object.assign(new Settings(), json);                        
-                    settings.set(newSettings);
-                    goto("/");
-                })
-                
-            } else {
-                // todo: error
-                console.log("Cannot update settings");
+        settingsHandler.updateSettings(settings).then((res) => {
+            if (!res.isSuccessful) {
+                console.log("Could not update settings"); // todo
             }
-        });
+
+            closeDrawer();
+        })
     }
 </script>
 
@@ -72,7 +61,7 @@
 
                     <input type="text" placeholder="API Key" 
                         class="input input-bordered w-full max-w"
-                        bind:value={storedSettings.api_key} />
+                        bind:value={settings.api_key} />
                 </label>
 
                 <div class="py-8 flex-none">

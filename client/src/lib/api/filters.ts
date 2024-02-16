@@ -6,7 +6,7 @@ export class FiltersApi {
     constructor() {}
 
     public updateFilters = async (filters: Filter[]) => {
-        return fetch('/filters/', {
+        return fetch('/filters', {
             method: 'PUT',
             body: JSON.stringify(filters)
         }).then((response) => {
