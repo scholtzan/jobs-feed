@@ -10,6 +10,10 @@ export class SettingsHandler {
     constructor() {
         this.settings = get(settings);
         this.api = new SettingsApi();
+
+        settings.subscribe((_) => {
+            this.settings = get(settings);
+        });
     }
 
     public store(): void {
@@ -19,6 +23,17 @@ export class SettingsHandler {
     public subscribe(callback: (value: any) => void): void {
         settings.subscribe(callback);
     }
+
+    public refresh() {
+        return this.api.getSettings().then((res) => {
+            if (res.isSuccessful) {
+                this.settings = res.data;                    
+                this.store();
+            }
+
+            return res;
+        });
+    } 
 
     public updateSettings(settings: Settings) {
         return this.api.updateSettings(settings).then((res) => {

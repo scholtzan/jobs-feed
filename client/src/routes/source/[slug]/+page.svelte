@@ -1,10 +1,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { Source } from "../../../lib/types";
     import { page } from '$app/stores';
-    import { writable, get } from 'svelte/store';
-    import { sources } from "../../../lib/store"; 
-    import { Sources } from "../../../lib/types/sources";
+    import { Sources, Source } from "../../../lib/types/sources";
 
     let drawerOpen = true;
     export let data: PageData;

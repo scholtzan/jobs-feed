@@ -1,11 +1,8 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { Posting } from "../../../lib/types";
     import { page } from '$app/stores';
-    import { writable, get } from 'svelte/store';
-    import { postings } from "../../../lib/store"; 
     import type { PageData } from "./$types";
-    import { Postings } from "../../../lib/types/postings";
+    import { Postings, Posting } from "../../../lib/types/postings";
 
     let postingsHandler = new Postings();
     let drawerOpen = true;

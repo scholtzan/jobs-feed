@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { Source } from "../../lib/types";
+    import { Source } from "../../lib/types/sources";
     import { page } from '$app/stores';
     import { Settings, SettingsHandler } from "../../lib/types/settings";
 

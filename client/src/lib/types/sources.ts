@@ -18,6 +18,14 @@ export class Sources {
         this.sources = get(sources);
         this.api = new SourcesApi();
         this.selectedSource = get(selectedSource);
+
+        sources.subscribe((_) => {
+            this.sources = get(sources);
+        });
+
+        selectedSource.subscribe((_) => {
+            this.selectedSource = get(selectedSource);
+        });
     }
 
     public store(): void {
@@ -40,6 +48,17 @@ export class Sources {
         this.selectedSource = selected;
         selectedSource.set(selected);
     }
+
+    public refresh() {
+        return this.api.getSources().then((res) => {
+            if (res.isSuccessful) {
+                this.sources = res.data;                    
+                this.store();
+            }
+
+            return res;
+        });
+    } 
 
     public createSource(source: Source) {
         return this.api.createSource(source).then((res) => {

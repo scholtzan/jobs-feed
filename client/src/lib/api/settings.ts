@@ -20,4 +20,24 @@ export class SettingsApi {
             }
         });
     }
+
+    public getSettings = async () => {
+        return fetch('/settings', {
+            method: 'GET'
+        }).then((response) => {
+            if (response.status == 200) {
+                return response.json().then((json) => {
+                    let storedSettings: Settings;
+                    if (json == null) { 
+                        storedSettings = new Settings();
+                    } else {
+                        storedSettings = Object.assign(new Settings(), json);
+                    }
+                    return success(storedSettings);
+                });
+            } else {
+                return error(`Could not get settings: ${response}`);
+            }
+        });
+    }
 }

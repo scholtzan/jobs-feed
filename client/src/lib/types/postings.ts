@@ -9,6 +9,10 @@ export class Postings {
     constructor() {
         this.postings = get(postings);
         this.api = new PostingsApi();
+
+        postings.subscribe((_) => {
+            this.postings = get(postings);
+        });
     }
 
     public store(): void {
@@ -37,15 +41,26 @@ export class Postings {
         });
     }
 
-    public refresh() {
-        return this.api.refreshPostings().then((res) => {
-            if (res.isSuccessful) {
-                this.postings = res.data as Posting[];
-                this.store();
-            }
+    public refresh(useCached: boolean = true) {
+        if (useCached) {
+            return this.api.getUnreadPostings().then((res) => {
+                if (res.isSuccessful) {
+                    this.postings = res.data;                    
+                    this.store();
+                }
+    
+                return res;
+            });
+        } else {
+            return this.api.refreshPostings().then((res) => {
+                if (res.isSuccessful) {
+                    this.postings = res.data as Posting[];
+                    this.store();
+                }
 
-            return res;
-        });
+                return res;
+            });
+        }
     }
 
     public postingsBySource(): Posting[] {

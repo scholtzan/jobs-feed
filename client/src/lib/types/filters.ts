@@ -10,6 +10,10 @@ export class Filters {
     constructor() {
         this.filters = get(filters);
         this.api = new FiltersApi();
+
+        filters.subscribe((_) => {
+            this.filters = get(filters);
+        });
     }
 
     public store(): void {
@@ -19,6 +23,17 @@ export class Filters {
     public subscribe(callback: (value: any) => void): void {
         filters.subscribe(callback);
     }
+
+    public refresh() {
+        return this.api.getFilters().then((res) => {
+            if (res.isSuccessful) {
+                this.filters = res.data;                    
+                this.store();
+            }
+
+            return res;
+        });
+    } 
 
     public updateFilters(filters: Filter[]) {
         return this.api.updateFilters(filters).then((res) => {

@@ -17,7 +17,6 @@
     let storedSources = sourcesHandler.sources;
     let selected = sourcesHandler.selectedSource;
 
-
     sourcesHandler.subscribe((value) => {
         storedSources = sourcesHandler.sources;
     });
@@ -33,7 +32,7 @@
     });
 
     function refreshPostings() {
-        postingsHandler.refresh().then((res) => {
+        postingsHandler.refresh(false).then((res) => {
             if (!res.isSuccessful) {
                 console.log(res.message);
             }

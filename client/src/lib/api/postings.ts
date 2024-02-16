@@ -19,6 +19,20 @@ export class PostingsApi {
         });
     }
 
+    public getUnreadPostings = async () => {
+        return fetch('/postings/unread', {
+            method: 'GET'
+        }).then((response) => {
+            if (response.status == 200) {
+                return response.json().then((json) => {
+                    return success(json as Posting[]);
+                })
+            } else {
+                return error(`Could not get postings: ${response}`);
+            }
+        });
+    }
+
     public getBookmarkedPostings = async () => {
         return fetch("/postings/bookmarked", {
             method: "GET"

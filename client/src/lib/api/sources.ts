@@ -5,6 +5,20 @@ import { Source } from "../types/sources";
 export class SourcesApi {
     constructor() {}
 
+    public getSources = async () => {
+        return fetch('/sources', {
+            method: 'GET'
+        }).then((response) => {
+            if (response.status == 200) {
+                return response.json().then((json) => {
+                    return success(json as Source[]);
+                })
+            } else {
+                return error(`Could not get sources: ${response}`);
+            }
+        });
+    }
+
     public createSource = async (source: Source) => {
         return fetch('/sources', {
             method: 'POST',
