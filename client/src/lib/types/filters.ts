@@ -1,55 +1,53 @@
-import { filters } from "../store";
+import { filters } from '../store';
 import { get, writable } from 'svelte/store';
-import { FiltersApi } from "../api/filters";
-
+import { FiltersApi } from '../api/filters';
 
 export class Filters {
-    filters: Filter[] = [];
-    api: FiltersApi;
+	filters: Filter[] = [];
+	api: FiltersApi;
 
-    constructor() {
-        this.filters = get(filters);
-        this.api = new FiltersApi();
+	constructor() {
+		this.filters = get(filters);
+		this.api = new FiltersApi();
 
-        filters.subscribe((_) => {
-            this.filters = get(filters);
-        });
-    }
+		filters.subscribe((_) => {
+			this.filters = get(filters);
+		});
+	}
 
-    public store(): void {
-        filters.set(this.filters);
-    }
+	public store(): void {
+		filters.set(this.filters);
+	}
 
-    public subscribe(callback: (value: any) => void): void {
-        filters.subscribe(callback);
-    }
+	public subscribe(callback: (value: any) => void): void {
+		filters.subscribe(callback);
+	}
 
-    public refresh() {
-        return this.api.getFilters().then((res) => {
-            if (res.isSuccessful) {
-                this.filters = res.data;                    
-                this.store();
-            }
+	public refresh() {
+		return this.api.getFilters().then((res) => {
+			if (res.isSuccessful) {
+				this.filters = res.data;
+				this.store();
+			}
 
-            return res;
-        });
-    } 
+			return res;
+		});
+	}
 
-    public updateFilters(filters: Filter[]) {
-        return this.api.updateFilters(filters).then((res) => {
-            if (res.isSuccessful) {
-                this.filters = res.data;                    
-                this.store();
-            }
+	public updateFilters(filters: Filter[]) {
+		return this.api.updateFilters(filters).then((res) => {
+			if (res.isSuccessful) {
+				this.filters = res.data;
+				this.store();
+			}
 
-            return res;
-        });
-    } 
+			return res;
+		});
+	}
 }
 
-
 export class Filter {
-    id: number | null = null;
-    name: string = "";
-    value: string = "";
+	id: number | null = null;
+	name: string = '';
+	value: string = '';
 }

@@ -7,3 +7,6 @@ client:
 
 server:
 	cd server/ && cargo run
+
+format:
+	npx prettier --write client

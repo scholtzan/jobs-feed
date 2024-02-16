@@ -1,124 +1,173 @@
 <script lang="ts">
-  import { get } from 'svelte/store';
-  import { sources, postings, selectedSource } from "../store"; 
+	import { get } from 'svelte/store';
+	import { sources, postings, selectedSource } from '../store';
 	import { goto } from '$app/navigation';
-  import { Postings } from "../types/postings";
+	import { Postings } from '../types/postings';
 
-  let postingsHandler = new Postings();
-  let sourceSelected = get(selectedSource);
-  let storedSources = get(sources);
-  let shownPostings = postingsHandler.postings;
+	let postingsHandler = new Postings();
+	let sourceSelected = get(selectedSource);
+	let storedSources = get(sources);
+	let shownPostings = postingsHandler.postings;
 
-  postingsHandler.subscribe((_) => {
-    shownPostings = postingsHandler.postings;
-  });
+	postingsHandler.subscribe((_) => {
+		shownPostings = postingsHandler.postings;
+	});
 
-  selectedSource.subscribe((_) => {
-    sourceSelected = get(selectedSource);
-    if (sourceSelected == "all") { // todo: enum
-      shownPostings = postingsHandler.postings;
-    } else if (sourceSelected == "today") {
-      shownPostings = postingsHandler.getTodaysPostings();
-    } else if (sourceSelected == "bookmarked") {
-      postingsHandler.getBookmarked().then((res) => {
-        if (res.isSuccessful) {
-          shownPostings = res.data;
-        } else {
-          console.log(res.message);
-        }
-      });
-    }
-     else {
-      let postingsPerSource = postingsHandler.postingsBySource();
-      if (sourceSelected in postingsPerSource) {
-        shownPostings = postingsPerSource[sourceSelected];
-      } else {
-        shownPostings = [];
-      }
-    }
-  });
+	selectedSource.subscribe((_) => {
+		sourceSelected = get(selectedSource);
+		if (sourceSelected == 'all') {
+			// todo: enum
+			shownPostings = postingsHandler.postings;
+		} else if (sourceSelected == 'today') {
+			shownPostings = postingsHandler.getTodaysPostings();
+		} else if (sourceSelected == 'bookmarked') {
+			postingsHandler.getBookmarked().then((res) => {
+				if (res.isSuccessful) {
+					shownPostings = res.data;
+				} else {
+					console.log(res.message);
+				}
+			});
+		} else {
+			let postingsPerSource = postingsHandler.postingsBySource();
+			if (sourceSelected in postingsPerSource) {
+				shownPostings = postingsPerSource[sourceSelected];
+			} else {
+				shownPostings = [];
+			}
+		}
+	});
 
-  sources.subscribe((_) => {
-    storedSources = get(sources);
-  });
+	sources.subscribe((_) => {
+		storedSources = get(sources);
+	});
 
-  function markAsRead(ids) {
-    postingsHandler.markAsRead(ids).then((res) => {
-      if (!res.isSuccessful) {
-        console.log(res.message);
-      }
-    })
-  }
+	function markAsRead(ids) {
+		postingsHandler.markAsRead(ids).then((res) => {
+			if (!res.isSuccessful) {
+				console.log(res.message);
+			}
+		});
+	}
 
-  function bookmark(id) {
-    postingsHandler.bookmarkPosting(id).then((res) => {
-      if (!res.isSuccessful) {
-        console.log(res.message);
-      }
-    })
-  }
-
+	function bookmark(id) {
+		postingsHandler.bookmarkPosting(id).then((res) => {
+			if (!res.isSuccessful) {
+				console.log(res.message);
+			}
+		});
+	}
 </script>
 
 <div class="w-2/3">
-  <div class="flex flex-row grow justify-end px-4">
-    <button class="btn btn-ghost btn-square" on:click={() => markAsRead(shownPostings.map((p) => p.id))}>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-9 h-9">
-        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-      </svg>        
-    </button>
-  </div>
-  <h1 class="flex grow text-4xl font-bold py-8 px-4">
-    {#if sourceSelected == "all"}
-    All Job Postings
-    {:else if sourceSelected == "today"} 
-    Today's Job Postings
-    {:else if sourceSelected == "bookmarked"}
-    Bookmarked Postings
-    {:else}
-      {storedSources.find((s) => s.id == sourceSelected).name}
-    {/if}
-  </h1>
-  {#each shownPostings as posting}
-    <div class="card card-compact w-full group {posting.seen && sourceSelected != "bookmarked" ? "text-slate-100" : ""}">
-      <div class="card-body items-left text-left">
-        <div class="flex flex-row grow">
-          <a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
-            <h2 class="card-title flex grow mb-0">
-              {posting.title}
-            </h2>
-          </a>
+	<div class="flex flex-row grow justify-end px-4">
+		<button
+			class="btn btn-ghost btn-square"
+			on:click={() => markAsRead(shownPostings.map((p) => p.id))}
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke-width="1.5"
+				stroke="currentColor"
+				class="w-9 h-9"
+			>
+				<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+			</svg>
+		</button>
+	</div>
+	<h1 class="flex grow text-4xl font-bold py-8 px-4">
+		{#if sourceSelected == 'all'}
+			All Job Postings
+		{:else if sourceSelected == 'today'}
+			Today's Job Postings
+		{:else if sourceSelected == 'bookmarked'}
+			Bookmarked Postings
+		{:else}
+			{storedSources.find((s) => s.id == sourceSelected).name}
+		{/if}
+	</h1>
+	{#each shownPostings as posting}
+		<div
+			class="card card-compact w-full group {posting.seen && sourceSelected != 'bookmarked'
+				? 'text-slate-100'
+				: ''}"
+		>
+			<div class="card-body items-left text-left">
+				<div class="flex flex-row grow">
+					<a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
+						<h2 class="card-title flex grow mb-0">
+							{posting.title}
+						</h2>
+					</a>
 
-          <div class="flex flex-row grow justify-end px-4 gap-2">
-            <button class="btn btn-ghost btn-square btn-xs hidden group-hover:block" on:click={() => markAsRead([posting.id])}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-              </svg>        
-            </button>
-            <button class="btn btn-ghost btn-square btn-xs hidden group-hover:block" on:click={() => bookmark(posting.id)}>
-              {#if posting.bookmarked}
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                <path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z" clip-rule="evenodd" />
-              </svg>
-              {:else}                
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-              </svg>
-              {/if}                  
-            </button>
-          </div>
-        </div>
-        <a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
-          <p class="text-justify">{posting.description}</p>
-        </a>
-      </div>
-    </div>
-  {/each}
+					<div class="flex flex-row grow justify-end px-4 gap-2">
+						<button
+							class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
+							on:click={() => markAsRead([posting.id])}
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="w-6 h-6"
+							>
+								<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+							</svg>
+						</button>
+						<button
+							class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
+							on:click={() => bookmark(posting.id)}
+						>
+							{#if posting.bookmarked}
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="currentColor"
+									class="w-6 h-6"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z"
+										clip-rule="evenodd"
+									/>
+								</svg>
+							{:else}
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke-width="1.5"
+									stroke="currentColor"
+									class="w-6 h-6"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+									/>
+								</svg>
+							{/if}
+						</button>
+					</div>
+				</div>
+				<a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
+					<p class="text-justify">{posting.description}</p>
+				</a>
+			</div>
+		</div>
+	{/each}
 
-  {#if shownPostings.length > 0}
-  <div class="py-8 flex-none px-4">
-    <!-- todo -->
-    <button on:click={() => markAsRead(shownPostings.map((p) => p.id))} class="btn btn-active w-full max-w">Mark All As Read</button>
-  </div>
-  {/if}
+	{#if shownPostings.length > 0}
+		<div class="py-8 flex-none px-4">
+			<!-- todo -->
+			<button
+				on:click={() => markAsRead(shownPostings.map((p) => p.id))}
+				class="btn btn-active w-full max-w">Mark All As Read</button
+			>
+		</div>
+	{/if}
 </div>
