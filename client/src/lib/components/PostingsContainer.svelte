@@ -1,7 +1,6 @@
 <script lang="ts">
   import { get } from 'svelte/store';
   import { sources, postings, selectedSource } from "../store"; 
-  import { todaysPostings, postingsForSource } from "../utils";
 	import { goto } from '$app/navigation';
   import { Postings } from "../types/postings";
 
@@ -16,7 +15,7 @@
 
   selectedSource.subscribe((_) => {
     sourceSelected = get(selectedSource);
-    if (sourceSelected == "all") {
+    if (sourceSelected == "all") { // todo: enum
       shownPostings = postingsHandler.postings;
     } else if (sourceSelected == "today") {
       shownPostings = postingsHandler.getTodaysPostings();
@@ -81,7 +80,7 @@
     {/if}
   </h1>
   {#each shownPostings as posting}
-    <div class="card card-compact w-full group {posting.seen && selectedSource != "bookmarked" ? "text-slate-100" : ""}">
+    <div class="card card-compact w-full group {posting.seen && sourceSelected != "bookmarked" ? "text-slate-100" : ""}">
       <div class="card-body items-left text-left">
         <div class="flex flex-row grow">
           <a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>

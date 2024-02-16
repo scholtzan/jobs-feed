@@ -10,9 +10,8 @@ import type { PageLoad } from "./$types";
 /** @type {import('./$types').PageLoad} */
 export const load: PageLoad = async ({ params }) => {
     let postingId = params.slug;
-    let posting = await fetch("/postings/" + postingId).then((data) => data.json()) as Posting;
 
     return {
-        posting: posting
+        postingId: postingId
     }
 }

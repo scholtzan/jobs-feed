@@ -5,8 +5,18 @@ import { Posting } from "../types/postings";
 export class PostingsApi {
     constructor() {}
 
-    public getPostings = async () => {
-
+    public refreshPostings = async () => {
+        return fetch('/postings/refresh', {
+            method: 'GET'
+        }).then((response) => {
+            if (response.status == 200) {
+                return response.json().then((json) => {
+                    return success(json.map((p) => Object.assign(new Posting(), p)));
+                });
+            } else {
+                return error("Could not refresh postings");
+            }
+        });
     }
 
     public getBookmarkedPostings = async () => {

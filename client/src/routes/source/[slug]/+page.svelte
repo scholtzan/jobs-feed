@@ -4,13 +4,18 @@
     import { page } from '$app/stores';
     import { writable, get } from 'svelte/store';
     import { sources } from "../../../lib/store"; 
+    import { Sources } from "../../../lib/types/sources";
 
     let drawerOpen = true;
     export let data: PageData;
-    let source = data.source;
-    let isNewSource = source == null;
-    if (source == null) {
-        source == new Source();
+    let isNewSource = data.sourceId == "new";
+    let sourcesHandler = new Sources();
+    let source;
+
+    if (isNewSource) {
+        source = new Source();
+    } else {
+        source = sourcesHandler.sourceById(data.sourceId);
     }
 
     let urlValidation = null;
@@ -31,40 +36,21 @@
 
         if (source.url.trim() != "" && source.url.trim() != "") {
             if (isNewSource) {
-                const res = fetch('/sources', {
-                    method: 'POST',
-                    body: JSON.stringify(source)
-                }).then((response) => {
-                    if (response.status == 200) {
-                        const sourceJson = response.json().then((json) => {
-                            let storedSource: Source = Object.assign(new Source(), json);                        
-                            sources.set([ ...get(sources), storedSource]);
-                            goto("/");
-                        })
-                        
-                    } else {
-                        // todo: error
-                        console.log("Cannot add source");
+                sourcesHandler.createSource(source).then((res) => {
+                    if (!res.isSuccessful) {
+                        console.log("Could not add source"); // todo
                     }
+
+                    goto("/");
                 });
             } else {
-                const res = fetch('/sources/' + source.id, {
-                    method: 'PUT',
-                    body: JSON.stringify(source)
-                }).then((response) => {
-                    if (response.status == 200) {
-                        const sourceJson = response.json().then((json) => {
-                            let storedSource: Source = Object.assign(new Source(), json);
-                            let filteredSources = get(sources).filter((s) => s.id != storedSource.id);                        
-                            sources.set([ ...filteredSources, storedSource]);
-                            goto("/");
-                        })
-                        
-                    } else {
-                        // todo: error
-                        console.log("Cannot update source");
+                sourcesHandler.updateSource(source).then((res) => {
+                    if (!res.isSuccessful) {
+                        console.log("Cannot update source"); // todo
                     }
-                });
+
+                    goto("/");
+                })
             }
         }
         

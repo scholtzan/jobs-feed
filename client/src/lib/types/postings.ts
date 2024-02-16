@@ -37,6 +37,17 @@ export class Postings {
         });
     }
 
+    public refresh() {
+        return this.api.refreshPostings().then((res) => {
+            if (res.isSuccessful) {
+                this.postings = res.data as Posting[];
+                this.store();
+            }
+
+            return res;
+        });
+    }
+
     public postingsBySource(): Posting[] {
         return Object.groupBy(this.postings, ( p: Posting ) => p.source_id);
     }

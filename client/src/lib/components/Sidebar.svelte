@@ -2,60 +2,46 @@
 	import { onMount, onDestroy } from "svelte";
     import { get, set } from 'svelte/store';
     import { sources, postings, selectedSource } from "../store"; 
-    import { todaysPostings, postingsForSource } from "../utils";
+    import { Postings } from "../types/postings";
+    import { Sources } from "../types/sources";
 
-    let storedSources = get(sources);
-    let newPostings: Posting[] = get(postings) as Posting[];
-    let selected = get(selectedSource);
-    let postingsToday = todaysPostings(newPostings);
-    let postingsPerSource = postingsForSource(newPostings);
     let sourceContextMenu = null;
     let lastSourceContextMenu = null;
     let sourceNameContextMenu = null;
-    let contextMenuPosition = {x: 10, y: 10};
+    let contextMenuPosition = {x: 0, y: 0};
+    let postingsHandler = new Postings();
+    let sourcesHandler = new Sources();
+    let newPostings: Posting[] = postingsHandler.postings;
+    let postingsToday = postingsHandler.getTodaysPostings();
+    let postingsPerSource = postingsHandler.postingsBySource();
+    let storedSources = sourcesHandler.sources;
+    let selected = sourcesHandler.selectedSource;
 
-    sources.subscribe((value) => {
-        storedSources = get(sources);
+
+    sourcesHandler.subscribe((value) => {
+        storedSources = sourcesHandler.sources;
     });
 
-    postings.subscribe((value) => {
-        newPostings = get(postings);
+    sourcesHandler.subscribeSelectedSource((value) => {
+        selected = sourcesHandler.selectedSource;
     });
 
-    selectedSource.subscribe((value) => {
-        selected = get(selectedSource);
-        postingsToday = todaysPostings(newPostings);
-        postingsPerSource = postingsForSource(newPostings);
-    })
-
-
-	onMount(async () => {
-		
-	});
-
-	onDestroy(() => {
-
-	});
+    postingsHandler.subscribe((_) => {
+        newPostings = postingsHandler.postings;
+        postingsToday = postingsHandler.getTodaysPostings();
+        postingsPerSource = postingsHandler.postingsBySource();
+    });
 
     function refreshPostings() {
-        const res = fetch('/postings/refresh', {
-            method: 'GET'
-        }).then((response) => {
-            if (response.status == 200) {
-                response.json().then((json) => {
-                    const postingsResponse = json.map((p) => Object.assign(new Posting(), p));
-                    postings.set(postingsResponse);
-                });
-            } else {
-                // todo: error
-                console.log("Cannot refresh postings");
+        postingsHandler.refresh().then((res) => {
+            if (!res.isSuccessful) {
+                console.log(res.message);
             }
         });
     }
 
-    function select(sourceId) {
-        console.log(sourceId);
-        selectedSource.set(sourceId);
+    function select(source) {
+        sourcesHandler.setSelectedSource(source);
     }
 
     function contextMenu(event, sourceId, sourceName) {
@@ -63,21 +49,15 @@
         sourceContextMenu = sourceId;
         sourceNameContextMenu = sourceName;
         contextMenuPosition = {x: event.clientX, y: event.clientY};
-        console.log(sourceContextMenu);
     }
 
     function deleteSource(sourceId) {
         lastSourceContextMenu = null;
-        const res = fetch('/postings/' + sourceId, {
-            method: 'DELETE'
-        }).then((response) => {
-            if (response.status == 200) {
-                storedSources = storedSources.filter((s) => s.id != sourceId);
-            } else {
-                // todo: error
-                console.log("Cannot delete source");
+        sourcesHandler.deleteSource(sourceId).then((res) => {
+            if (!res.isSuccessful) {
+                console.log("Could not delete source");
             }
-        });
+        })
     }
 </script>
 

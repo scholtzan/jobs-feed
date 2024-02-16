@@ -5,23 +5,22 @@
     import { writable, get } from 'svelte/store';
     import { postings } from "../../../lib/store"; 
     import type { PageData } from "./$types";
+    import { Postings } from "../../../lib/types/postings";
 
+    let postingsHandler = new Postings();
     let drawerOpen = true;
     export let data: PageData;
-    let posting = data.posting;
+    let postingId = data.postingId;
+    let posting = postingsHandler.postingById(postingId);
+
+    postingsHandler.subscribe((_) => {
+        posting = postingsHandler.postingById(postingId)
+    });
 
     function bookmark() {
-        posting.bookmarked = !posting.bookmarked;
-
-        const res = fetch('/postings/' + posting.id, {
-            method: 'PUT',
-            body: JSON.stringify(posting)
-        }).then((response) => {
-            if (response.status == 200) {
-            console.log("updated bookmark")
-            } else {
-            console.log("Could not update bookmarking for posting");
-            posting.bookmarked = !posting.bookmarked;
+        postingsHandler.bookmarkPosting(postingId).then((res) => {
+            if (!res.isSuccessful) {
+                console.log(res.message);
             }
         });
     }
