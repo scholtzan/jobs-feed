@@ -1,52 +1,42 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
-    import { writable, get } from 'svelte/store';
-    import { filters } from "../../lib/store"; 
-	import { Filter } from '../../lib/types';
+	import { Filters, Filter } from '../../lib/types/filters';
 
     const filterSuggestions = [
         "Skills",
         "Location",
         "Job Title"
     ];
-    let storedFilters = get(filters);
+    let filtersHandler = new Filters();
+    let filters = filtersHandler.filters;
     let drawerOpen = true;
-    filters.subscribe((value) => {
-        storedFilters = get(filters);
-    })
 
+    filtersHandler.subscribe((value) => {
+        filters = filtersHandler.filters;
+    })
 
     function closeDrawer() {
         goto("/");
     }
 
     function updateFilters() {
-        const res = fetch('/filters', {
-            method: 'PUT',
-            body: JSON.stringify(storedFilters)
-        }).then((response) => {
-            if (response.status == 200) {
-                response.json().then((json) => {
-                    const filtersResponse = json.map((f) => Object.assign(new Filter(), f));
-                    filters.set(filtersResponse);
-                    goto("/");
-                })
-                
-            } else {
-                // todo: error
-                console.log("Cannot update filters");
+        filtersHandler.updateFilters(filters).then((res) => {
+            if (!res.isSuccessful) {
+                console.log("Could not update filters"); // todo
             }
+
+            goto("/");
         });
     }
 
     function removeFilter(filter) {
-        filters.set(storedFilters.filter((f) => f != filter));
+        filters = filters.filter((f) => f != filter);
     }
 
     function addFilter() {
         let newFilter = new Filter();
-        filters.set([...storedFilters, newFilter]);
+        filters = [...filters, newFilter];
     }
 </script>
 
@@ -77,7 +67,7 @@
             <form class="px-8" id="filters-form" on:submit|preventDefault={updateFilters}>
                 <h1 class="text-4xl font-bold py-8">Filters</h1>
 
-                {#each storedFilters as filter}
+                {#each filters as filter}
                 <div class="flex items-end gap-2 py-2">
                     <label class="form-control w-1/3 max-w">
                         <div class="label">
@@ -94,13 +84,13 @@
                                 class="input input-bordered w-full max-w"
                                 bind:value={filter.name} />
                         <!-- </div> -->
-                            {#if !filterSuggestions.every(s => storedFilters.find(f => f.name == s))}
+                            {#if !filterSuggestions.every(s => filters.find(f => f.name == s))}
                             <ul
                                 tabindex="0"
                                 class="dropdown-content dropdown-open menu p-2 shadow bg-base-100 rounded-box w-full z-40"
                             >
                                 {#each filterSuggestions as filterSuggestion}
-                                    {#if !storedFilters.find(f => f.name == filterSuggestion) }
+                                    {#if !filters.find(f => f.name == filterSuggestion) }
                                         <li>
                                             <span on:click={()=>filter.name=filterSuggestion}>{filterSuggestion}</span>
                                         </li>
