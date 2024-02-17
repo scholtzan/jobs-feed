@@ -1,51 +1,47 @@
 <script lang="ts">
-	import { get } from 'svelte/store';
-	import { sources, postings, selectedSource } from '../store';
 	import { goto } from '$app/navigation';
 	import { Postings } from '../types/postings';
+	import { Sources, SelectedSource } from '../types/sources';
+	import { NotificationHandler } from '../types/notifications';
 
+	let notificationHandler = new NotificationHandler();
+	let sourcesHandler = new Sources();
 	let postingsHandler = new Postings();
-	let sourceSelected = get(selectedSource);
-	let storedSources = get(sources);
-	let shownPostings = postingsHandler.postings;
+	let sourceSelected = sourcesHandler.selectedSource;
+	let sources = sourcesHandler.sources;
+	let postings = postingsHandler.postings;
 
 	postingsHandler.subscribe((_) => {
-		shownPostings = postingsHandler.postings;
+		postings = postingsHandler.postings;
 	});
 
-	selectedSource.subscribe((_) => {
-		sourceSelected = get(selectedSource);
-		if (sourceSelected == 'all') {
-			// todo: enum
-			shownPostings = postingsHandler.postings;
-		} else if (sourceSelected == 'today') {
-			shownPostings = postingsHandler.getTodaysPostings();
-		} else if (sourceSelected == 'bookmarked') {
-			postingsHandler.getBookmarked().then((res) => {
-				if (res.isSuccessful) {
-					shownPostings = res.data;
-				} else {
-					console.log(res.message);
-				}
-			});
+	sourcesHandler.subscribeSelectedSource((value) => {
+		sourceSelected = sourcesHandler.selectedSource;
+
+		if (sourceSelected == SelectedSource.All) {
+			postings = postingsHandler.postings;
+		} else if (sourceSelected == SelectedSource.Today) {
+			postings = postingsHandler.getTodaysPostings();
+		} else if (sourceSelected == SelectedSource.Bookmarked) {
+			postings = postingsHandler.getBookmarked();
 		} else {
-			let postingsPerSource = postingsHandler.postingsBySource();
-			if (sourceSelected in postingsPerSource) {
-				shownPostings = postingsPerSource[sourceSelected];
+			let postingsBySource = postingsHandler.postingsBySource();
+			if (sourceSelected in postingsBySource) {
+				postings = postingsBySource[sourceSelected];
 			} else {
-				shownPostings = [];
+				postings = [];
 			}
 		}
 	});
 
-	sources.subscribe((_) => {
-		storedSources = get(sources);
+	sourcesHandler.subscribe((_) => {
+		sources = sourcesHandler.sources;
 	});
 
 	function markAsRead(ids) {
 		postingsHandler.markAsRead(ids).then((res) => {
 			if (!res.isSuccessful) {
-				console.log(res.message);
+				notificationHandler.addError('Could not mark posting as read', res.message);
 			}
 		});
 	}
@@ -53,7 +49,7 @@
 	function bookmark(id) {
 		postingsHandler.bookmarkPosting(id).then((res) => {
 			if (!res.isSuccessful) {
-				console.log(res.message);
+				notificationHandler.addError('Could not bookmark posting', res.message);
 			}
 		});
 	}
@@ -61,10 +57,7 @@
 
 <div class="w-2/3">
 	<div class="flex flex-row grow justify-end px-4">
-		<button
-			class="btn btn-ghost btn-square"
-			on:click={() => markAsRead(shownPostings.map((p) => p.id))}
-		>
+		<button class="btn btn-ghost btn-square" on:click={() => markAsRead(postings.map((p) => p.id))}>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				fill="none"
@@ -78,19 +71,20 @@
 		</button>
 	</div>
 	<h1 class="flex grow text-4xl font-bold py-8 px-4">
-		{#if sourceSelected == 'all'}
+		{#if sourceSelected == SelectedSource.All}
 			All Job Postings
-		{:else if sourceSelected == 'today'}
+		{:else if sourceSelected == SelectedSource.Today}
 			Today's Job Postings
-		{:else if sourceSelected == 'bookmarked'}
+		{:else if sourceSelected == SelectedSource.Bookmarked}
 			Bookmarked Postings
 		{:else}
-			{storedSources.find((s) => s.id == sourceSelected).name}
+			{sourcesHandler.sourceById(sourceSelected).name}
 		{/if}
 	</h1>
-	{#each shownPostings as posting}
+	{#each postings as posting}
 		<div
-			class="card card-compact w-full group {posting.seen && sourceSelected != 'bookmarked'
+			class="card card-compact w-full group {posting.seen &&
+			sourceSelected != SelectedSource.Bookmarked
 				? 'text-slate-100'
 				: ''}"
 		>
@@ -161,11 +155,11 @@
 		</div>
 	{/each}
 
-	{#if shownPostings.length > 0}
+	{#if postings.length > 0}
 		<div class="py-8 flex-none px-4">
 			<!-- todo -->
 			<button
-				on:click={() => markAsRead(shownPostings.map((p) => p.id))}
+				on:click={() => markAsRead(postings.map((p) => p.id))}
 				class="btn btn-active w-full max-w">Mark All As Read</button
 			>
 		</div>

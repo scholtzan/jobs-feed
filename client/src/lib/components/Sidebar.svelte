@@ -4,7 +4,9 @@
 	import { sources, postings, selectedSource } from '../store';
 	import { Postings } from '../types/postings';
 	import { Sources } from '../types/sources';
+	import { NotificationHandler, NotificationType } from '../types/notifications';
 
+	let notificationHandler = new NotificationHandler();
 	let sourceContextMenu = null;
 	let lastSourceContextMenu = null;
 	let sourceNameContextMenu = null;
@@ -34,7 +36,7 @@
 	function refreshPostings() {
 		postingsHandler.refresh(false).then((res) => {
 			if (!res.isSuccessful) {
-				console.log(res.message);
+				notificationHandler.addError('Could not refresh postings', res.message);
 			}
 		});
 	}
@@ -54,7 +56,7 @@
 		lastSourceContextMenu = null;
 		sourcesHandler.deleteSource(sourceId).then((res) => {
 			if (!res.isSuccessful) {
-				console.log('Could not delete source');
+				notificationHandler.addError('Could not delete source', res.message);
 			}
 		});
 	}
@@ -233,24 +235,6 @@
 				</ul>
 			</div>
 		</div>
-
-		<!-- Footer -->
-		<!--
-        <div class="flex justify-between items-center p-2">
-            <a class="btn">
-                <img alt="Profile" src="/avatar.png" class="w-8 rounded-full" />
-
-                <div class="flex flex-col text-start">
-                    <span class="font-bold">User name</span>
-                    <span class="text-sm text-accent">user@email.com</span>
-                </div>
-            </a>
-
-            <a class="btn btn-error btn-sm mr-3" title="Logout">
-                <i class="fa-solid fa-door-open"></i>
-            </a>
-        </div>
-        -->
 	</aside>
 </div>
 

@@ -3,9 +3,11 @@
 	import { Source } from '../../lib/types/sources';
 	import { page } from '$app/stores';
 	import { Settings, SettingsHandler } from '../../lib/types/settings';
+	import { NotificationHandler } from '../../lib/types/notifications';
 
 	let drawerOpen = true;
 
+	let notificationHandler = new NotificationHandler();
 	let settingsHandler = new SettingsHandler();
 	let settings = settingsHandler.settings;
 	settingsHandler.subscribe((value) => {
@@ -19,7 +21,7 @@
 	function updateSettings() {
 		settingsHandler.updateSettings(settings).then((res) => {
 			if (!res.isSuccessful) {
-				console.log('Could not update settings'); // todo
+				notificationHandler.addError('Could not update settings', res.message);
 			}
 
 			closeDrawer();

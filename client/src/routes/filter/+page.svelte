@@ -2,8 +2,10 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { Filters, Filter } from '../../lib/types/filters';
+	import { NotificationHandler } from '../../lib/types/notifications';
 
 	const filterSuggestions = ['Skills', 'Location', 'Job Title'];
+	let notificationHandler = new NotificationHandler();
 	let filtersHandler = new Filters();
 	let filters = filtersHandler.filters;
 	let drawerOpen = true;
@@ -19,7 +21,7 @@
 	function updateFilters() {
 		filtersHandler.updateFilters(filters).then((res) => {
 			if (!res.isSuccessful) {
-				console.log('Could not update filters'); // todo
+				notificationHandler.addError('Could not update filters', res.message);
 			}
 
 			goto('/');

@@ -4,11 +4,14 @@
 	import Toolbar from '../lib/components/Toolbar.svelte';
 	import PostingsContainer from '../lib/components/PostingsContainer.svelte';
 	import SourceDrawer from '../lib/components/SourceDrawer.svelte';
+	import NotificationContainer from '../lib/components/NotificationContainer.svelte';
 </script>
 
 <div class="flex flex-column">
 	<div class="static">
 		<Sidebar></Sidebar>
+
+		<NotificationContainer></NotificationContainer>
 	</div>
 
 	<div class="grow">

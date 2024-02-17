@@ -2,7 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { Sources, Source } from '../../../lib/types/sources';
+	import { NotificationHandler } from '../../../lib/types/notifications';
 
+	let notifications = new NotificationHandler();
 	let drawerOpen = true;
 	export let data: PageData;
 	let isNewSource = data.sourceId == 'new';
@@ -35,7 +37,7 @@
 			if (isNewSource) {
 				sourcesHandler.createSource(source).then((res) => {
 					if (!res.isSuccessful) {
-						console.log('Could not add source'); // todo
+						notificationHandler.addError('Could not add source', res.message);
 					}
 
 					goto('/');
@@ -43,7 +45,7 @@
 			} else {
 				sourcesHandler.updateSource(source).then((res) => {
 					if (!res.isSuccessful) {
-						console.log('Cannot update source'); // todo
+						notificationHandler.addError('Could not update source', res.message);
 					}
 
 					goto('/');

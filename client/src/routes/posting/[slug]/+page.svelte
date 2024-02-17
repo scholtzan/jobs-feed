@@ -3,7 +3,9 @@
 	import { page } from '$app/stores';
 	import type { PageData } from './$types';
 	import { Postings, Posting } from '../../../lib/types/postings';
+	import { NotificationHandler } from '../../../lib/types/notifications';
 
+	let notificationHandler = new NotificationHandler();
 	let postingsHandler = new Postings();
 	let drawerOpen = true;
 	export let data: PageData;
@@ -17,7 +19,7 @@
 	function bookmark() {
 		postingsHandler.bookmarkPosting(postingId).then((res) => {
 			if (!res.isSuccessful) {
-				console.log(res.message);
+				notificationHandler.addError('Could not bookmark posting', res.message);
 			}
 		});
 	}

@@ -1,5 +1,5 @@
 import { postings } from '../store';
-import { get, writable } from 'svelte/store';
+import { get } from 'svelte/store';
 import { PostingsApi } from '../api/postings';
 
 export class Postings {
