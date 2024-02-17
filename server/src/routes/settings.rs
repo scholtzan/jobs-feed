@@ -1,23 +1,11 @@
 use crate::entities;
-use crate::entities::{prelude::*, *};
-use chrono::{DateTime, FixedOffset, Local, Utc};
-use futures::executor::block_on;
-use rocket::http::ContentType;
+use crate::entities::prelude::*;
+
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
-use rocket::{
-	fs::{relative, NamedFile},
-	shield::Shield,
-};
+
 use sea_orm::*;
-use sea_orm::{entity::*, error::*, query::*, FromQueryResult};
-use serde::Deserialize;
-use serde_json::{json, Value};
-use std::{
-	env,
-	path::{Path, PathBuf},
-};
 
 #[get("/settings")]
 pub async fn settings(db: &State<DatabaseConnection>) -> Result<Json<Option<entities::settings::Model>>, Status> {

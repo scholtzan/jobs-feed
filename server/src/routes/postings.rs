@@ -1,25 +1,16 @@
 use crate::entities::{prelude::*, *};
 use crate::extract::PostingsExtractorHandler;
-use chrono::{DateTime, FixedOffset, Local, Utc};
-use futures::executor::block_on;
+
 use futures::lock::Mutex;
-use rocket::http::ContentType;
+
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
-use rocket::{
-	fs::{relative, NamedFile},
-	shield::Shield,
-};
-use sea_orm::{entity::*, error::*, query::*, FromQueryResult};
+
+use sea_orm::{entity::*, query::*};
 use sea_orm::{sea_query::Expr, *};
-use serde::Deserialize;
-use serde_json::{json, Value};
+
 use std::sync::Arc;
-use std::{
-	env,
-	path::{Path, PathBuf},
-};
 
 #[get("/postings/unread")]
 pub async fn unread_postings(db: &State<DatabaseConnection>) -> Result<Json<Vec<posting::Model>>, Status> {
@@ -89,9 +80,9 @@ pub async fn mark_postings_read(db: &State<DatabaseConnection>, input: Json<Vec<
 pub async fn update_posting(db: &State<DatabaseConnection>, id: i32, input: Json<posting::Model>) -> Result<Json<posting::Model>, Status> {
 	let db = db as &DatabaseConnection;
 
-	let mut existing_posting = Posting::find_by_id(id).one(db).await.expect("Could not find posting");
+	let existing_posting = Posting::find_by_id(id).one(db).await.expect("Could not find posting");
 	let mut existing_posting: posting::ActiveModel = existing_posting.unwrap().into();
-	let mut updated_posting: posting::Model = input.into_inner();
+	let updated_posting: posting::Model = input.into_inner();
 
 	existing_posting.seen = Set(updated_posting.seen);
 	existing_posting.bookmarked = Set(updated_posting.bookmarked);

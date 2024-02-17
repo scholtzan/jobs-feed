@@ -1,22 +1,11 @@
 use crate::entities::{prelude::*, *};
-use chrono::{DateTime, FixedOffset, Local, Utc};
-use futures::executor::block_on;
-use rocket::http::ContentType;
+use chrono::FixedOffset;
+
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
-use rocket::{
-	fs::{relative, NamedFile},
-	shield::Shield,
-};
+
 use sea_orm::*;
-use sea_orm::{entity::*, error::*, query::*, FromQueryResult};
-use serde::Deserialize;
-use serde_json::{json, Value};
-use std::{
-	env,
-	path::{Path, PathBuf},
-};
 
 #[get("/filters")]
 pub async fn filters(db: &State<DatabaseConnection>) -> Result<Json<Vec<filter::Model>>, Status> {
@@ -39,7 +28,7 @@ pub async fn update_filters(db_state: &State<DatabaseConnection>, input: Json<Ve
 		.map(|f| {
 			let mut new_filter: filter::ActiveModel = f.into();
 			new_filter.id = NotSet;
-			new_filter.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east(0))));
+			new_filter.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
 			new_filter
 		})
 		.collect();

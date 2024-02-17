@@ -1,22 +1,11 @@
 use crate::entities::{prelude::*, *};
-use chrono::{DateTime, FixedOffset, Local, Utc};
-use futures::executor::block_on;
-use rocket::http::ContentType;
+use chrono::FixedOffset;
+
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
-use rocket::{
-	fs::{relative, NamedFile},
-	shield::Shield,
-};
+
 use sea_orm::*;
-use sea_orm::{entity::*, error::*, query::*, FromQueryResult};
-use serde::Deserialize;
-use serde_json::{json, Value};
-use std::{
-	env,
-	path::{Path, PathBuf},
-};
 
 #[get("/sources")]
 pub async fn sources(db: &State<DatabaseConnection>) -> Result<Json<Vec<source::Model>>, Status> {
@@ -31,7 +20,7 @@ pub async fn add_source(db: &State<DatabaseConnection>, input: Json<source::Mode
 
 	let mut new_source: source::ActiveModel = input.into_inner().into();
 	new_source.id = NotSet;
-	new_source.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east(0))));
+	new_source.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
 	let inserted_source: source::Model = new_source.insert(db).await.expect("Could not insert source");
 	Ok(Json(inserted_source))
 }
@@ -43,7 +32,7 @@ pub async fn delete_source(db: &State<DatabaseConnection>, id: i32) -> Result<()
 	let source: Option<source::Model> = Source::find_by_id(id).one(db).await.expect("Could not find source");
 	let source: source::Model = source.unwrap();
 
-	let res: DeleteResult = source.delete(db).await.expect("Cannot delete source");
+	let _res: DeleteResult = source.delete(db).await.expect("Cannot delete source");
 
 	Ok(())
 }
@@ -59,8 +48,8 @@ pub async fn source_by_id(db: &State<DatabaseConnection>, id: i32) -> Result<Jso
 pub async fn update_source(db: &State<DatabaseConnection>, id: i32, input: Json<source::Model>) -> Result<Json<source::Model>, Status> {
 	let db = db as &DatabaseConnection;
 
-	let mut existing_source = Source::find_by_id(id).one(db).await.expect("Could not find source").unwrap();
-	let mut updated_source: source::Model = input.into_inner();
+	let existing_source = Source::find_by_id(id).one(db).await.expect("Could not find source").unwrap();
+	let updated_source: source::Model = input.into_inner();
 	let content_changed = existing_source.url != updated_source.url || existing_source.selector != updated_source.selector || existing_source.pagination != updated_source.pagination;
 
 	let mut existing_source_active: source::ActiveModel = existing_source.into();

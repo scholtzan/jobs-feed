@@ -7,24 +7,16 @@ mod util;
 #[macro_use]
 extern crate rocket;
 
-use rocket::{
-	fs::{relative, NamedFile},
-	shield::Shield,
-};
+use rocket::fs::{relative, NamedFile};
 
-use crate::assistant::Assistant;
 use crate::extract::PostingsExtractorHandler;
-use entities::{prelude::*, *};
-use futures::executor::block_on;
+
 use futures::lock::Mutex;
-use rocket::http::ContentType;
-use rocket::http::Status;
-use rocket::serde::json::Json;
-use rocket::State;
+
 use sea_orm::*;
-use sea_orm::{entity::*, error::*, query::*, FromQueryResult};
+
 use serde::Deserialize;
-use serde_json::{json, Value};
+
 use std::sync::Arc;
 use std::{
 	env,

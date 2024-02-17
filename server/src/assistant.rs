@@ -1,13 +1,11 @@
 use anyhow::anyhow;
-use anyhow::{Error, Result};
-use core::time;
+use anyhow::Result;
+
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::StatusCode;
 use serde_json::json;
 use serde_json::Value;
-use std::collections::HashMap;
-use std::f64::consts::E;
-use std::hash::Hash;
+
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 

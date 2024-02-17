@@ -4,22 +4,18 @@ use crate::{
 	entities::{prelude::*, *},
 };
 use anyhow::Result;
-use chatgpt::prelude::*;
-use chrono::{DateTime, FixedOffset, Local, Utc};
-use headless_chrome::{Browser, Element, LaunchOptionsBuilder, Tab};
+
+use chrono::FixedOffset;
+use headless_chrome::{Browser, LaunchOptionsBuilder, Tab};
 use sea_orm::entity::prelude::*;
 use sea_orm::*;
-use serde::Deserialize;
 use similar::{ChangeTag, TextDiff};
 use std::sync::Arc;
 use std::time::Duration;
-use thiserror::Error;
+
 use url::Url;
 
 const MESSAGE_MAX_CHARS: usize = 32000;
-const CONTEXT_MAX_CHARS: usize = 100000;
-const CONTEXT_OVERLAP: usize = 200;
-const MAX_REQUESTS_PER_SITE: usize = 3; // needed?
 
 pub struct PostingsExtractorHandler {
 	extractors: Vec<PostingsExtractor>,
@@ -97,7 +93,7 @@ impl PostingsExtractorHandler {
 					.map(|p| {
 						let mut active_posting: posting::ActiveModel = p.into();
 						active_posting.id = NotSet;
-						active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east(0))));
+						active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
 						active_posting.seen = Set(Some(false));
 						active_posting.source_id = Set(Some(e.source_id));
 
@@ -109,10 +105,10 @@ impl PostingsExtractorHandler {
 			})
 			.collect();
 
-		Posting::insert_many(postings).exec(db).await;
+		let _ = Posting::insert_many(postings).exec(db).await;
 
 		for extractor in &self.extractors {
-			Source::update_many()
+			let _ = Source::update_many()
 				.col_expr(source::Column::Content, Expr::value(extractor.parsed_content.to_string().clone()))
 				.filter(source::Column::Id.eq(extractor.source_id))
 				.exec(db)
@@ -121,17 +117,6 @@ impl PostingsExtractorHandler {
 
 		Ok(())
 	}
-}
-
-#[derive(Deserialize, Debug)]
-struct ExtractResponse {
-	postings: Vec<posting::Model>,
-}
-
-#[derive(Clone, Debug)]
-struct PageLink {
-	url: String,
-	content: String,
 }
 
 #[derive(Clone)]
@@ -173,16 +158,6 @@ impl ParsedSource {
 		}
 
 		return None;
-	}
-
-	pub fn get_page_for_url(&self, url: &String) -> Option<&ParsedPage> {
-		for page in &self.parsed_pages {
-			if &page.url == url {
-				return Some(page);
-			}
-		}
-
-		None
 	}
 
 	pub fn add_content(&mut self, content: &String, url: &String) {
@@ -422,7 +397,7 @@ impl PostingsExtractor {
 								let new_url = &tab.get_url();
 
 								if new_url != tab_url {
-									if let Ok(page_element) = tab.wait_for_element("body") {
+									if let Ok(_page_element) = tab.wait_for_element("body") {
 										posting.url = Some(new_url.to_string());
 										// todo: get details as summary
 									}
