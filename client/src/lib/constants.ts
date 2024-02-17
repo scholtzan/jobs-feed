@@ -1,3 +1,3 @@
-const constants = {};
-
-export default constants;
+export const constants = {
+	API_VERSION: 'v1'
+};

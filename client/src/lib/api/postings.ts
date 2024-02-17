@@ -1,12 +1,12 @@
 import { error, success } from '.';
-import { RequestResponse } from '../types/index';
+import { constants } from '../constants';
 import { Posting } from '../types/postings';
 
 export class PostingsApi {
 	constructor() {}
 
 	public refreshPostings = async () => {
-		return fetch('/postings/refresh', {
+		return fetch(`/api/${constants.API_VERSION}/postings/refresh`, {
 			method: 'GET'
 		}).then((response) => {
 			if (response.status == 200) {
@@ -20,7 +20,7 @@ export class PostingsApi {
 	};
 
 	public getUnreadPostings = async () => {
-		return fetch('/postings/unread', {
+		return fetch(`/api/${constants.API_VERSION}/postings/unread`, {
 			method: 'GET'
 		}).then((response) => {
 			if (response.status == 200) {
@@ -34,7 +34,7 @@ export class PostingsApi {
 	};
 
 	public getBookmarkedPostings = async () => {
-		return fetch('/postings/bookmarked', {
+		return fetch(`/api/${constants.API_VERSION}/postings/bookmarked`, {
 			method: 'GET'
 		}).then((response) => {
 			if (response.status == 200) {
@@ -48,7 +48,7 @@ export class PostingsApi {
 	};
 
 	public markPostingsAsRead = async (ids: number[]) => {
-		return fetch('/postings/mark_read', {
+		return fetch(`/api/${constants.API_VERSION}/postings/mark_read`, {
 			method: 'PUT',
 			body: JSON.stringify(ids)
 		}).then((response) => {
@@ -61,7 +61,7 @@ export class PostingsApi {
 	};
 
 	public updatePosting = async (posting: Posting) => {
-		return fetch('/postings/' + posting.id, {
+		return fetch(`/api/${constants.API_VERSION}/postings/${posting.id}`, {
 			method: 'PUT',
 			body: JSON.stringify(posting)
 		}).then((response) => {

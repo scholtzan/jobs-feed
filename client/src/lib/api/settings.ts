@@ -1,12 +1,12 @@
 import { error, success } from '.';
-import { RequestResponse } from '../types/index';
 import { Settings } from '../types/settings';
+import { constants } from '../constants';
 
 export class SettingsApi {
 	constructor() {}
 
 	public updateSettings = async (settings: Settings) => {
-		return fetch('/settings', {
+		return fetch(`/api/${constants.API_VERSION}/settings`, {
 			method: 'PUT',
 			body: JSON.stringify(settings)
 		}).then((response) => {
@@ -22,7 +22,7 @@ export class SettingsApi {
 	};
 
 	public getSettings = async () => {
-		return fetch('/settings', {
+		return fetch(`/api/${constants.API_VERSION}/settings`, {
 			method: 'GET'
 		}).then((response) => {
 			if (response.status == 200) {

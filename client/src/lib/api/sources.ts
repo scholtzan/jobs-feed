@@ -1,12 +1,12 @@
 import { error, success } from '.';
-import { RequestResponse } from '../types/index';
 import { Source } from '../types/sources';
+import { constants } from '../constants';
 
 export class SourcesApi {
 	constructor() {}
 
 	public getSources = async () => {
-		return fetch('/sources', {
+		return fetch(`/api/${constants.API_VERSION}/sources`, {
 			method: 'GET'
 		}).then((response) => {
 			if (response.status == 200) {
@@ -20,7 +20,7 @@ export class SourcesApi {
 	};
 
 	public createSource = async (source: Source) => {
-		return fetch('/sources', {
+		return fetch(`/api/${constants.API_VERSION}/sources`, {
 			method: 'POST',
 			body: JSON.stringify(source)
 		}).then((response) => {
@@ -36,7 +36,7 @@ export class SourcesApi {
 	};
 
 	public updateSource = async (source: Source) => {
-		return fetch('/sources/' + source.id, {
+		return fetch(`/api/${constants.API_VERSION}/sources/${source.id}`, {
 			method: 'PUT',
 			body: JSON.stringify(source)
 		}).then((response) => {
@@ -52,7 +52,7 @@ export class SourcesApi {
 	};
 
 	public deleteSource = async (sourceId: number) => {
-		return fetch('/postings/' + sourceId, {
+		return fetch(`/api/${constants.API_VERSION}/source/${sourceId}`, {
 			method: 'DELETE'
 		}).then((response) => {
 			if (response.status == 200) {

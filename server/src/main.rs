@@ -58,7 +58,7 @@ async fn rocket() -> _ {
 		.manage(Arc::new(Mutex::new(postings_extractor_handler)))
 		.mount("/_app", routes![static_files])
 		.mount(
-			"/",
+			"/api/v1",
 			routes![
 				routes::sources::sources,
 				routes::sources::add_source,

@@ -1,12 +1,12 @@
 import { error, success } from '.';
-import { RequestResponse } from '../types/index';
 import { Filter } from '../types/filters';
+import { constants } from '../constants';
 
 export class FiltersApi {
 	constructor() {}
 
 	public getFilters = async () => {
-		return fetch('/filters', {
+		return fetch(`/api/${constants.API_VERSION}/filters`, {
 			method: 'GET'
 		}).then((response) => {
 			if (response.status == 200) {
@@ -20,7 +20,7 @@ export class FiltersApi {
 	};
 
 	public updateFilters = async (filters: Filter[]) => {
-		return fetch('/filters', {
+		return fetch(`/api/${constants.API_VERSION}/filters`, {
 			method: 'PUT',
 			body: JSON.stringify(filters)
 		}).then((response) => {
