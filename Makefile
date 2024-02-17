@@ -9,4 +9,4 @@ server:
 	cd server/ && cargo run
 
 format:
-	npx prettier --write client
+	npx prettier --write client && cargo fmt --manifest-path server/Cargo.toml 
