@@ -70,21 +70,39 @@
 	<aside class="h-screen sticky top-0 flex flex-col bg-base-200 overflow-y-auto">
 		<!-- Header -->
 		<div class="flex gap-x-20 justify-between p-2 px-4 h-16 border-b align-bottom">
-			<a class="btn btn-accent btn-square" href="/">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					class="w-6 h-6"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z"
-					/>
-				</svg>
+			<a href="/" class="h-12 w-8">
+				<svg width="100%" height="100%" viewBox="0 0 773 1155" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+                    <g transform="matrix(1,0,0,1,-204.506,-13.1363)">
+                        <g transform="matrix(0.900145,0,0,0.900145,12.7466,44.8305)">
+                            <path d="M334.283,686.7L603.534,855.623" style="fill:none;stroke:rgb(157,157,157);stroke-width:78.69px;"/>
+                        </g>
+                        <g transform="matrix(-0.900145,0,0,0.900145,1159.98,51.5085)">
+                            <path d="M330.486,685.039L603.534,855.623" style="fill:none;stroke:rgb(157,157,157);stroke-width:78.69px;"/>
+                        </g>
+                        <g transform="matrix(0.900145,0,0,0.900145,37.7064,58.9696)">
+                            <path d="M614.173,0L236.22,188.976L354.331,1001.7L614.173,1181.1L614.173,762.795L291.004,565.945" style="fill:none;stroke:rgb(35,35,35);stroke-width:101.84px;"/>
+                        </g>
+                        <g transform="matrix(1.48441,0,0,1.48441,-321.133,-254.441)">
+                            <path d="M614.173,472.441L614.173,536.418L578.927,472.441L614.173,472.441Z" style="fill:rgb(35,35,35);stroke:rgb(35,35,35);stroke-width:21.05px;"/>
+                        </g>
+                        <g transform="matrix(-1.48441,0,0,1.48441,1502.24,-254.228)">
+                            <path d="M614.173,472.441L614.173,536.418L578.927,472.441L614.173,472.441Z" style="fill:rgb(35,35,35);stroke:rgb(35,35,35);stroke-width:21.05px;"/>
+                        </g>
+                        <g transform="matrix(2.01024,0,0,2.01024,-529.273,-129.548)">
+                            <circle cx="496.063" cy="212.598" r="23.622" style="fill:rgb(35,35,35);"/>
+                        </g>
+                        <g transform="matrix(2.01024,0,0,2.01024,-263.54,-129.548)">
+                            <circle cx="496.063" cy="212.598" r="23.622" style="fill:rgb(35,35,35);"/>
+                        </g>
+                        <g transform="matrix(-0.900145,0,0,0.900145,1143.4,58.9696)">
+                            <path d="M614.173,0L236.22,188.976L354.331,1001.7L614.173,1181.1L614.173,762.795L291.004,565.945" style="fill:none;stroke:rgb(35,35,35);stroke-width:101.84px;"/>
+                        </g>
+                        <g transform="matrix(0.900145,0,0,0.900145,37.7064,58.9696)">
+                            <path d="M614.173,778.3L614.173,1133.86" style="fill:none;stroke:rgb(35,35,35);stroke-width:97.21px;stroke-linecap:square;"/>
+                        </g>
+                    </g>
+                </svg>
+                
 			</a>
 		</div>
 
