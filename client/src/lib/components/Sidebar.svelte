@@ -69,40 +69,20 @@
 <div class="max-w-[20em] min-w-[16em]">
 	<aside class="h-screen sticky top-0 flex flex-col bg-base-200 overflow-y-auto">
 		<!-- Header -->
-		<div class="flex gap-x-20 justify-between p-2 px-4 h-16 border-b align-bottom">
-			<a href="/" class="h-12 w-8">
-				<svg width="100%" height="100%" viewBox="0 0 773 1155" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
-                    <g transform="matrix(1,0,0,1,-204.506,-13.1363)">
-                        <g transform="matrix(0.900145,0,0,0.900145,12.7466,44.8305)">
-                            <path d="M334.283,686.7L603.534,855.623" style="fill:none;stroke:rgb(157,157,157);stroke-width:78.69px;"/>
-                        </g>
-                        <g transform="matrix(-0.900145,0,0,0.900145,1159.98,51.5085)">
-                            <path d="M330.486,685.039L603.534,855.623" style="fill:none;stroke:rgb(157,157,157);stroke-width:78.69px;"/>
-                        </g>
-                        <g transform="matrix(0.900145,0,0,0.900145,37.7064,58.9696)">
-                            <path d="M614.173,0L236.22,188.976L354.331,1001.7L614.173,1181.1L614.173,762.795L291.004,565.945" style="fill:none;stroke:rgb(35,35,35);stroke-width:101.84px;"/>
-                        </g>
-                        <g transform="matrix(1.48441,0,0,1.48441,-321.133,-254.441)">
-                            <path d="M614.173,472.441L614.173,536.418L578.927,472.441L614.173,472.441Z" style="fill:rgb(35,35,35);stroke:rgb(35,35,35);stroke-width:21.05px;"/>
-                        </g>
-                        <g transform="matrix(-1.48441,0,0,1.48441,1502.24,-254.228)">
-                            <path d="M614.173,472.441L614.173,536.418L578.927,472.441L614.173,472.441Z" style="fill:rgb(35,35,35);stroke:rgb(35,35,35);stroke-width:21.05px;"/>
-                        </g>
-                        <g transform="matrix(2.01024,0,0,2.01024,-529.273,-129.548)">
-                            <circle cx="496.063" cy="212.598" r="23.622" style="fill:rgb(35,35,35);"/>
-                        </g>
-                        <g transform="matrix(2.01024,0,0,2.01024,-263.54,-129.548)">
-                            <circle cx="496.063" cy="212.598" r="23.622" style="fill:rgb(35,35,35);"/>
-                        </g>
-                        <g transform="matrix(-0.900145,0,0,0.900145,1143.4,58.9696)">
-                            <path d="M614.173,0L236.22,188.976L354.331,1001.7L614.173,1181.1L614.173,762.795L291.004,565.945" style="fill:none;stroke:rgb(35,35,35);stroke-width:101.84px;"/>
-                        </g>
-                        <g transform="matrix(0.900145,0,0,0.900145,37.7064,58.9696)">
-                            <path d="M614.173,778.3L614.173,1133.86" style="fill:none;stroke:rgb(35,35,35);stroke-width:97.21px;stroke-linecap:square;"/>
-                        </g>
+		<div class="flex gap-x-20 justify-between p-2 h-16 border-b align-bottom">
+			<a href="/" class="h-12 w-12">
+				<svg width="100%" height="100%" viewBox="0 0 1182 1182" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+                    <path d="M1181.1,105.837L1181.1,1075.27C1181.1,1133.68 1133.68,1181.1 1075.27,1181.1L105.837,1181.1C47.424,1181.1 0,1133.68 0,1075.27L0,105.837C0,47.424 47.424,0 105.837,0L1075.27,0C1133.68,0 1181.1,47.424 1181.1,105.837Z" style="fill:url(#_Radial1);"/>
+                    <g transform="matrix(0.974472,0,0,0.974472,15.0757,27.0862)">
+                        <path d="M472.441,578.74L708.661,578.74L590.551,578.74C590.551,578.74 590.073,331.65 590.551,254.258C590.602,246.012 600.231,176.574 688.788,175.14C771.217,173.805 792.505,215.415 803.15,236.22" style="fill:none;stroke:white;stroke-width:132.55px;"/>
                     </g>
+                    <g transform="matrix(-0.974472,0,0,-0.974472,1166.03,1154.02)">
+                        <path d="M472.441,578.74L708.661,578.74L590.551,578.74C590.551,578.74 590.073,331.65 590.551,254.258C590.602,246.012 600.231,176.574 688.788,175.14C771.217,173.805 792.505,215.415 803.15,236.22" style="fill:none;stroke:white;stroke-width:132.55px;"/>
+                    </g>
+                    <defs>
+                        <radialGradient id="_Radial1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(755.906,0,0,755.906,590.551,590.551)"><stop offset="0" style="stop-color:rgb(255,116,0);stop-opacity:1"/><stop offset="0.65" style="stop-color:rgb(251,114,2);stop-opacity:1"/><stop offset="1" style="stop-color:rgb(226,104,12);stop-opacity:1"/></radialGradient>
+                    </defs>
                 </svg>
-                
 			</a>
 		</div>
 
