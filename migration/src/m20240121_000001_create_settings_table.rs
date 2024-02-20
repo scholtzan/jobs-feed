@@ -18,6 +18,7 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Settings::ApiKey).string())
+                    .col(ColumnDef::new(Settings::Model).string())
                     .to_owned(),
             )
             .await
@@ -34,5 +35,6 @@ impl MigrationTrait for Migration {
 enum Settings {
     Table,
     ApiKey,
-    Id
+    Id,
+    Model
 }

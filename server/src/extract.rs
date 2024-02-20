@@ -427,7 +427,7 @@ impl PostingsExtractor {
 	}
 
 	async fn chatgpt_extract_postings(&self, message_parts: &mut Vec<String>) -> Result<String> {
-		let assistant = Assistant::new(&self.settings.api_key.clone().unwrap_or("".to_string())).await?;
+		let assistant = Assistant::new(&self.settings.api_key.clone().unwrap_or("".to_string()), &self.settings.model.clone().unwrap_or("".to_string())).await?;
 
 		let criteria = self
 			.filters

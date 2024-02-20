@@ -14,12 +14,17 @@ const BASE_URL: &str = "https://api.openai.com/v1";
 
 pub struct Assistant {
 	api_key: String,
+	model: String,
 	id: Option<String>,
 }
 
 impl Assistant {
-	pub async fn new(api_key: &String) -> Result<Self> {
-		let mut assistant = Self { api_key: api_key.clone(), id: None };
+	pub async fn new(api_key: &String, model: &String) -> Result<Self> {
+		let mut assistant = Self {
+			api_key: api_key.clone(),
+			model: model.clone(),
+			id: None,
+		};
 
 		if let Some(assistant_id) = assistant.get().await? {
 			assistant.id = Some(assistant_id);
@@ -30,16 +35,27 @@ impl Assistant {
 		Ok(assistant)
 	}
 
+	pub async fn get_models(&self) -> Result<Vec<String>> {
+		let url = format!("{BASE_URL}/models");
+		let headers = self.headers()?;
+		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
+		let res = client.get(url).headers(headers).send().await?;
+
+		if res.status() == StatusCode::OK {
+			let response_body = res.json::<Value>().await?;
+			let data = response_body.get("data").unwrap().as_array().unwrap();
+			let models = data.into_iter().map(|d| d.get("id").unwrap().as_str().unwrap().to_string()).collect();
+			return Ok(models);
+		}
+
+		return Err(anyhow!("Couldn't get models"));
+	}
+
 	async fn get(&self) -> Result<Option<String>> {
 		let url = format!("{BASE_URL}/assistants");
-		let bearer = format!("Bearer {}", self.api_key);
-		let mut headers = HeaderMap::new();
-		headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-		headers.insert(AUTHORIZATION, bearer.parse()?);
-		headers.insert(HeaderName::from_static("openai-beta"), HeaderValue::from_static("assistants=v1"));
+		let headers = self.headers()?;
 
 		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
-
 		let res = client.get(url).headers(headers).send().await?;
 
 		if res.status() == StatusCode::OK {
@@ -53,13 +69,19 @@ impl Assistant {
 		return Ok(None);
 	}
 
-	async fn create(&self) -> Result<Option<String>> {
-		let url = format!("{BASE_URL}/assistants");
+	fn headers(&self) -> Result<HeaderMap> {
 		let bearer = format!("Bearer {}", self.api_key);
 		let mut headers = HeaderMap::new();
 		headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 		headers.insert(AUTHORIZATION, bearer.parse()?);
 		headers.insert(HeaderName::from_static("openai-beta"), HeaderValue::from_static("assistants=v1"));
+
+		Ok(headers)
+	}
+
+	async fn create(&self) -> Result<Option<String>> {
+		let url = format!("{BASE_URL}/assistants");
+		let headers = self.headers()?;
 
 		let body = json!({
 			"instructions": "Extract a complete list of job postings with descriptions from the provided inputs that match the provided criteria. \
@@ -67,7 +89,7 @@ impl Assistant {
 				Extract the job descriptions and shorted to 200 characters. Do not miss any posting! \
 				Response format: [{{\"title\": \"\", \"description\": \"\"}}]",
 			"name": "Jobs Feed",
-			"model": "gpt-3.5-turbo"
+			"model": &self.model
 		});
 
 		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;

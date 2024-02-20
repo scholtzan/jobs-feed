@@ -1,3 +1,4 @@
+use crate::assistant::Assistant;
 use crate::entities;
 use crate::entities::prelude::*;
 
@@ -28,4 +29,21 @@ pub async fn update_settings(db_state: &State<DatabaseConnection>, input: Json<e
 	txn.commit().await.expect("Cannot commit transaction");
 
 	settings(db_state).await
+}
+
+#[get("/settings/models")]
+pub async fn get_models(db: &State<DatabaseConnection>) -> Result<Json<Vec<String>>, Status> {
+	let db = db as &DatabaseConnection;
+	let settings = Settings::find().one(db).await.expect("Could not retrieve settings");
+
+	if settings.is_none() {
+		return Ok(Json(vec![]));
+	}
+
+	let assistant = Assistant::new(&settings.unwrap().api_key.unwrap(), &"".to_string())
+		.await
+		.expect("Could not retrieve model information");
+	let models = assistant.get_models().await.expect("Could not retrieve model information");
+
+	Ok(Json(models))
 }

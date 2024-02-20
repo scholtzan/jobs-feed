@@ -11,6 +11,7 @@
 	let notificationHandler = new NotificationHandler();
 	let settingsHandler = new SettingsHandler();
 	let settings = settingsHandler.settings;
+	let models = getModels();
 	let validation = {
 		apiKeyValidation: null
 	};
@@ -37,6 +38,16 @@
 				closeDrawer();
 			});
 		}
+	}
+
+	function getModels() {
+		return settingsHandler.getModels().then((res) => {
+			if (!res.isSuccessful) {
+				notificationHandler.addError('Could not retrieve model information', res.message);
+			} else {
+				models = res.data;
+			}
+		});
 	}
 </script>
 
@@ -86,6 +97,17 @@
 					bind:value={settings.api_key}
 					bind:validation={validation.apiKeyValidation}
 				/>
+
+				<label class="form-control w-full max-w">
+					<div class="label">
+						<span class="label-text">OpenAI Model</span>
+					</div>
+					<select bind:value={settings.model} class="select select-bordered">
+						{#each models as model}
+							<option>{model}</option>
+						{/each}
+					</select>
+				</label>
 
 				<div class="py-8 flex-none">
 					<button class="btn btn-active btn-primary" on:click={updateSettings}>Save</button>

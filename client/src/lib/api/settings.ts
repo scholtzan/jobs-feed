@@ -40,4 +40,18 @@ export class SettingsApi {
 			}
 		});
 	};
+
+	public getModels = async () => {
+		return fetch(`/api/${constants.API_VERSION}/settings/models`, {
+			method: 'GET'
+		}).then((response) => {
+			if (response.status == 200) {
+				return response.json().then((json) => {
+					return success(json);
+				});
+			} else {
+				return error(`Could not get models: ${response}`);
+			}
+		});
+	};
 }

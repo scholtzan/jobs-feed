@@ -75,6 +75,7 @@ async fn rocket() -> _ {
 				routes::postings::bookmarked_postings,
 				routes::settings::settings,
 				routes::settings::update_settings,
+				routes::settings::get_models,
 			],
 		)
 		.mount("/", routes![index])

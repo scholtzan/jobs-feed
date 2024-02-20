@@ -10,6 +10,7 @@ pub struct Model {
 	#[serde(skip_deserializing)]
 	pub id: i32,
 	pub api_key: Option<String>,
+	pub model: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

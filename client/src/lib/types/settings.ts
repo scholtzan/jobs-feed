@@ -44,9 +44,14 @@ export class SettingsHandler {
 			return res;
 		});
 	}
+
+	public getModels() {
+		return this.api.getModels();
+	}
 }
 
 export class Settings {
 	id: number | null = null;
 	api_key: string | null = null;
+	model: string | null = null;
 }
