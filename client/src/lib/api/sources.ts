@@ -52,13 +52,13 @@ export class SourcesApi {
 	};
 
 	public deleteSource = async (sourceId: number) => {
-		return fetch(`/api/${constants.API_VERSION}/source/${sourceId}`, {
+		return fetch(`/api/${constants.API_VERSION}/sources/${sourceId}`, {
 			method: 'DELETE'
 		}).then((response) => {
 			if (response.status == 200) {
 				return success({});
 			} else {
-				return error('Could not delete source');
+				return error(`Could not delete source: ${response}`);
 			}
 		});
 	};

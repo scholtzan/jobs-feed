@@ -4,12 +4,17 @@
 	import { page } from '$app/stores';
 	import { Settings, SettingsHandler } from '../../lib/types/settings';
 	import { NotificationHandler } from '../../lib/types/notifications';
+	import ValidatedInput from '../../lib/components/ValidatedInput.svelte';
 
 	let drawerOpen = true;
 
 	let notificationHandler = new NotificationHandler();
 	let settingsHandler = new SettingsHandler();
 	let settings = settingsHandler.settings;
+	let validation = {
+		apiKeyValidation: null
+	};
+
 	settingsHandler.subscribe((value) => {
 		settings = settingsHandler.settings;
 	});
@@ -19,13 +24,19 @@
 	}
 
 	function updateSettings() {
-		settingsHandler.updateSettings(settings).then((res) => {
-			if (!res.isSuccessful) {
-				notificationHandler.addError('Could not update settings', res.message);
-			}
+		if (settings.api_key.trim() == '') {
+			validation.apiKeyValidation = 'Please provide an API key';
+		}
 
-			closeDrawer();
-		});
+		if (validation.apiKeyValidation == null) {
+			settingsHandler.updateSettings(settings).then((res) => {
+				if (!res.isSuccessful) {
+					notificationHandler.addError('Could not update settings', res.message);
+				}
+
+				closeDrawer();
+			});
+		}
 	}
 </script>
 
@@ -65,27 +76,22 @@
 				<div class="flex-none"></div>
 			</nav>
 
-			<form class="px-8" id="settings-form" on:submit|preventDefault={updateSettings}>
+			<div class="px-8">
 				<h1 class="text-4xl font-bold py-8">Settings</h1>
 
-				<label class="form-control w-full max-w">
-					<div class="label">
-						<span class="label-text">API Key</span>
-					</div>
-
-					<input
-						type="text"
-						placeholder="API Key"
-						class="input input-bordered w-full max-w"
-						bind:value={settings.api_key}
-					/>
-				</label>
+				<ValidatedInput
+					label={'API Key'}
+					placeholder={'******'}
+					masked={true}
+					bind:value={settings.api_key}
+					bind:validation={validation.apiKeyValidation}
+				/>
 
 				<div class="py-8 flex-none">
-					<button class="btn btn-active btn-primary" form="settings-form">Save</button>
+					<button class="btn btn-active btn-primary" on:click={updateSettings}>Save</button>
 					<a href="/" class="btn btn-active">Close</a>
 				</div>
-			</form>
+			</div>
 		</div>
 	</div>
 </div>

@@ -18,7 +18,7 @@
 	let postingsPerSource = postingsHandler.postingsBySource();
 	let storedSources = sourcesHandler.sources;
 	let selected = sourcesHandler.selectedSource;
-    let isRefreshing = false;
+	let isRefreshing = false;
 
 	sourcesHandler.subscribe((value) => {
 		storedSources = sourcesHandler.sources;
@@ -35,13 +35,13 @@
 	});
 
 	function refreshPostings() {
-        isRefreshing = true;
+		isRefreshing = true;
 		postingsHandler.refresh(false).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not refresh postings', res.message);
 			}
 
-            isRefreshing = false;
+			isRefreshing = false;
 		});
 	}
 
@@ -71,18 +71,51 @@
 		<!-- Header -->
 		<div class="flex gap-x-20 justify-between p-2 h-16 border-b align-bottom">
 			<a href="/" class="h-12 w-12">
-				<svg width="100%" height="100%" viewBox="0 0 1182 1182" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
-                    <path d="M1181.1,105.837L1181.1,1075.27C1181.1,1133.68 1133.68,1181.1 1075.27,1181.1L105.837,1181.1C47.424,1181.1 0,1133.68 0,1075.27L0,105.837C0,47.424 47.424,0 105.837,0L1075.27,0C1133.68,0 1181.1,47.424 1181.1,105.837Z" style="fill:url(#_Radial1);"/>
-                    <g transform="matrix(0.974472,0,0,0.974472,15.0757,27.0862)">
-                        <path d="M472.441,578.74L708.661,578.74L590.551,578.74C590.551,578.74 590.073,331.65 590.551,254.258C590.602,246.012 600.231,176.574 688.788,175.14C771.217,173.805 792.505,215.415 803.15,236.22" style="fill:none;stroke:white;stroke-width:132.55px;"/>
-                    </g>
-                    <g transform="matrix(-0.974472,0,0,-0.974472,1166.03,1154.02)">
-                        <path d="M472.441,578.74L708.661,578.74L590.551,578.74C590.551,578.74 590.073,331.65 590.551,254.258C590.602,246.012 600.231,176.574 688.788,175.14C771.217,173.805 792.505,215.415 803.15,236.22" style="fill:none;stroke:white;stroke-width:132.55px;"/>
-                    </g>
-                    <defs>
-                        <radialGradient id="_Radial1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(755.906,0,0,755.906,590.551,590.551)"><stop offset="0" style="stop-color:rgb(255,116,0);stop-opacity:1"/><stop offset="0.65" style="stop-color:rgb(251,114,2);stop-opacity:1"/><stop offset="1" style="stop-color:rgb(226,104,12);stop-opacity:1"/></radialGradient>
-                    </defs>
-                </svg>
+				<svg
+					width="100%"
+					height="100%"
+					viewBox="0 0 1182 1182"
+					version="1.1"
+					xmlns="http://www.w3.org/2000/svg"
+					xmlns:xlink="http://www.w3.org/1999/xlink"
+					xml:space="preserve"
+					xmlns:serif="http://www.serif.com/"
+					style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;"
+				>
+					<path
+						d="M1181.1,105.837L1181.1,1075.27C1181.1,1133.68 1133.68,1181.1 1075.27,1181.1L105.837,1181.1C47.424,1181.1 0,1133.68 0,1075.27L0,105.837C0,47.424 47.424,0 105.837,0L1075.27,0C1133.68,0 1181.1,47.424 1181.1,105.837Z"
+						style="fill:url(#_Radial1);"
+					/>
+					<g transform="matrix(0.974472,0,0,0.974472,15.0757,27.0862)">
+						<path
+							d="M472.441,578.74L708.661,578.74L590.551,578.74C590.551,578.74 590.073,331.65 590.551,254.258C590.602,246.012 600.231,176.574 688.788,175.14C771.217,173.805 792.505,215.415 803.15,236.22"
+							style="fill:none;stroke:white;stroke-width:132.55px;"
+						/>
+					</g>
+					<g transform="matrix(-0.974472,0,0,-0.974472,1166.03,1154.02)">
+						<path
+							d="M472.441,578.74L708.661,578.74L590.551,578.74C590.551,578.74 590.073,331.65 590.551,254.258C590.602,246.012 600.231,176.574 688.788,175.14C771.217,173.805 792.505,215.415 803.15,236.22"
+							style="fill:none;stroke:white;stroke-width:132.55px;"
+						/>
+					</g>
+					<defs>
+						<radialGradient
+							id="_Radial1"
+							cx="0"
+							cy="0"
+							r="1"
+							gradientUnits="userSpaceOnUse"
+							gradientTransform="matrix(755.906,0,0,755.906,590.551,590.551)"
+							><stop offset="0" style="stop-color:rgb(255,116,0);stop-opacity:1" /><stop
+								offset="0.65"
+								style="stop-color:rgb(251,114,2);stop-opacity:1"
+							/><stop
+								offset="1"
+								style="stop-color:rgb(226,104,12);stop-opacity:1"
+							/></radialGradient
+						>
+					</defs>
+				</svg>
 			</a>
 		</div>
 
@@ -123,25 +156,28 @@
 					</svg>
 				</a>
 
-				<button class="btn btn-ghost btn-square btn-sm {isRefreshing ? 'btn-disabled' : ''}" on:click={refreshPostings}>
-                    {#if isRefreshing}
-                    <span class="loading loading-spinner"></span>
-                    {:else}
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke-width="1.5"
-						stroke="currentColor"
-						class="w-6 h-6"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-						/>
-					</svg>
-                    {/if}
+				<button
+					class="btn btn-ghost btn-square btn-sm {isRefreshing ? 'btn-disabled' : ''}"
+					on:click={refreshPostings}
+				>
+					{#if isRefreshing}
+						<span class="loading loading-spinner"></span>
+					{:else}
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="1.5"
+							stroke="currentColor"
+							class="w-6 h-6"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+							/>
+						</svg>
+					{/if}
 				</button>
 			</div>
 

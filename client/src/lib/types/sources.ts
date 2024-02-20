@@ -62,7 +62,7 @@ export class Sources {
 	public createSource(source: Source) {
 		return this.api.createSource(source).then((res) => {
 			if (res.isSuccessful) {
-				this.sources.push(source);
+				this.sources.push(res.data);
 				this.store();
 			}
 
@@ -83,11 +83,13 @@ export class Sources {
 	}
 
 	public deleteSource(sourceId: number) {
-		this.api.deleteSource(sourceId).then((res) => {
+		return this.api.deleteSource(sourceId).then((res) => {
 			if (res.isSuccessful) {
 				this.sources = this.sources.filter((s) => s.id != sourceId);
 				this.store();
 			}
+
+			return res;
 		});
 	}
 }

@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { Sources, Source } from '../../../lib/types/sources';
 	import { NotificationHandler } from '../../../lib/types/notifications';
+	import ValidatedInput from '../../../lib/components/ValidatedInput.svelte';
 
 	let notifications = new NotificationHandler();
 	let drawerOpen = true;
@@ -17,8 +18,10 @@
 		source = sourcesHandler.sourceById(data.sourceId);
 	}
 
-	let urlValidation = null;
-	let nameValidation = null;
+	let validation = {
+		nameValidation: null,
+		urlValidation: null
+	};
 
 	function closeDrawer(e) {
 		goto('/');
@@ -26,14 +29,24 @@
 
 	function saveSource() {
 		if (source.name.trim() == '') {
-			nameValidation = 'Give this source a name';
+			validation.nameValidation = 'Give this source a name';
 		}
 
 		if (source.url.trim() == '') {
-			urlValidation = 'Set a URL for this source';
+			validation.urlValidation = 'Set a URL for this source';
 		}
 
-		if (source.url.trim() != '' && source.url.trim() != '') {
+		try {
+			let urlToValidate = source.url;
+			if (!source.url.includes('://')) {
+				urlToValidate = 'http://' + source.url;
+			}
+			new URL(urlToValidate);
+		} catch (_) {
+			validation.urlValidation = 'Set a valid URL for this source';
+		}
+
+		if (validation.nameValidation == null && validation.urlValidation == null) {
 			if (isNewSource) {
 				sourcesHandler.createSource(source).then((res) => {
 					if (!res.isSuccessful) {
@@ -91,7 +104,7 @@
 				<div class="flex-none"></div>
 			</nav>
 
-			<form class="px-8" id="source-form" on:submit|preventDefault={saveSource}>
+			<div class="px-8">
 				<h1 class="text-4xl font-bold py-8">
 					{#if isNewSource}
 						New Source
@@ -100,49 +113,19 @@
 					{/if}
 				</h1>
 
-				<label class="form-control w-full max-w">
-					<div class="label">
-						<span class="label-text">Name</span>
-					</div>
+				<ValidatedInput
+					name={'Source Name'}
+					placeholder={'Super cool company'}
+					bind:validation={validation.nameValidation}
+					bind:value={source.name}
+				/>
 
-					<div
-						class="inline-block {source.name.trim() == '' && nameValidation
-							? 'tooltip tooltip-open tooltip-error'
-							: ''}"
-						data-tip={nameValidation || null}
-					>
-						<input
-							type="text"
-							placeholder="Source name"
-							class="input input-bordered w-full max-w {source.name.trim() == '' && nameValidation
-								? 'input-error'
-								: ''}"
-							bind:value={source.name}
-						/>
-					</div>
-				</label>
-
-				<label class="form-control w-full max-w">
-					<div class="label">
-						<span class="label-text">URL</span>
-					</div>
-
-					<div
-						class="inline-block {source.url.trim() == '' && urlValidation
-							? 'tooltip tooltip-open tooltip-error'
-							: ''}"
-						data-tip={urlValidation || null}
-					>
-						<input
-							type="text"
-							placeholder="URL to Source"
-							class="input input-bordered w-full max-w {source.url.trim() == '' && urlValidation
-								? 'input-error'
-								: ''}"
-							bind:value={source.url}
-						/>
-					</div>
-				</label>
+				<ValidatedInput
+					name={'URL'}
+					placeholder={'example.com'}
+					bind:validation={validation.urlValidation}
+					bind:value={source.url}
+				/>
 
 				<div class="py-4">
 					<details class="collapse bg-base-200 collapse-arrow border border-base-300">
@@ -176,10 +159,10 @@
 				</div>
 
 				<div class="py-8 flex-none">
-					<button class="btn btn-active btn-primary" form="source-form">Save</button>
+					<button class="btn btn-active btn-primary" on:click={saveSource}>Save</button>
 					<a href="/" class="btn btn-active">Cancel</a>
 				</div>
-			</form>
+			</div>
 		</div>
 	</div>
 </div>
