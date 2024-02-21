@@ -49,8 +49,8 @@ pub async fn refresh_postings(db: &State<DatabaseConnection>, extractor_handler:
 	let db_connection = db as &DatabaseConnection;
 	let mut extractor_handler = extractor_handler.inner().lock().await;
 
-	let _ = extractor_handler.refresh(db_connection).await;
-	let _ = extractor_handler.save(db_connection).await;
+	extractor_handler.refresh(db_connection).await.expect("Could not refresh postings");
+	extractor_handler.save(db_connection).await.expect("Could not cache source content");
 
 	unread_postings(db).await
 }
