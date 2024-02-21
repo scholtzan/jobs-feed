@@ -12,18 +12,27 @@
 	let postings = postingsHandler.postings;
 
 	postingsHandler.subscribe((_) => {
-		postings = postingsHandler.postings;
+		getPostingsForSelectedSource();
 	});
 
 	sourcesHandler.subscribeSelectedSource((value) => {
 		sourceSelected = sourcesHandler.selectedSource;
+		getPostingsForSelectedSource();
+	});
 
+	function getPostingsForSelectedSource() {
 		if (sourceSelected == SelectedSource.All) {
 			postings = postingsHandler.postings;
 		} else if (sourceSelected == SelectedSource.Today) {
 			postings = postingsHandler.getTodaysPostings();
 		} else if (sourceSelected == SelectedSource.Bookmarked) {
-			postings = postingsHandler.getBookmarked();
+			postingsHandler.getBookmarked().then((res) => {
+				if (!res.isSuccessful) {
+					notificationHandler.addError('Could not get bookmarked postings', res.message);
+				} else {
+					postings = res.data;
+				}
+			});
 		} else {
 			let postingsBySource = postingsHandler.postingsBySource();
 			if (sourceSelected in postingsBySource) {
@@ -32,7 +41,7 @@
 				postings = [];
 			}
 		}
-	});
+	}
 
 	sourcesHandler.subscribe((_) => {
 		sources = sourcesHandler.sources;
@@ -50,6 +59,16 @@
 		postingsHandler.bookmarkPosting(id).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not bookmark posting', res.message);
+			}
+		});
+	}
+
+	function viewRead() {
+		postingsHandler.getReadPostingsOfSource(sourceSelected).then((res) => {
+			if (!res.isSuccessful) {
+				notificationHandler.addError('Could not fetch read postings', res.message);
+			} else {
+				postings = res.data;
 			}
 		});
 	}
@@ -85,7 +104,7 @@
 		<div
 			class="card card-compact w-full group {posting.seen &&
 			sourceSelected != SelectedSource.Bookmarked
-				? 'text-slate-100'
+				? 'text-slate-500'
 				: ''}"
 		>
 			<div class="card-body items-left text-left">
@@ -155,13 +174,16 @@
 		</div>
 	{/each}
 
-	{#if postings.length > 0}
+	{#if postings && postings.filter((p) => !p.seen).length > 0}
 		<div class="py-8 flex-none px-4">
-			<!-- todo -->
 			<button
 				on:click={() => markAsRead(postings.map((p) => p.id))}
 				class="btn btn-active w-full max-w">Mark All As Read</button
 			>
+		</div>
+	{:else if sourceSelected != 'bookmarked' && postings.length == 0}
+		<div class="py-8 flex-none px-4 justify-items-center grid max-w w-full">
+			<button on:click={viewRead} class="btn btn-active w-1/4">View Read Postings</button>
 		</div>
 	{/if}
 </div>

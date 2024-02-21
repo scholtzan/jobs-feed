@@ -62,6 +62,30 @@ pub async fn posting_by_id(db: &State<DatabaseConnection>, id: i32) -> Result<Js
 	Ok(Json(Posting::find().filter(posting::Column::Id.eq(id)).one(db).await.expect("Could not retrieve posting")))
 }
 
+#[get("/postings?<source_id>&<read>")]
+pub async fn get_postings(db: &State<DatabaseConnection>, source_id: Option<i32>, read: Option<bool>) -> Result<Json<Vec<posting::Model>>, Status> {
+	let db = db as &DatabaseConnection;
+
+	let mut filter_condition = Condition::all();
+
+	if let Some(source_id) = source_id {
+		filter_condition = filter_condition.add(posting::Column::SourceId.eq(source_id));
+	}
+
+	if let Some(read) = read {
+		filter_condition = filter_condition.add(posting::Column::Seen.eq(read));
+	}
+
+	Ok(Json(
+		Posting::find()
+			.filter(filter_condition)
+			.order_by_desc(posting::Column::CreatedAt)
+			.all(db)
+			.await
+			.expect("Could not retrieve postings"),
+	))
+}
+
 #[put("/postings/mark_read", data = "<input>")]
 pub async fn mark_postings_read(db: &State<DatabaseConnection>, input: Json<Vec<i32>>) -> Result<(), Status> {
 	let db = db as &DatabaseConnection;

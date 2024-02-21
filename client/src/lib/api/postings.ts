@@ -74,4 +74,23 @@ export class PostingsApi {
 			}
 		});
 	};
+
+	public getReadPostingsOfSource = async (sourceId: number | string) => {
+		let sourceFilter = '';
+		if (sourceId != 'all' && sourceId != 'today') {
+			sourceFilter = `source_id=${sourceId}&`;
+		}
+
+		return fetch(`/api/${constants.API_VERSION}/postings?${sourceFilter}read=true`, {
+			method: 'GET'
+		}).then((response) => {
+			if (response.status == 200) {
+				return response.json().then((json) => {
+					return success(json as Posting[]);
+				});
+			} else {
+				return error(`Could not get read postings ${response.statusText}`);
+			}
+		});
+	};
 }

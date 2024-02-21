@@ -104,6 +104,12 @@ export class Postings {
 			return res;
 		});
 	}
+
+	public getReadPostingsOfSource(sourceId: number) {
+		return this.api.getReadPostingsOfSource(sourceId).then((res) => {
+			return res;
+		});
+	}
 }
 
 export class Posting {
