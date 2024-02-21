@@ -14,7 +14,7 @@ export class SourcesApi {
 					return success(json as Source[]);
 				});
 			} else {
-				return error(`Could not get sources: ${response}`);
+				return error(`Could not get sources: ${response.statusText}`);
 			}
 		});
 	};
@@ -30,7 +30,7 @@ export class SourcesApi {
 					return success(storedSource);
 				});
 			} else {
-				return error(`Cannot add source. ${response}`);
+				return error(`Cannot add source. ${response.statusText}`);
 			}
 		});
 	};
@@ -46,7 +46,7 @@ export class SourcesApi {
 					return success(storedSource);
 				});
 			} else {
-				return error(`Could not update source: ${response}`);
+				return error(`Could not update source: ${response.statusText}`);
 			}
 		});
 	};
@@ -58,7 +58,19 @@ export class SourcesApi {
 			if (response.status == 200) {
 				return success({});
 			} else {
-				return error(`Could not delete source: ${response}`);
+				return error(`Could not delete source: ${response.statusText}`);
+			}
+		});
+	};
+
+	public resetSourceCache = async (sourceId: number) => {
+		return fetch(`/api/${constants.API_VERSION}/sources/${sourceId}/reset`, {
+			method: 'PUT'
+		}).then((response) => {
+			if (response.status == 200) {
+				return success({});
+			} else {
+				return error(`Could not reset source cache: ${response.statusText}`);
 			}
 		});
 	};

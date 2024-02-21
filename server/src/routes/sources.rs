@@ -67,3 +67,16 @@ pub async fn update_source(db: &State<DatabaseConnection>, id: i32, input: Json<
 
 	Ok(Json(existing_source))
 }
+
+#[put("/sources/<id>/reset")]
+pub async fn reset_source_cache(db: &State<DatabaseConnection>, id: i32) -> Result<(), Status> {
+	let db = db as &DatabaseConnection;
+
+	let existing_source = Source::find_by_id(id).one(db).await.expect("Could not find source").unwrap();
+	let mut existing_source_active: source::ActiveModel = existing_source.into();
+	existing_source_active.content = Set(Some("".to_string()));
+
+	let _ = existing_source_active.update(db).await.expect("Could not reset source");
+
+	Ok(())
+}

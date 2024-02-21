@@ -5,7 +5,7 @@
 	import { NotificationHandler } from '../../../lib/types/notifications';
 	import ValidatedInput from '../../../lib/components/ValidatedInput.svelte';
 
-	let notifications = new NotificationHandler();
+	let notificationHandler = new NotificationHandler();
 	let drawerOpen = true;
 	export let data: PageData;
 	let isNewSource = data.sourceId == 'new';
@@ -65,6 +65,15 @@
 				});
 			}
 		}
+	}
+
+	function resetCache() {
+		sourcesHandler.resetSourceCache(source.id).then((res) => {
+			if (!res.isSuccessful) {
+				notificationHandler.addError('Could not reset source cache', res.message);
+			}
+		});
+		goto('/');
 	}
 </script>
 
@@ -162,6 +171,31 @@
 					<button class="btn btn-active btn-primary" on:click={saveSource}>Save</button>
 					<a href="/" class="btn btn-active">Cancel</a>
 				</div>
+
+				{#if !isNewSource}
+					<div class="py-4">
+						<div tabindex="0" class="collapse collapse-open bg-base-200 border border-red-400">
+							<div class="collapse-title font-medium">Danger Zone</div>
+							<div class="collapse-content">
+								<div class="form-control w-full max-w flex-row flex justify-between">
+									<div class="label grow">
+										<span class="label-text"
+											>Reset the source cache. During the next refresh all current job postings will
+											be evaluated.</span
+										>
+									</div>
+									<button
+										placeholder="Link with pagination"
+										class="btn btn-outline btn-error w-1/5"
+										on:click={resetCache}
+									>
+										Reset Cache
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>

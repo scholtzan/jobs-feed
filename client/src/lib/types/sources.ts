@@ -92,6 +92,12 @@ export class Sources {
 			return res;
 		});
 	}
+
+	public resetSourceCache(sourceId: number) {
+		return this.api.resetSourceCache(sourceId).then((res) => {
+			return res;
+		});
+	}
 }
 
 export class Source {
