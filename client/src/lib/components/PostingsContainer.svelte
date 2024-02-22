@@ -97,7 +97,9 @@
 		{:else if sourceSelected == SelectedSource.Bookmarked}
 			Bookmarked Postings
 		{:else}
-			{sourcesHandler.sourceById(sourceSelected).name}
+			{sourcesHandler.sourceById(sourceSelected) == undefined
+				? goto('/')
+				: sourcesHandler.sourceById(sourceSelected).name}
 		{/if}
 	</h1>
 	{#each postings as posting}

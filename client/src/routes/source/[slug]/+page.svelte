@@ -16,6 +16,9 @@
 		source = new Source();
 	} else {
 		source = sourcesHandler.sourceById(data.sourceId);
+		if (source == undefined) {
+			notificationHandler.addError('No such source');
+		}
 	}
 
 	let validation = {

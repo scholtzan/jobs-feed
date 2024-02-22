@@ -5,6 +5,7 @@
 	import { Postings } from '../types/postings';
 	import { Sources } from '../types/sources';
 	import { NotificationHandler, NotificationType } from '../types/notifications';
+	import { goto } from '$app/navigation';
 
 	let notificationHandler = new NotificationHandler();
 	let sourceContextMenu = null;
@@ -43,10 +44,6 @@
 
 			isRefreshing = false;
 		});
-	}
-
-	function select(source) {
-		sourcesHandler.setSelectedSource(source);
 	}
 
 	function contextMenu(event, sourceId, sourceName) {
@@ -185,7 +182,10 @@
 			<div class="flex flex-col divide-y divide-base-300">
 				<ul class="menu menu-s px-0">
 					<li class="font-bold">
-						<button on:click={() => select('today')} class={selected == 'today' ? 'active' : ''}>
+						<button
+							on:click={() => goto('/postings/today')}
+							class={selected == 'today' ? 'active' : ''}
+						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="none"
@@ -208,7 +208,10 @@
 					</li>
 
 					<li class="font-bold">
-						<button on:click={() => select('all')} class={selected == 'all' ? 'active' : ''}>
+						<button
+							on:click={() => goto('/postings/all')}
+							class={selected == 'all' ? 'active' : ''}
+						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="none"
@@ -232,7 +235,7 @@
 
 					<li class="font-bold">
 						<button
-							on:click={() => select('bookmarked')}
+							on:click={() => goto('/postings/bookmarked')}
 							class={selected == 'bookmarked' ? 'active' : ''}
 						>
 							<svg
@@ -256,7 +259,7 @@
 					{#each storedSources as source}
 						<li class="font-bold">
 							<button
-								on:click={() => select(source.id)}
+								on:click={() => goto(`/postings/${source.id}`)}
 								class={selected == source.id ? 'active' : ''}
 								on:contextmenu={(e) => contextMenu(e, source.id, source.name)}
 							>
