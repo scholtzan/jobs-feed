@@ -1,6 +1,7 @@
 use crate::util::base_url;
 use crate::{
 	assistant::Assistant,
+	assistant::Usage,
 	entities::{prelude::*, *},
 };
 use anyhow::Result;
@@ -113,25 +114,22 @@ impl PostingsExtractorHandler {
 				.filter(source::Column::Id.eq(extractor.source_id))
 				.exec(db)
 				.await;
+
+			let model = extractor.settings.model.clone();
+			let extraction_usage: extraction::ActiveModel = extraction::ActiveModel {
+				id: NotSet,
+				created_at: Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap()))),
+				model: Set(model.clone()),
+				prompt_tokens: Set(Some(extractor.usage.prompt_tokens)),
+				completion_tokens: Set(Some(extractor.usage.completion_tokens)),
+				source_id: Set(Some(extractor.source_id)),
+				cost: Set(extractor.usage.get_cost(&model.unwrap_or("".to_string()))),
+			};
+			extraction_usage.insert(db).await?;
 		}
 
 		Ok(())
 	}
-}
-
-#[derive(Clone)]
-pub struct PostingsExtractor {
-	url: String,
-	source_id: i32,
-	selector: Option<String>,
-	pagination: Option<String>,
-	filters: Vec<filter::Model>,
-	settings: settings::Model,
-	browser: Browser,
-
-	parsed_content: ParsedSource,
-	cached_content: Option<String>,
-	extracted_postings: Option<Vec<posting::Model>>,
 }
 
 #[derive(Clone, Default, Debug)]
@@ -181,6 +179,23 @@ struct ParsedPage {
 	url: String,
 }
 
+#[derive(Clone)]
+pub struct PostingsExtractor {
+	url: String,
+	source_id: i32,
+	selector: Option<String>,
+	pagination: Option<String>,
+	filters: Vec<filter::Model>,
+	settings: settings::Model,
+	browser: Browser,
+
+	parsed_content: ParsedSource,
+	cached_content: Option<String>,
+	extracted_postings: Option<Vec<posting::Model>>,
+
+	usage: Usage,
+}
+
 impl PostingsExtractor {
 	pub fn new(
 		url: String,
@@ -203,14 +218,13 @@ impl PostingsExtractor {
 			parsed_content: ParsedSource::default(),
 			extracted_postings: None,
 			browser,
+			usage: Usage::default(),
 		}
 	}
 
 	pub async fn extract(&mut self) -> Result<Vec<posting::Model>> {
 		self.parse_source_content().await?;
-		eprintln!("content parsed {:?}", self.parsed_content);
 		let content_diff = self.new_source_content();
-		eprintln!("content diff {:?}", content_diff);
 
 		if !content_diff.parsed_pages.is_empty() {
 			let postings = self.extract_postings(&content_diff).await?;
@@ -332,19 +346,15 @@ impl PostingsExtractor {
 		return new_content;
 	}
 
-	async fn extract_postings(&self, content: &ParsedSource) -> Result<Vec<posting::Model>> {
+	async fn extract_postings(&mut self, content: &ParsedSource) -> Result<Vec<posting::Model>> {
 		let mut postings: Vec<posting::Model> = vec![];
 
 		for page in &content.parsed_pages {
 			let mut content_chunks = self.chunk_message(&page.content);
 			let r = self.chatgpt_extract_postings(&mut content_chunks).await;
-			eprintln!("r {:?}", r);
 			let chatgpt_result = r?;
 			let resp = serde_json::from_str(&chatgpt_result);
-			eprintln!("{:?}", resp);
 			let response: Vec<posting::Model> = resp?;
-
-			eprintln!("response {:?}", response);
 
 			for mut posting in response {
 				self.add_posting_details(&mut posting, &page)?;
@@ -352,13 +362,10 @@ impl PostingsExtractor {
 			}
 		}
 
-		eprintln!("postings {:?}", postings);
-
 		Ok(postings)
 	}
 
 	fn add_posting_details(&self, posting: &mut posting::Model, page: &ParsedPage) -> Result<()> {
-		eprintln!("posting deets");
 		let t = self.browser.new_tab();
 		match &t {
 			Err(e) => eprintln!("{:?}", e),
@@ -366,7 +373,6 @@ impl PostingsExtractor {
 		};
 
 		let tab = t?;
-		eprintln!("p {:?}", &page.url);
 		tab.navigate_to(&page.url)?;
 		tab.wait_until_navigated()?;
 
@@ -382,15 +388,12 @@ impl PostingsExtractor {
 				match el.find_elements_by_xpath(&format!("//*[contains(text(), '{title}')]")) {
 					Ok(elements_with_text) => {
 						let tab_url = &page.url;
-						eprintln!("{:?}", elements_with_text);
-
 						for el in elements_with_text {
 							if &tab.get_url() != tab_url {
 								tab.navigate_to(&tab_url)?;
 								tab.wait_until_navigated()?;
 							}
 
-							eprintln!("tabs b {:?}", self.browser.get_tabs().lock().unwrap().len());
 							if el.click().is_ok() {
 								std::thread::sleep(std::time::Duration::from_secs(15));
 								tab.wait_until_navigated()?;
@@ -408,7 +411,6 @@ impl PostingsExtractor {
 						return Ok(());
 					}
 					_ => {
-						eprintln!("none");
 						return Ok(());
 					}
 				}
@@ -426,8 +428,8 @@ impl PostingsExtractor {
 			.collect::<Vec<String>>()
 	}
 
-	async fn chatgpt_extract_postings(&self, message_parts: &mut Vec<String>) -> Result<String> {
-		let assistant = Assistant::new(&self.settings.api_key.clone().unwrap_or("".to_string()), &self.settings.model.clone().unwrap_or("".to_string())).await?;
+	async fn chatgpt_extract_postings(&mut self, message_parts: &mut Vec<String>) -> Result<String> {
+		let mut assistant = Assistant::new(&self.settings.api_key.clone().unwrap_or("".to_string()), &self.settings.model.clone().unwrap_or("".to_string())).await?;
 
 		let criteria = self
 			.filters
@@ -442,6 +444,7 @@ impl PostingsExtractor {
 		message_parts.push(last_message);
 
 		let response = assistant.run(message_parts).await?;
+		self.usage.add(assistant.usage);
 
 		Ok(response)
 	}
