@@ -8,6 +8,7 @@ use anyhow::Result;
 
 use chrono::FixedOffset;
 use headless_chrome::{Browser, LaunchOptionsBuilder, Tab};
+use html2md::parse_html;
 use sea_orm::entity::prelude::*;
 use sea_orm::*;
 use similar::{ChangeTag, TextDiff};
@@ -384,37 +385,37 @@ impl PostingsExtractor {
 		let title = &posting.title;
 
 		match tab.wait_for_element(selector) {
-			Ok(el) => {
-				match el.find_elements_by_xpath(&format!("//*[contains(text(), '{title}')]")) {
-					Ok(elements_with_text) => {
-						let tab_url = &page.url;
-						for el in elements_with_text {
-							if &tab.get_url() != tab_url {
-								tab.navigate_to(&tab_url)?;
-								tab.wait_until_navigated()?;
-							}
+			Ok(el) => match el.find_elements_by_xpath(&format!("//*[contains(text(), '{title}')]")) {
+				Ok(elements_with_text) => {
+					let tab_url = &page.url;
+					for el in elements_with_text {
+						if &tab.get_url() != tab_url {
+							tab.navigate_to(&tab_url)?;
+							tab.wait_until_navigated()?;
+						}
 
-							if el.click().is_ok() {
-								std::thread::sleep(std::time::Duration::from_secs(15));
-								tab.wait_until_navigated()?;
-								let new_url = &tab.get_url();
+						if el.click().is_ok() {
+							std::thread::sleep(std::time::Duration::from_secs(15));
+							tab.wait_until_navigated()?;
+							let new_url = &tab.get_url();
 
-								if new_url != tab_url {
-									if let Ok(_page_element) = tab.wait_for_element("body") {
-										posting.url = Some(new_url.to_string());
-										// todo: get details as summary
-									}
+							if new_url != tab_url {
+								if let Ok(page_element) = tab.wait_for_element("body") {
+									posting.url = Some(new_url.to_string());
+									let content = page_element.get_content()?;
+									let markdown_content = parse_html(&content);
+									posting.content = Some(markdown_content);
 								}
 							}
 						}
+					}
 
-						return Ok(());
-					}
-					_ => {
-						return Ok(());
-					}
+					return Ok(());
 				}
-			}
+				_ => {
+					return Ok(());
+				}
+			},
 			_ => return Ok(()),
 		}
 	}

@@ -28,7 +28,7 @@ export class Postings {
 	}
 
 	public postingById(id: number) {
-		return this.postings.find((p) => p.id == id);
+		return this.api.getPostingById(id);
 	}
 
 	public getTodaysPostings(): Posting[] {
@@ -121,4 +121,5 @@ export class Posting {
 	source_id: number | null = null;
 	created_at: Date = new Date();
 	bookmarked: boolean = false;
+	content: string = '';
 }

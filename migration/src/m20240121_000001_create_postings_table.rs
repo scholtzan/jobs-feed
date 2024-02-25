@@ -27,6 +27,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Posting::Seen).boolean().default(false))
                     .col(ColumnDef::new(Posting::SourceId).integer())
                     .col(ColumnDef::new(Posting::Bookmarked).boolean().default(false))
+                    .col(ColumnDef::new(Posting::Content).string())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-posting-source_id")
@@ -55,5 +56,6 @@ enum Posting {
     CreatedAt,
     Seen,
     SourceId,
-    Bookmarked
+    Bookmarked,
+    Content
 }

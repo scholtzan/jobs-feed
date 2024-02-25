@@ -5,6 +5,20 @@ import { Posting } from '../types/postings';
 export class PostingsApi {
 	constructor() {}
 
+	public getPostingById = async (id: number) => {
+		return fetch(`/api/${constants.API_VERSION}/postings/${id}`, {
+			method: 'GET'
+		}).then((response) => {
+			if (response.status == 200) {
+				return response.json().then((json) => {
+					return success(json as Posting);
+				});
+			} else {
+				return error('Could not get posting');
+			}
+		});
+	};
+
 	public refreshPostings = async () => {
 		return fetch(`/api/${constants.API_VERSION}/postings/refresh`, {
 			method: 'GET'

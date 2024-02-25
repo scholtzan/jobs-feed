@@ -4,16 +4,30 @@
 	import type { PageData } from './$types';
 	import { Postings, Posting } from '../../../lib/types/postings';
 	import { NotificationHandler } from '../../../lib/types/notifications';
+	import SvelteMarkdown from 'svelte-markdown';
 
 	let notificationHandler = new NotificationHandler();
 	let postingsHandler = new Postings();
 	let drawerOpen = true;
+	let posting = new Posting();
 	export let data: PageData;
 	let postingId = data.postingId;
-	let posting = postingsHandler.postingById(postingId);
+	postingsHandler.postingById(postingId).then((res) => {
+		if (!res.isSuccessful) {
+			notificationHandler.addError('Could not fetch posting', res.message);
+		} else {
+			posting = res.data;
+		}
+	});
 
 	postingsHandler.subscribe((_) => {
-		posting = postingsHandler.postingById(postingId);
+		postingsHandler.postingById(postingId).then((res) => {
+			if (!res.isSuccessful) {
+				notificationHandler.addError('Could not fetch posting', res.message);
+			} else {
+				posting = res.data;
+			}
+		});
 	});
 
 	function bookmark() {
@@ -26,6 +40,29 @@
 
 	function closeDrawer(e) {
 		goto('/');
+	}
+
+	function getContent() {
+		let content = posting.content;
+		let startIndex = content.indexOf(posting.title);
+
+		if (startIndex != -1) {
+			content = content.substring(startIndex);
+		}
+
+		let endIndex = content.indexOf('Apply Now');
+
+		if (endIndex != -1) {
+			content = content.substring(0, endIndex);
+		}
+
+		endIndex = content.indexOf('©');
+
+		if (endIndex != -1) {
+			content = content.substring(0, endIndex);
+		}
+
+		return content;
 	}
 </script>
 
@@ -102,7 +139,11 @@
 				</h1>
 
 				<p class="w-full max-w">
-					{posting.description}
+					{#if posting.content}
+						<SvelteMarkdown source={getContent()} />
+					{:else}
+						{posting.description}
+					{/if}
 				</p>
 
 				<div class="py-8 flex-none">

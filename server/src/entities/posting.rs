@@ -16,6 +16,8 @@ pub struct Model {
 	pub seen: Option<bool>,
 	pub source_id: Option<i32>,
 	pub bookmarked: Option<bool>,
+	#[sea_orm(column_type = "Text", nullable)]
+	pub content: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
