@@ -242,6 +242,7 @@ impl Assistant {
 		headers.insert(AUTHORIZATION, bearer.parse()?);
 		headers.insert(HeaderName::from_static("openai-beta"), HeaderValue::from_static("assistants=v1"));
 		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
+        let mut messages_received = 0;
 
 		while next_time < end {
 			let res = client.get(&url).headers(headers.clone()).send().await?;
@@ -257,25 +258,29 @@ impl Assistant {
 
 				let total_messages = messages.len();
 
-				for message in messages {
-					let content = message
-						.get("content")
-						.unwrap()
-						.as_array()
-						.unwrap()
-						.first()
-						.unwrap()
-						.get("text")
-						.unwrap()
-						.get("value")
-						.unwrap()
-						.as_str()
-						.unwrap();
+                if total_messages == messages_received {
+                    for message in messages {
+                        let content = message
+                            .get("content")
+                            .unwrap()
+                            .as_array()
+                            .unwrap()
+                            .first()
+                            .unwrap()
+                            .get("text")
+                            .unwrap()
+                            .get("value")
+                            .unwrap()
+                            .as_str()
+                            .unwrap();
 
-					if total_messages > 0 && content != "" {
-						return Ok(content.to_string());
-					}
-				}
+                        if total_messages > 0 && content != "" {
+                            return Ok(content.to_string());
+                        }
+                    }
+                } else {
+                    messages_received = total_messages;
+                }
 			} else {
 				return Err(anyhow!("Cannot get run"));
 			}

@@ -46,7 +46,7 @@ impl PostingsExtractorHandler {
 				tokio::spawn(async move {
 					let opt = LaunchOptionsBuilder::default()
                 .headless(true)
-                .idle_browser_timeout(Duration::from_millis(60_000)) // <- This
+                .idle_browser_timeout(Duration::from_millis(60_000))
                 .build().unwrap();
 					let browser = Browser::new(opt).unwrap();
 
@@ -302,9 +302,9 @@ impl PostingsExtractor {
 							}
 							_ => {
 								let pagination_click = pagination_element.click();
-								// todo: not quite working
 								if pagination_click.is_ok() {
 									std::thread::sleep(std::time::Duration::from_secs(15));
+                                    tab.wait_until_navigated()?;
 									let mut parsed_pages = self.parse_source_pages(tab, &parsed_page)?;
 									parsed_pages.insert(0, parsed_page);
 									return Ok(parsed_pages);
@@ -367,13 +367,7 @@ impl PostingsExtractor {
 	}
 
 	fn add_posting_details(&self, posting: &mut posting::Model, page: &ParsedPage) -> Result<()> {
-		let t = self.browser.new_tab();
-		match &t {
-			Err(e) => eprintln!("{:?}", e),
-			_ => eprintln!("all good"),
-		};
-
-		let tab = t?;
+		let tab = self.browser.new_tab()?;
 		tab.navigate_to(&page.url)?;
 		tab.wait_until_navigated()?;
 

@@ -38,8 +38,15 @@ async fn index() -> Option<NamedFile> {
 
 #[launch]
 async fn rocket() -> _ {
+    let args: Vec<String> = env::args().collect();
+    let mut environment = "dev";
+
+    if args.len() > 1 {
+        environment = &args[1];
+    }
+
 	let rocket = rocket::build();
-	let figment = rocket.figment();
+	let figment = rocket.figment().clone().select(environment);
 
 	#[derive(Deserialize)]
 	#[serde(crate = "rocket::serde")]
