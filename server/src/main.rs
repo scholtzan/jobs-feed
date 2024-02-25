@@ -23,29 +23,34 @@ use std::{
 	path::{Path, PathBuf},
 };
 
-use migration::{Migrator, MigratorTrait};
+use migration::MigratorTrait;
 
 // todo: make configurable
 const DIST: &str = relative!("dist");
 
-#[get("/<file..>", rank = 1)]
+#[get("/<file..>", rank = 2)]
 async fn static_files(file: PathBuf) -> Option<NamedFile> {
 	NamedFile::open(Path::new(DIST).join("_app/").join(file)).await.ok()
 }
 
-#[get("/<_..>", rank = 2)]
+#[get("/favicon.svg", rank = 1)]
+async fn favicon() -> Option<NamedFile> {
+	NamedFile::open(Path::new(DIST).join("favicon.svg")).await.ok()
+}
+
+#[get("/<_..>", rank = 3)]
 async fn index() -> Option<NamedFile> {
 	NamedFile::open(Path::new(DIST).join("index.html")).await.ok()
 }
 
 #[launch]
 async fn rocket() -> _ {
-    let args: Vec<String> = env::args().collect();
-    let mut environment = "dev";
+	let args: Vec<String> = env::args().collect();
+	let mut environment = "dev";
 
-    if args.len() > 1 {
-        environment = &args[1];
-    }
+	if args.len() > 1 {
+		environment = &args[1];
+	}
 
 	let rocket = rocket::build();
 	let figment = rocket.figment().clone().select(environment);
@@ -59,7 +64,7 @@ async fn rocket() -> _ {
 	let config: DatabaseConfig = figment.extract_inner::<DatabaseConfig>("database").unwrap();
 
 	let db = Database::connect(config.url).await.unwrap();
-    migration::Migrator::up(&db, None).await.unwrap();
+	migration::Migrator::up(&db, None).await.unwrap();
 
 	let postings_extractor_handler = PostingsExtractorHandler::new();
 
@@ -91,5 +96,5 @@ async fn rocket() -> _ {
 				routes::usage::extraction_costs,
 			],
 		)
-		.mount("/", routes![index])
+		.mount("/", routes![favicon, index])
 }

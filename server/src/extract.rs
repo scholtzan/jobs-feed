@@ -44,10 +44,7 @@ impl PostingsExtractorHandler {
 				let filters = filters.clone();
 
 				tokio::spawn(async move {
-					let opt = LaunchOptionsBuilder::default()
-                .headless(true)
-                .idle_browser_timeout(Duration::from_millis(60_000))
-                .build().unwrap();
+					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(60_000)).build().unwrap();
 					let browser = Browser::new(opt).unwrap();
 
 					let mut extractor = PostingsExtractor::new(
@@ -304,7 +301,7 @@ impl PostingsExtractor {
 								let pagination_click = pagination_element.click();
 								if pagination_click.is_ok() {
 									std::thread::sleep(std::time::Duration::from_secs(15));
-                                    tab.wait_until_navigated()?;
+									tab.wait_until_navigated()?;
 									let mut parsed_pages = self.parse_source_pages(tab, &parsed_page)?;
 									parsed_pages.insert(0, parsed_page);
 									return Ok(parsed_pages);

@@ -1,4 +1,4 @@
-use crate::entities::{prelude::*, *};
+use crate::entities::*;
 use serde::{Deserialize, Serialize};
 
 use chrono;
