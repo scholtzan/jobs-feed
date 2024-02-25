@@ -1,6 +1,7 @@
 [default]
 port = 3000
 dist_dir = "dist/"
+address = "0.0.0.0"
 
 [release.database]
 url = "postgres://postgres:postgres@localhost:5432/jobs_feed_release"

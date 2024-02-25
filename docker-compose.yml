@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      ENVIRONMENT: release
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: "jobs_feed_${ENVIRONMENT:-release}"
+    ports: 
+      - '5432:5432'
+    volumes:
+      - jobs_feed_db:/var/lib/postgresql/data
+      - ./migration/create_database.sql:/docker-entrypoint-initdb.d/create_database.sql
+
+  jobs_feed:
+    build:
+      context: .
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: postgres
+      ENVIRONMENT: "${ENVIRONMENT:-release}"
+      RUST_BACKTRACE: 1
+      ROCKET_ADDRESS: "0.0.0.0"
+    depends_on:
+      - postgres
+    ports:
+      - '127.0.0.1:3000:3000'
+        
+volumes:
+  jobs_feed_db:

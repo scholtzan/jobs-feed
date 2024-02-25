@@ -1,0 +1,5 @@
+server/dist/*
+server/target/*
+migration/target/*
+client/node_modules/*
+client/.svelte_kit/*
