@@ -3,7 +3,7 @@ port = 3000
 dist_dir = "dist/"
 
 [release.database]
-url = "postgres://postgres:postgres@localhost:5432/jobs_feed"
+url = "postgres://postgres:postgres@localhost:5432/jobs_feed_release"
 
 [debug.database]
-url = "postgres://postgres:postgres@localhost:5432/jobs_feed_dev"
+url = "postgres://postgres:postgres@localhost:5432/jobs_feed_debug"

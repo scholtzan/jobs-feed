@@ -23,6 +23,8 @@ use std::{
 	path::{Path, PathBuf},
 };
 
+use migration::{Migrator, MigratorTrait};
+
 // todo: make configurable
 const DIST: &str = relative!("dist");
 
@@ -57,6 +59,7 @@ async fn rocket() -> _ {
 	let config: DatabaseConfig = figment.extract_inner::<DatabaseConfig>("database").unwrap();
 
 	let db = Database::connect(config.url).await.unwrap();
+    migration::Migrator::up(&db, None).await.unwrap();
 
 	let postings_extractor_handler = PostingsExtractorHandler::new();
 
