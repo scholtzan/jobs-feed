@@ -5,7 +5,7 @@ export default {
 		extend: {}
 	},
 	daisyui: {
-		themes: ['light', 'dark', 'cupcake'],
+		themes: ['light', 'dark', 'cupcake', 'cmyk'],
 		styled: true,
 		base: true
 	},

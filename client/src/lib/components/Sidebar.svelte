@@ -1,10 +1,7 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
-	import { get, set } from 'svelte/store';
-	import { sources, postings, selectedSource } from '../store';
 	import { Postings } from '../types/postings';
 	import { Sources } from '../types/sources';
-	import { NotificationHandler, NotificationType } from '../types/notifications';
+	import { NotificationHandler } from '../types/notifications';
 	import { goto } from '$app/navigation';
 
 	let notificationHandler = new NotificationHandler();
@@ -66,7 +63,7 @@
 <div class="max-w-[20em] min-w-[16em]">
 	<aside class="h-screen sticky top-0 flex flex-col bg-base-200 overflow-y-auto">
 		<!-- Header -->
-		<div class="flex gap-x-20 justify-between p-2 h-16 border-b align-bottom">
+		<div class="flex gap-x-20 justify-between p-2 h-16 border-b border-base-300 align-bottom">
 			<a href="/" class="h-12 w-12">
 				<svg
 					width="100%"
@@ -114,19 +111,16 @@
 					</defs>
 				</svg>
 			</a>
-		</div>
 
-		<!-- Body -->
-		<div class="flex flex-col border-base-300 px-2 pt-4 grow">
-			<div class="flex flex-row justify-end space-x-1">
-				<a class="btn btn-ghost btn-square btn-sm" href="/source/new">
+			<div class="flex flex-row justify-end">
+				<a class="btn btn-ghost btn-square" href="/source/new">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke-width="1.5"
 						stroke="currentColor"
-						class="w-6 h-6"
+						class="w-7 h-7"
 					>
 						<path
 							stroke-linecap="round"
@@ -136,14 +130,14 @@
 					</svg>
 				</a>
 
-				<a class="btn btn-ghost btn-square btn-sm" href="/filter">
+				<a class="btn btn-ghost btn-square" href="/filter">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke-width="1.5"
 						stroke="currentColor"
-						class="w-6 h-6"
+						class="w-7 h-7"
 					>
 						<path
 							stroke-linecap="round"
@@ -154,7 +148,7 @@
 				</a>
 
 				<button
-					class="btn btn-ghost btn-square btn-sm {isRefreshing ? 'btn-disabled' : ''}"
+					class="btn btn-ghost btn-square {isRefreshing ? 'btn-disabled' : ''}"
 					on:click={refreshPostings}
 				>
 					{#if isRefreshing}
@@ -166,7 +160,7 @@
 							viewBox="0 0 24 24"
 							stroke-width="1.5"
 							stroke="currentColor"
-							class="w-6 h-6"
+							class="w-7 h-7"
 						>
 							<path
 								stroke-linecap="round"
@@ -177,10 +171,13 @@
 					{/if}
 				</button>
 			</div>
+		</div>
 
+		<!-- Body -->
+		<div class="flex flex-col border-base-300 px-2 pt-4 grow">
 			<!-- Links -->
 			<div class="flex flex-col divide-y divide-base-300">
-				<ul class="menu menu-s px-0">
+				<ul class="menu menu-s px-0 gap-y-1">
 					<li class="font-bold">
 						<button
 							on:click={() => goto('/postings/today')}
