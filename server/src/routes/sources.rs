@@ -32,6 +32,11 @@ pub async fn delete_source(db: &State<DatabaseConnection>, id: i32) -> Result<()
 	let source: Option<source::Model> = Source::find_by_id(id).one(db).await.expect("Could not find source");
 	let source: source::Model = source.unwrap();
 
+	let _res: DeleteResult = posting::Entity::delete_many()
+		.filter(posting::Column::SourceId.eq(id))
+		.exec(db)
+		.await
+		.expect("Cannot delete postings associated with source");
 	let _res: DeleteResult = source.delete(db).await.expect("Cannot delete source");
 
 	Ok(())

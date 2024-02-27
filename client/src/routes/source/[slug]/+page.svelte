@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 	import { Sources, Source } from '../../../lib/types/sources';
 	import { NotificationHandler } from '../../../lib/types/notifications';
 	import ValidatedInput from '../../../lib/components/ValidatedInput.svelte';
@@ -10,15 +9,23 @@
 	export let data: PageData;
 	let isNewSource = data.sourceId == 'new';
 	let sourcesHandler = new Sources();
-	let source;
+	let source = new Source();
 
 	if (isNewSource) {
 		source = new Source();
 	} else {
-		source = sourcesHandler.sourceById(data.sourceId);
-		if (source == undefined) {
-			notificationHandler.addError('No such source');
-		}
+		sourcesHandler.refresh().then((res) => {
+			if (!res.isSuccessful) {
+				notificationHandler.addError('Could not get sources.');
+				source = new Source();
+			} else {
+				source = sourcesHandler.sourceById(data.sourceId);
+				if (source == undefined) {
+					source = new Source();
+					notificationHandler.addError('No such source');
+				}
+			}
+		});
 	}
 
 	let validation = {
@@ -78,6 +85,24 @@
 		});
 		goto('/');
 	}
+
+	function openSource() {
+		let s = sourcesHandler.sourceById(source.id);
+
+		if (s != undefined) {
+			window.open(s.url, '_blank');
+		} else {
+			notificationHandler.addError('Could not open link to source. Source does not exist');
+		}
+	}
+
+	function deleteSource() {
+		sourcesHandler.deleteSource(source.id).then((res) => {
+			if (!res.isSuccessful) {
+				notificationHandler.addError('Could not delete source', res.message);
+			}
+		});
+	}
 </script>
 
 <div class="drawer drawer-end">
@@ -122,6 +147,22 @@
 						New Source
 					{:else}
 						{source.name}
+						<button class="btn btn-ghost btn-square" on:click={openSource}>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="w-6 h-6"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+								/>
+							</svg>
+						</button>
 					{/if}
 				</h1>
 
@@ -140,7 +181,7 @@
 				/>
 
 				<div class="py-4">
-					<details class="collapse bg-base-200 collapse-arrow border border-base-300">
+					<details class="collapse bg-base-200 collapse-arrow border border-base-400">
 						<summary class="collapse-title font-medium">Advanced Settings</summary>
 						<div class="collapse-content">
 							<label class="form-control w-full max-w">
@@ -180,19 +221,26 @@
 						<div tabindex="0" class="collapse collapse-open bg-base-200 border border-red-400">
 							<div class="collapse-title font-medium">Danger Zone</div>
 							<div class="collapse-content">
-								<div class="form-control w-full max-w flex-row flex justify-between">
+								<div class="form-control w-full max-w flex-row flex justify-between py-2">
 									<div class="label grow">
 										<span class="label-text"
 											>Reset the source cache. During the next refresh all current job postings will
 											be evaluated.</span
 										>
 									</div>
-									<button
-										placeholder="Link with pagination"
-										class="btn btn-outline btn-error w-1/5"
-										on:click={resetCache}
-									>
+									<button class="btn btn-outline btn-error w-1/5" on:click={resetCache}>
 										Reset Cache
+									</button>
+								</div>
+								<div class="form-control w-full max-w flex-row flex justify-between py-2">
+									<div class="label grow">
+										<span class="label-text">Delete the source and all associated data.</span>
+									</div>
+									<button
+										class="btn btn-outline btn-error w-1/5"
+										onclick="confirm_remove_modal.showModal()"
+									>
+										Remove
 									</button>
 								</div>
 							</div>
@@ -203,3 +251,20 @@
 		</div>
 	</div>
 </div>
+
+<dialog id="confirm_remove_modal" class="modal">
+	<div class="modal-box">
+		<form method="dialog">
+			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+		</form>
+		<h3 class="font-bold text-lg">Remove '{source.name}'?</h3>
+		<p class="py-4">Please confirm to remove the source '{source.name}'.</p>
+
+		<form method="dialog" class="modal-backdrop">
+			<div class="py-8 flex-none">
+				<button class="btn btn-active">Cancel</button>
+				<button class="btn btn-active btn-error" on:click={deleteSource}>Yes, Remove</button>
+			</div>
+		</form>
+	</div>
+</dialog>
