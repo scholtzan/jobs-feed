@@ -82,6 +82,7 @@
 				</details>
 			</div>
 			<button
+				title="Close"
 				on:click={() => removeNotification(notification)}
 				class="btn btn-ghost btn-sm btn-circle"
 			>

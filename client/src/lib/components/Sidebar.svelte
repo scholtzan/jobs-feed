@@ -74,7 +74,7 @@
 	<aside class="h-screen sticky top-0 flex flex-col bg-base-200 overflow-y-auto">
 		<!-- Header -->
 		<div class="flex gap-x-20 justify-between p-2 h-16 border-b border-base-300 align-bottom">
-			<a href="/" class="h-12 w-12">
+			<a title="Jobs Feed" href="/" class="h-12 w-12">
 				<svg
 					width="100%"
 					height="100%"
@@ -123,7 +123,7 @@
 			</a>
 
 			<div class="flex flex-row justify-end">
-				<a class="btn btn-ghost btn-square" href="/source/new">
+				<a title="Add Source" class="btn btn-ghost btn-square" href="/source/new">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
@@ -140,7 +140,7 @@
 					</svg>
 				</a>
 
-				<a class="btn btn-ghost btn-square" href="/filter">
+				<a title="Set Filters" class="btn btn-ghost btn-square" href="/filter">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
@@ -158,6 +158,7 @@
 				</a>
 
 				<button
+					title="Refresh Postings"
 					class="btn btn-ghost btn-square {isRefreshing ? 'btn-disabled' : ''}"
 					on:click={refreshPostings}
 				>
@@ -190,6 +191,7 @@
 				<ul class="menu menu-s px-0 gap-y-1">
 					<li class="font-bold">
 						<button
+							title="Postings Added Today"
 							on:click={() => goto('/postings/today')}
 							class={selected == 'today' ? 'active' : ''}
 						>
@@ -216,6 +218,7 @@
 
 					<li class="font-bold">
 						<button
+							title="All Postings"
 							on:click={() => goto('/postings/all')}
 							class={selected == 'all' ? 'active' : ''}
 						>
@@ -242,6 +245,7 @@
 
 					<li class="font-bold">
 						<button
+							title="Bookmarked Postings"
 							on:click={() => goto('/postings/bookmarked')}
 							class={selected == 'bookmarked' ? 'active' : ''}
 						>
@@ -266,6 +270,7 @@
 					{#each storedSources as source}
 						<li class="font-bold">
 							<button
+								title={source.name}
 								on:click={() => goto(`/postings/${source.id}`)}
 								class={selected == source.id ? 'active' : ''}
 								on:contextmenu={(e) => contextMenu(e, source.id, source.name)}

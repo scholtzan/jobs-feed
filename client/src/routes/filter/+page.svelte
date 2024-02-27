@@ -135,6 +135,7 @@
 						</label>
 
 						<button
+							title="Remove Filter"
 							class="btn btn-active btn-square"
 							on:click|preventDefault={() => removeFilter(filter)}
 						>
@@ -156,7 +157,7 @@
 					</div>
 				{/each}
 
-				<button class="btn btn-active" on:click|preventDefault={addFilter}>
+				<button title="Add Filter" class="btn btn-active" on:click|preventDefault={addFilter}>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"

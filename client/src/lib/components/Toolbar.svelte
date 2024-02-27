@@ -3,7 +3,7 @@
 	<div class="flex-none"></div>
 	<div class="flex-1"></div>
 	<div class="flex-none">
-		<a class="btn btn-square btn-ghost" href="/usage">
+		<a title="Usage" class="btn btn-square btn-ghost" href="/usage">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				fill="none"
@@ -19,7 +19,7 @@
 				/>
 			</svg>
 		</a>
-		<a class="btn btn-square btn-ghost" href="/preferences">
+		<a title="Settings" class="btn btn-square btn-ghost" href="/preferences">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				fill="none"

@@ -86,27 +86,31 @@
 
 <div class="w-2/3">
 	<div class="flex flex-row grow justify-end px-4 gap-x-2">
-		<button class="btn btn-ghost btn-square" on:click={() => markAsRead(postings.map((p) => p.id))}>
+		<button
+			title="Mark As Read"
+			class="btn btn-ghost btn-square"
+			on:click={() => markAsRead(postings.map((p) => p.id))}
+		>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				fill="none"
 				viewBox="0 0 24 24"
 				stroke-width="1.5"
 				stroke="currentColor"
-				class="w-9 h-9"
+				class="w-7 h-7"
 			>
 				<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
 			</svg>
 		</button>
 		{#if ![SelectedSource.All, SelectedSource.Bookmarked, SelectedSource.Today].includes(sourceSelected)}
-			<a class="btn btn-ghost btn-square" href="/source/{sourceSelected}">
+			<a title="Edit Source" class="btn btn-ghost btn-square" href="/source/{sourceSelected}">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					fill="none"
 					viewBox="0 0 24 24"
 					stroke-width="1.5"
 					stroke="currentColor"
-					class="w-9 h-9"
+					class="w-7 h-7"
 				>
 					<path
 						stroke-linecap="round"
@@ -120,14 +124,18 @@
 					/>
 				</svg>
 			</a>
-			<button class="btn btn-ghost btn-square" on:click={() => openSource(sourceSelected)}>
+			<button
+				title="Visit Page"
+				class="btn btn-ghost btn-square"
+				on:click={() => openSource(sourceSelected)}
+			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					fill="none"
 					viewBox="0 0 24 24"
 					stroke-width="1.5"
 					stroke="currentColor"
-					class="w-9 h-9"
+					class="w-7 h-7"
 				>
 					<path
 						stroke-linecap="round"
@@ -168,6 +176,7 @@
 
 					<div class="flex flex-row grow justify-end px-4 gap-2">
 						<button
+							title="Mark As Read"
 							class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
 							on:click={() => markAsRead([posting.id])}
 						>
@@ -177,12 +186,13 @@
 								viewBox="0 0 24 24"
 								stroke-width="1.5"
 								stroke="currentColor"
-								class="w-6 h-6"
+								class="w-5 h-5"
 							>
 								<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
 							</svg>
 						</button>
 						<button
+							title="Bookmark Posting"
 							class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
 							on:click={() => bookmark(posting.id)}
 						>
@@ -191,7 +201,7 @@
 									xmlns="http://www.w3.org/2000/svg"
 									viewBox="0 0 24 24"
 									fill="currentColor"
-									class="w-6 h-6"
+									class="w-5 h-5"
 								>
 									<path
 										fill-rule="evenodd"
@@ -206,7 +216,7 @@
 									viewBox="0 0 24 24"
 									stroke-width="1.5"
 									stroke="currentColor"
-									class="w-6 h-6"
+									class="w-5 h-5"
 								>
 									<path
 										stroke-linecap="round"
