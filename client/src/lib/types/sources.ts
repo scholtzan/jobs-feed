@@ -106,4 +106,5 @@ export class Source {
 	id: number | null = null;
 	pagination: string | null = null;
 	selector: string | null = null;
+	favicon: string | null = null;
 }

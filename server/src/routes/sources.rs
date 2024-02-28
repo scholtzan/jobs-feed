@@ -67,6 +67,7 @@ pub async fn update_source(db: &State<DatabaseConnection>, id: i32, input: Json<
 	existing_source_active.url = Set(updated_source.url);
 	existing_source_active.selector = Set(updated_source.selector);
 	existing_source_active.pagination = Set(updated_source.pagination);
+	existing_source_active.favicon = Set(updated_source.favicon);
 
 	let existing_source: source::Model = existing_source_active.update(db).await.expect("Could not update source");
 

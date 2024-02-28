@@ -279,7 +279,9 @@
 									alt=""
 									height="16"
 									width="16"
-									src="https://www.google.com/s2/favicons?domain={source.url}&amp;alt=feed"
+									src="https://www.google.com/s2/favicons?domain={source.favicon == null
+										? source.url
+										: source.favicon}&amp;alt=feed"
 								/>
 								{source.name}
 

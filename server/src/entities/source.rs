@@ -16,6 +16,7 @@ pub struct Model {
 	pub pagination: Option<String>,
 	#[sea_orm(column_type = "Text", nullable)]
 	pub content: Option<String>,
+	pub favicon: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -1,31 +1,33 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { Postings } from '../types/postings';
-	import { Sources, SelectedSource } from '../types/sources';
+	import { Sources, SelectedSource, Source } from '../types/sources';
 	import { NotificationHandler } from '../types/notifications';
 
 	let notificationHandler = new NotificationHandler();
 	let sourcesHandler = new Sources();
 	let postingsHandler = new Postings();
-	let sourceSelected = sourcesHandler.selectedSource;
+	let selectedSourceId = sourcesHandler.selectedSource;
 	let sources = sourcesHandler.sources;
 	let postings = postingsHandler.postings;
+	let source;
+	getPostingsForSelectedSource();
 
 	postingsHandler.subscribe((_) => {
 		getPostingsForSelectedSource();
 	});
 
 	sourcesHandler.subscribeSelectedSource((value) => {
-		sourceSelected = sourcesHandler.selectedSource;
+		selectedSourceId = sourcesHandler.selectedSource;
 		getPostingsForSelectedSource();
 	});
 
 	function getPostingsForSelectedSource() {
-		if (sourceSelected == SelectedSource.All) {
+		if (selectedSourceId == SelectedSource.All) {
 			postings = postingsHandler.postings;
-		} else if (sourceSelected == SelectedSource.Today) {
+		} else if (selectedSourceId == SelectedSource.Today) {
 			postings = postingsHandler.getTodaysPostings();
-		} else if (sourceSelected == SelectedSource.Bookmarked) {
+		} else if (selectedSourceId == SelectedSource.Bookmarked) {
 			postingsHandler.getBookmarked().then((res) => {
 				if (!res.isSuccessful) {
 					notificationHandler.addError('Could not get bookmarked postings', res.message);
@@ -34,9 +36,10 @@
 				}
 			});
 		} else {
+			source = sourcesHandler.sourceById(selectedSourceId);
 			let postingsBySource = postingsHandler.postingsBySource();
-			if (sourceSelected in postingsBySource) {
-				postings = postingsBySource[sourceSelected];
+			if (selectedSourceId in postingsBySource) {
+				postings = postingsBySource[selectedSourceId];
 			} else {
 				postings = [];
 			}
@@ -64,7 +67,7 @@
 	}
 
 	function viewRead() {
-		postingsHandler.getReadPostingsOfSource(sourceSelected).then((res) => {
+		postingsHandler.getReadPostingsOfSource(selectedSourceId).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not fetch read postings', res.message);
 			} else {
@@ -102,8 +105,8 @@
 				<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
 			</svg>
 		</button>
-		{#if ![SelectedSource.All, SelectedSource.Bookmarked, SelectedSource.Today].includes(sourceSelected)}
-			<a title="Edit Source" class="btn btn-ghost btn-square" href="/source/{sourceSelected}">
+		{#if ![SelectedSource.All, SelectedSource.Bookmarked, SelectedSource.Today].includes(selectedSourceId)}
+			<a title="Edit Source" class="btn btn-ghost btn-square" href="/source/{selectedSourceId}">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					fill="none"
@@ -127,7 +130,7 @@
 			<button
 				title="Visit Page"
 				class="btn btn-ghost btn-square"
-				on:click={() => openSource(sourceSelected)}
+				on:click={() => openSource(selectedSourceId)}
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -147,22 +150,73 @@
 		{/if}
 	</div>
 	<h1 class="flex grow text-4xl font-bold py-8 px-4">
-		{#if sourceSelected == SelectedSource.All}
+		{#if selectedSourceId == SelectedSource.All}
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke-width="1.5"
+				stroke="currentColor"
+				class="w-11 h-11 mr-2"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
+				/>
+			</svg>
 			All Job Postings
-		{:else if sourceSelected == SelectedSource.Today}
+		{:else if selectedSourceId == SelectedSource.Today}
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke-width="1.5"
+				stroke="currentColor"
+				class="w-11 h-11 mr-2"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"
+				/>
+			</svg>
 			Today's Job Postings
-		{:else if sourceSelected == SelectedSource.Bookmarked}
+		{:else if selectedSourceId == SelectedSource.Bookmarked}
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 24 24"
+				fill="currentColor"
+				class="w-11 h-11 mr-2"
+			>
+				<path
+					fill-rule="evenodd"
+					d="M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z"
+					clip-rule="evenodd"
+				/>
+			</svg>
+
 			Bookmarked Postings
 		{:else}
-			{sourcesHandler.sourceById(sourceSelected) == undefined
-				? goto('/')
-				: sourcesHandler.sourceById(sourceSelected).name}
+			{#if source != undefined}
+				<img
+					class="mr-2"
+					width="40"
+					height="40"
+					alt=""
+					src="https://www.google.com/s2/favicons?sz=32&domain={source.favicon != null
+						? source.favicon
+						: source.url}&amp;alt=feed"
+				/>
+			{/if}
+
+			{source == undefined ? goto('/') : source.name}
 		{/if}
 	</h1>
 	{#each postings as posting}
 		<div
 			class="card card-compact w-full group {posting.seen &&
-			sourceSelected != SelectedSource.Bookmarked
+			selectedSourceId != SelectedSource.Bookmarked
 				? 'text-slate-500'
 				: ''}"
 		>
@@ -242,7 +296,7 @@
 				class="btn btn-active w-full max-w">Mark All As Read</button
 			>
 		</div>
-	{:else if sourceSelected != 'bookmarked' && postings.length == 0}
+	{:else if selectedSourceId != 'bookmarked' && postings.length == 0}
 		<div class="py-8 flex-none px-4 justify-items-center grid max-w w-full">
 			<button on:click={viewRead} class="btn btn-active w-1/4">View Read Postings</button>
 		</div>
