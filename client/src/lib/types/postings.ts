@@ -86,22 +86,23 @@ export class Postings {
 	}
 
 	public bookmarkPosting(id: number) {
-		let posting = this.postingById(id);
-
-		if (posting === undefined) {
-			return;
-		}
-
-		posting.bookmarked = !posting.bookmarked;
-
-		return this.api.updatePosting(posting).then((res) => {
+		return this.postingById(id).then((res) => {
 			if (!res.isSuccessful) {
-				posting.bookmarked = !posting.bookmarked;
+				return res;
 			} else {
-				this.store();
-			}
+				let posting = res.data;
+				posting.bookmarked = !posting.bookmarked;
 
-			return res;
+				return this.api.updatePosting(posting).then((res) => {
+					if (!res.isSuccessful) {
+						posting.bookmarked = !posting.bookmarked;
+					} else {
+						this.store();
+					}
+
+					return res;
+				});
+			}
 		});
 	}
 

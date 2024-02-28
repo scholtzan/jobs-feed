@@ -224,6 +224,18 @@
 				<div class="flex flex-row grow">
 					<a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
 						<h2 class="card-title flex grow mb-0">
+							{#if sourcesHandler.sourceById(posting.source_id) != undefined}
+								<img
+									width="16"
+									height="16"
+									alt=""
+									src="https://www.google.com/s2/favicons?sz=16&domain={sourcesHandler.sourceById(
+										posting.source_id
+									).favicon != null
+										? sourcesHandler.sourceById(posting.source_id).favicon
+										: sourcesHandler.sourceById(posting.source_id).url}&amp;alt=feed"
+								/>
+							{/if}
 							{posting.title}
 						</h2>
 					</a>
@@ -283,6 +295,13 @@
 					</div>
 				</div>
 				<a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
+					{#if sourcesHandler.sourceById(posting.source_id) != undefined}
+						<p class="pb-1 text-slate-500">
+							{sourcesHandler.sourceById(posting.source_id).name} // {new Date(
+								posting.created_at
+							).toLocaleString()}
+						</p>
+					{/if}
 					<p class="text-justify">{posting.description}</p>
 				</a>
 			</div>
