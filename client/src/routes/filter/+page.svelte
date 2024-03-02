@@ -118,20 +118,36 @@
 
 						<label class="form-control w-3/5 max-w">
 							<div class="label">
-								<span class="label-text">Filter Value</span>
+								<span class="label-text">
+									Filter Value
+									<div
+										class="tooltip tooltip-right"
+										data-tip="Separate multiple filter values by comma (value 1, value 2, ...)"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke-width="1.5"
+											stroke="currentColor"
+											class="w-4 h-4"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
+											/>
+										</svg>
+									</div>
+								</span>
 							</div>
 
-							<!-- <div
-                            class="inline-block {newSource.url.trim() == "" && urlValidation ? 'tooltip tooltip-open tooltip-error' : ''}"
-                            data-tip={urlValidation || null}
-                        > -->
 							<input
 								type="text"
-								placeholder="Filter value"
+								placeholder="Filter value 1, Filter value 2"
 								class="input input-bordered w-full max-w"
 								bind:value={filter.value}
 							/>
-							<!-- </div> -->
 						</label>
 
 						<button

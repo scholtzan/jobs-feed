@@ -3,10 +3,12 @@
 	import { Postings } from '../types/postings';
 	import { Sources, SelectedSource, Source } from '../types/sources';
 	import { NotificationHandler } from '../types/notifications';
+	import { Filters } from '../types/filters';
 
 	let notificationHandler = new NotificationHandler();
 	let sourcesHandler = new Sources();
 	let postingsHandler = new Postings();
+	let filtersHandler = new Filters();
 	let selectedSourceId = sourcesHandler.selectedSource;
 	let sources = sourcesHandler.sources;
 	let postings = postingsHandler.postings;
@@ -19,6 +21,10 @@
 
 	sourcesHandler.subscribeSelectedSource((value) => {
 		selectedSourceId = sourcesHandler.selectedSource;
+		getPostingsForSelectedSource();
+	});
+
+	filtersHandler.subscribe((_) => {
 		getPostingsForSelectedSource();
 	});
 
@@ -84,6 +90,23 @@
 		} else {
 			notificationHandler.addError('Could not open link to source. Source does not exist');
 		}
+	}
+
+	function getMatchingFilters(content: string) {
+		let matchingFilters = [];
+
+		if (content != null) {
+			filtersHandler.filters.forEach((filter) => {
+				filter.value.split(',').forEach((v) => {
+					v = v.trim();
+					if (content.includes(v)) {
+						matchingFilters.push(v);
+					}
+				});
+			});
+		}
+
+		return matchingFilters;
 	}
 </script>
 
@@ -301,6 +324,23 @@
 								posting.created_at
 							).toLocaleString()}
 						</p>
+						{#if getMatchingFilters(posting.content).length > 0}
+							<p class="flex grow pb-1 text-orange-400">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="currentColor"
+									class="w-4 h-4 mr-1"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.576 2.576l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.576 2.576l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.576-2.576l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.466 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z"
+										clip-rule="evenodd"
+									/>
+								</svg>
+								{getMatchingFilters(posting.content).join(', ')}
+							</p>
+						{/if}
 					{/if}
 					<p class="text-justify">{posting.description}</p>
 				</a>
