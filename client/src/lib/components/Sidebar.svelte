@@ -40,6 +40,11 @@
 			}
 
 			isRefreshing = false;
+			sourcesHandler.refresh().then((res) => {
+				if (!res.isSuccessful) {
+					notificationHandler.addError('Could not refresh sources', res.message);
+				}
+			});
 		});
 	}
 
@@ -287,6 +292,10 @@
 
 								{#if source.id in postingsPerSource}
 									<div class="badge badge-neutral">{postingsPerSource[source.id].length}</div>
+								{/if}
+
+								{#if source.unreachable}
+									<div title="Unreachable" class="badge badge-error">!</div>
 								{/if}
 							</button>
 						</li>

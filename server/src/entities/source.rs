@@ -17,6 +17,7 @@ pub struct Model {
 	#[sea_orm(column_type = "Text", nullable)]
 	pub content: Option<String>,
 	pub favicon: Option<String>,
+	pub unreachable: Option<bool>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

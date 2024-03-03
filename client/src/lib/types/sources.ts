@@ -107,4 +107,5 @@ export class Source {
 	pagination: string | null = null;
 	selector: string | null = null;
 	favicon: string | null = null;
+	unreachable: boolean = false;
 }

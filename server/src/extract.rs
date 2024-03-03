@@ -4,6 +4,7 @@ use crate::{
 	assistant::Usage,
 	entities::{prelude::*, *},
 };
+use anyhow::anyhow;
 use anyhow::Result;
 
 use chrono::FixedOffset;
@@ -109,6 +110,7 @@ impl PostingsExtractorHandler {
 		for extractor in &self.extractors {
 			let _ = Source::update_many()
 				.col_expr(source::Column::Content, Expr::value(extractor.parsed_content.to_string().clone()))
+				.col_expr(source::Column::Unreachable, Expr::value(extractor.unreachable.clone()))
 				.filter(source::Column::Id.eq(extractor.source_id))
 				.exec(db)
 				.await;
@@ -190,6 +192,7 @@ pub struct PostingsExtractor {
 	parsed_content: ParsedSource,
 	cached_content: Option<String>,
 	extracted_postings: Option<Vec<posting::Model>>,
+	unreachable: bool,
 
 	usage: Usage,
 }
@@ -217,6 +220,7 @@ impl PostingsExtractor {
 			extracted_postings: None,
 			browser,
 			usage: Usage::default(),
+			unreachable: false,
 		}
 	}
 
@@ -236,7 +240,14 @@ impl PostingsExtractor {
 	async fn parse_source_content(&mut self) -> Result<()> {
 		let tab = self.browser.new_tab()?;
 
-		tab.navigate_to(&self.url)?;
+		match tab.navigate_to(&self.url) {
+			Err(_) => {
+				self.unreachable = true;
+				return Err(anyhow!("Source is unreachable."));
+			}
+			_ => {}
+		}
+
 		tab.wait_until_navigated()?;
 
 		let head = tab.wait_for_element("head")?.get_content()?;
