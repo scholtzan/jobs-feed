@@ -34,8 +34,8 @@
 	});
 
 	postingsHandler.subscribe((_) => {
-		newPostings = postingsHandler.postings;
-		postingsToday = postingsHandler.getTodaysPostings();
+		newPostings = postingsHandler.postings.filter((p) => !p.seen);
+		postingsToday = postingsHandler.getTodaysPostings().filter((p) => !p.seen);
 		postingsPerSource = postingsHandler.postingsBySource();
 	});
 
@@ -321,8 +321,10 @@
 								/>
 								{source.name}
 
-								{#if source.id in postingsPerSource}
-									<div class="badge badge-neutral">{postingsPerSource[source.id].length}</div>
+								{#if source.id in postingsPerSource && postingsPerSource[source.id].filter((p) => !p.seen).length > 0}
+									<div class="badge badge-neutral">
+										{postingsPerSource[source.id].filter((p) => !p.seen).length}
+									</div>
 								{/if}
 
 								{#if source.unreachable}

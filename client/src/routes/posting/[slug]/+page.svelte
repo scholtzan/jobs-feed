@@ -169,8 +169,13 @@
 				</p>
 
 				<div class="py-8 flex-none">
-					<a href={posting.url} target="_blank" class="btn btn-active w-full max-w">Go To Posting</a
-					>
+					{#if sourcesHandler.sourceById(posting.source_id) != undefined}
+						<a
+							href={posting.url ? posting.url : sourcesHandler.sourceById(posting.source_id).url}
+							target="_blank"
+							class="btn btn-active w-full max-w">Go To Posting</a
+						>
+					{/if}
 				</div>
 			</div>
 		</div>

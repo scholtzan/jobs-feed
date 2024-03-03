@@ -21,6 +21,7 @@
 
 	sourcesHandler.subscribeSelectedSource((value) => {
 		selectedSourceId = sourcesHandler.selectedSource;
+		postingsHandler.refresh();
 		getPostingsForSelectedSource();
 	});
 
@@ -28,7 +29,7 @@
 		getPostingsForSelectedSource();
 	});
 
-	function getPostingsForSelectedSource() {
+	function getPostingsForSelectedSource(filterSeen = false) {
 		if (selectedSourceId == SelectedSource.All) {
 			postings = postingsHandler.postings;
 		} else if (selectedSourceId == SelectedSource.Today) {
@@ -45,7 +46,7 @@
 			source = sourcesHandler.sourceById(selectedSourceId);
 			let postingsBySource = postingsHandler.postingsBySource();
 			if (selectedSourceId in postingsBySource) {
-				postings = postingsBySource[selectedSourceId];
+				postings = postingsBySource[selectedSourceId].filter((p) => !p.seen);
 			} else {
 				postings = [];
 			}
@@ -99,7 +100,7 @@
 			filtersHandler.filters.forEach((filter) => {
 				filter.value.split(',').forEach((v) => {
 					v = v.trim();
-					if (content.includes(v)) {
+					if (content.toLowerCase().includes(v.toLowerCase())) {
 						matchingFilters.push(v);
 					}
 				});
@@ -341,7 +342,7 @@
 								posting.created_at
 							).toLocaleString()}
 						</p>
-						{#if getMatchingFilters(posting.content).length > 0}
+						{#if getMatchingFilters(posting.content + posting.description).length > 0}
 							<p class="flex grow pb-1 text-orange-400">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
@@ -355,7 +356,7 @@
 										clip-rule="evenodd"
 									/>
 								</svg>
-								{getMatchingFilters(posting.content).join(', ')}
+								{getMatchingFilters(posting.content + posting.description).join(', ')}
 							</p>
 						{/if}
 					{/if}

@@ -34,7 +34,7 @@ impl PostingsExtractorHandler {
 	}
 
 	async fn fetch(&mut self, db: &DatabaseConnection) -> Result<Vec<posting::Model>> {
-		let sources = Source::find().all(db).await?;
+		let sources = Source::find().filter(source::Column::Deleted.eq(false)).all(db).await?;
 		let settings = Settings::find().one(db).await?.expect("No settings stored");
 		let filters = Filter::find().all(db).await?;
 
