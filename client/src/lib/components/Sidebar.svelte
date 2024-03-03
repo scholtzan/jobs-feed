@@ -295,7 +295,7 @@
 								{/if}
 
 								{#if source.unreachable}
-									<div title="Unreachable" class="badge badge-error">!</div>
+									<div title="Unreachable" class="badge badge-neutral">!</div>
 								{/if}
 							</button>
 						</li>

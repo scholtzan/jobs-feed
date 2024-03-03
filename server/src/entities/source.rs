@@ -18,6 +18,7 @@ pub struct Model {
 	pub content: Option<String>,
 	pub favicon: Option<String>,
 	pub unreachable: Option<bool>,
+	pub deleted: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

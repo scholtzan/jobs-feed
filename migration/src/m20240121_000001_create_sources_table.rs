@@ -25,7 +25,8 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Source::Pagination).string())
                     .col(ColumnDef::new(Source::Content).text())
                     .col(ColumnDef::new(Source::Favicon).string())
-                    .col(ColumnDef::new(Source::Unreachable).boolean())
+                    .col(ColumnDef::new(Source::Unreachable).boolean().default(false))
+                    .col(ColumnDef::new(Source::Deleted).boolean().default(false).not_null())
                     .to_owned(),
             )
             .await
@@ -49,5 +50,6 @@ pub enum Source {
     Pagination,
     Content,
     Favicon,
-    Unreachable
+    Unreachable,
+    Deleted
 }

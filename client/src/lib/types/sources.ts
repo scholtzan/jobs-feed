@@ -108,4 +108,5 @@ export class Source {
 	selector: string | null = null;
 	favicon: string | null = null;
 	unreachable: boolean = false;
+	deleted: boolean = false;
 }

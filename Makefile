@@ -1,4 +1,4 @@
-ENVIRONMENT=release
+ENVIRONMENT=debug
 
 .PHONY: server client
 

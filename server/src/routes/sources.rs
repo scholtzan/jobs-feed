@@ -11,7 +11,15 @@ use sea_orm::*;
 pub async fn sources(db: &State<DatabaseConnection>) -> Result<Json<Vec<source::Model>>, Status> {
 	let db = db as &DatabaseConnection;
 
-	Ok(Json(Source::find().all(db).await.expect("Could not retrieve sources").into_iter().collect::<Vec<_>>()))
+	Ok(Json(
+		Source::find()
+			.filter(source::Column::Deleted.eq(false))
+			.all(db)
+			.await
+			.expect("Could not retrieve sources")
+			.into_iter()
+			.collect::<Vec<_>>(),
+	))
 }
 
 #[post("/sources", data = "<input>")]
@@ -30,14 +38,10 @@ pub async fn delete_source(db: &State<DatabaseConnection>, id: i32) -> Result<()
 	let db = db as &DatabaseConnection;
 
 	let source: Option<source::Model> = Source::find_by_id(id).one(db).await.expect("Could not find source");
-	let source: source::Model = source.unwrap();
+	let mut source: source::ActiveModel = source.unwrap().into();
+	source.deleted = Set(true);
 
-	let _res: DeleteResult = posting::Entity::delete_many()
-		.filter(posting::Column::SourceId.eq(id))
-		.exec(db)
-		.await
-		.expect("Cannot delete postings associated with source");
-	let _res: DeleteResult = source.delete(db).await.expect("Cannot delete source");
+	source.update(db).await.expect("Could not delete source");
 
 	Ok(())
 }
