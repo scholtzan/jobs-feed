@@ -2,10 +2,13 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { Usages, Usage } from '../../lib/types/usage';
+	import { Sources } from '../../lib/types/sources';
 	import { NotificationHandler } from '../../lib/types/notifications';
+	import { sources } from '../../lib/store';
 
 	let notificationHandler = new NotificationHandler();
 	let usageHandler = new Usages();
+	let sourcesHandler = new Sources();
 	let drawerOpen = true;
 	let usage = {};
 
@@ -114,7 +117,7 @@
 							</svg>
 						</div>
 						<div class="stat-title">Total Sources</div>
-						<div class="stat-value text-primary">{Object.entries(usage).length}</div>
+						<div class="stat-value text-primary">{sourcesHandler.sources.length}</div>
 					</div>
 
 					<div class="stat">

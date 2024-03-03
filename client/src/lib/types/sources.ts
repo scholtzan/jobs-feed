@@ -48,6 +48,20 @@ export class Sources {
 		selectedSource.set(selected);
 	}
 
+	public sortedSources() {
+		return this.sources.sort((s1, s2) => {
+			const name1 = s1.name.toLowerCase();
+			const name2 = s2.name.toLowerCase();
+			if (name1 > name2) {
+				return 1;
+			}
+			if (name1 < name2) {
+				return -1;
+			}
+			return 0;
+		});
+	}
+
 	public refresh() {
 		return this.api.getSources().then((res) => {
 			if (res.isSuccessful) {

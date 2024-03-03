@@ -17,7 +17,7 @@
 	let newPostings: Posting[] = postingsHandler.postings;
 	let postingsToday = postingsHandler.getTodaysPostings();
 	let postingsPerSource = postingsHandler.postingsBySource();
-	let storedSources = sourcesHandler.sources;
+	let storedSources = sourcesHandler.sortedSources();
 	let selected = sourcesHandler.selectedSource;
 	let isRefreshing = false;
 
@@ -26,7 +26,7 @@
 	});
 
 	sourcesHandler.subscribe((value) => {
-		storedSources = sourcesHandler.sources;
+		storedSources = sourcesHandler.sortedSources();
 	});
 
 	sourcesHandler.subscribeSelectedSource((value) => {
