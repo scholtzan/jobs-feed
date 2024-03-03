@@ -21,6 +21,8 @@ export const load: PageLoad = async () => {
 	settingsHandler.refresh().then((res) => {
 		if (!res.isSuccessful) {
 			notificationHandler.addError('Cannot get settings', res.message);
+		} else if (!res.data || !res.data.api_key) {
+			notificationHandler.addMessage('[Please set an OpenAI API key in Settings](/preferences).');
 		}
 	});
 

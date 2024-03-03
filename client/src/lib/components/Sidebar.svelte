@@ -3,6 +3,7 @@
 	import { Sources } from '../types/sources';
 	import { NotificationHandler } from '../types/notifications';
 	import { goto } from '$app/navigation';
+	import { Settings, SettingsHandler } from '../types/settings';
 
 	let notificationHandler = new NotificationHandler();
 	let sourceContextMenu = null;
@@ -11,12 +12,18 @@
 	let contextMenuPosition = { x: 0, y: 0 };
 	let postingsHandler = new Postings();
 	let sourcesHandler = new Sources();
+	let settingsHandler = new SettingsHandler();
+	let settings = settingsHandler.settings;
 	let newPostings: Posting[] = postingsHandler.postings;
 	let postingsToday = postingsHandler.getTodaysPostings();
 	let postingsPerSource = postingsHandler.postingsBySource();
 	let storedSources = sourcesHandler.sources;
 	let selected = sourcesHandler.selectedSource;
 	let isRefreshing = false;
+
+	settingsHandler.subscribe((value) => {
+		settings = settingsHandler.settings;
+	});
 
 	sourcesHandler.subscribe((value) => {
 		storedSources = sourcesHandler.sources;
@@ -163,8 +170,10 @@
 				</a>
 
 				<button
-					title="Refresh Postings"
-					class="btn btn-ghost btn-square {isRefreshing ? 'btn-disabled' : ''}"
+					title={settings.api_key
+						? 'Refresh Postings'
+						: 'OpenAI API Key needs to be set in Settings.'}
+					class="btn btn-ghost btn-square {isRefreshing || !settings.api_key ? 'btn-disabled' : ''}"
 					on:click={refreshPostings}
 				>
 					{#if isRefreshing}
@@ -271,6 +280,28 @@
 					</li>
 
 					<h2 class="menu-title">Sources</h2>
+
+					{#if storedSources.length == 0}
+						<div class="flex justify-center">
+							<a href="/source/new" class="btn btn-sm btn-active w-1/2">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke-width="1.5"
+									stroke="currentColor"
+									class="w-5 h-5"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+									/>
+								</svg>
+								Add Source
+							</a>
+						</div>
+					{/if}
 
 					{#each storedSources as source}
 						<li class="font-bold">

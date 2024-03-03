@@ -3,8 +3,10 @@
 	import { Sources, Source } from '../../../lib/types/sources';
 	import { NotificationHandler } from '../../../lib/types/notifications';
 	import ValidatedInput from '../../../lib/components/ValidatedInput.svelte';
+	import { Filters } from '../../../lib/types/filters';
 
 	let notificationHandler = new NotificationHandler();
+	let filtersHandler = new Filters();
 	let drawerOpen = true;
 	export let data: PageData;
 	let isNewSource = data.sourceId == 'new';
@@ -61,6 +63,10 @@
 				sourcesHandler.createSource(source).then((res) => {
 					if (!res.isSuccessful) {
 						notificationHandler.addError('Could not add source', res.message);
+					} else if (filtersHandler.filters.length == 0) {
+						notificationHandler.addMessage(
+							'[Set filter criteria to narrow down new job postings.](/filter)'
+						);
 					}
 
 					goto('/');

@@ -46,6 +46,10 @@ export class NotificationHandler {
 		this.add(NotificationType.Error, message, details);
 	}
 
+	public addMessage(message: string, details: string | null = null) {
+		this.add(NotificationType.Success, message, details);
+	}
+
 	public remove(notification: Notification) {
 		this.notifications = this.notifications.filter((n) => n != notification);
 		this.store();
