@@ -29,7 +29,7 @@
 		getPostingsForSelectedSource();
 	});
 
-	function getPostingsForSelectedSource(filterSeen = false) {
+	function getPostingsForSelectedSource() {
 		if (selectedSourceId == SelectedSource.All) {
 			postings = postingsHandler.postings;
 		} else if (selectedSourceId == SelectedSource.Today) {
@@ -111,7 +111,7 @@
 	}
 </script>
 
-<div class="w-2/3">
+<div class="max-w-[50em] min-w-[20em] w-2/3">
 	<div class="flex flex-row grow justify-end px-4 gap-x-2">
 		<button
 			title="Mark As Read"
@@ -228,7 +228,7 @@
 					width="40"
 					height="40"
 					alt=""
-					src="https://www.google.com/s2/favicons?sz=32&domain={source.favicon != null
+					src="https://www.google.com/s2/favicons?sz=48&domain={source.favicon != null
 						? source.favicon
 						: source.url}&amp;alt=feed"
 				/>
@@ -270,7 +270,7 @@
 									width="16"
 									height="16"
 									alt=""
-									src="https://www.google.com/s2/favicons?sz=16&domain={sourcesHandler.sourceById(
+									src="https://www.google.com/s2/favicons?sz=48&domain={sourcesHandler.sourceById(
 										posting.source_id
 									).favicon != null
 										? sourcesHandler.sourceById(posting.source_id).favicon
@@ -390,7 +390,9 @@
 				/>
 			</svg>
 			<p class="text-slate-300 mb-10 font-bold">You're all caught up</p>
-			<button on:click={viewRead} class="btn btn-active w-1/4">View Read Postings</button>
+			<button on:click={viewRead} class="btn btn-active w-1/4 min-w-[15em]"
+				>View Read Postings</button
+			>
 		</div>
 	{/if}
 </div>

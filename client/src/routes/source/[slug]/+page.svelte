@@ -156,14 +156,14 @@
 									width="32"
 									height="32"
 									alt=""
-									src="https://www.google.com/s2/favicons?sz=24&domain={source.favicon}&amp;alt=feed"
+									src="https://www.google.com/s2/favicons?sz=48&domain={source.favicon}&amp;alt=feed"
 								/>
 							{:else if source.url}
 								<img
 									width="32"
 									height="32"
 									alt=""
-									src="https://www.google.com/s2/favicons?sz=24&domain={source.url}&amp;alt=feed"
+									src="https://www.google.com/s2/favicons?sz=48&domain={source.url}&amp;alt=feed"
 								/>
 							{:else}
 								<svg
@@ -208,7 +208,7 @@
 								viewBox="0 0 24 24"
 								stroke-width="1.5"
 								stroke="currentColor"
-								class="w-6 h-6"
+								class="w-7 h-7"
 							>
 								<path
 									stroke-linecap="round"
@@ -235,7 +235,7 @@
 				/>
 
 				<div class="py-4">
-					<details class="collapse bg-base-200 collapse-arrow border border-base-400">
+					<details class="collapse bg-base-200 collapse-arrow border border-slate-300">
 						<summary class="collapse-title font-medium">Advanced Settings</summary>
 						<div class="collapse-content">
 							<label class="form-control w-full max-w">

@@ -59,7 +59,7 @@
 		event.preventDefault();
 		sourceContextMenu = sourceId;
 		sourceNameContextMenu = sourceName;
-		contextMenuPosition = { x: event.clientX, y: event.clientY };
+		contextMenuPosition = { x: event.pageX, y: event.pageY };
 	}
 
 	function deleteSource(sourceId) {
@@ -202,7 +202,7 @@
 		<div class="flex flex-col border-base-300 px-2 pt-4 grow">
 			<!-- Links -->
 			<div class="flex flex-col divide-y divide-base-300">
-				<ul class="menu menu-s px-0 gap-y-1">
+				<ul class="menu menu px-0">
 					<li class="font-bold">
 						<button
 							title="Postings Added Today"
@@ -315,7 +315,7 @@
 									alt=""
 									height="16"
 									width="16"
-									src="https://www.google.com/s2/favicons?domain={source.favicon == null
+									src="https://www.google.com/s2/favicons?sz=48&domain={source.favicon == null
 										? source.url
 										: source.favicon}&amp;alt=feed"
 								/>

@@ -8,7 +8,7 @@
 </script>
 
 <div class="flex flex-column">
-	<div class="static">
+	<div class="static flex flex-column">
 		<Sidebar></Sidebar>
 
 		<NotificationContainer></NotificationContainer>
