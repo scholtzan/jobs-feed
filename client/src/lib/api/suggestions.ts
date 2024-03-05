@@ -34,7 +34,7 @@ export class SuggestionsApi {
 	};
 
 	public refreshSourceSuggestions = async (sourceId: number) => {
-		return fetch(`/api/${constants.API_VERSION}/sources/${sourceId}/suggestions`, {
+		return fetch(`/api/${constants.API_VERSION}/sources/${sourceId}/suggestions/refresh`, {
 			method: 'PUT'
 		}).then((response) => {
 			if (response.status == 200) {

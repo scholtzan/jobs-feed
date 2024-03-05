@@ -62,7 +62,12 @@ pub async fn source_suggestions(db: &State<DatabaseConnection>, id: i32) -> Resu
 	let db = db as &DatabaseConnection;
 
 	Ok(Json(
-		Suggestion::find().filter(suggestion::Column::SourceId.eq(id)).all(db).await.expect("Could not retrieve suggestions"),
+		Suggestion::find()
+			.filter(suggestion::Column::SourceId.eq(id))
+			.limit(10)
+			.all(db)
+			.await
+			.expect("Could not retrieve suggestions"),
 	))
 }
 
@@ -120,7 +125,12 @@ pub async fn refresh_source_suggestions(db: &State<DatabaseConnection>, id: i32)
 	suggestion_usage.insert(db).await.expect("Could not update suggestion usage");
 
 	Ok(Json(
-		Suggestion::find().filter(suggestion::Column::SourceId.eq(id)).all(db).await.expect("Could not retrieve suggestions"),
+		Suggestion::find()
+			.filter(suggestion::Column::SourceId.eq(id))
+			.limit(10)
+			.all(db)
+			.await
+			.expect("Could not retrieve suggestions"),
 	))
 }
 
