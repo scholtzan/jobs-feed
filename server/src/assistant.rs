@@ -11,7 +11,6 @@ use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-const ASSISTANT_NAME: &str = "Jobs Feed";
 const BASE_URL: &str = "https://api.openai.com/v1";
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
@@ -47,20 +46,51 @@ impl Usage {
 	}
 }
 
+pub enum AssistantType {
+	JobsFeed,
+	JobsSuggestion,
+}
+
+impl AssistantType {
+	fn name(&self) -> &'static str {
+		match self {
+			AssistantType::JobsFeed => "Jobs Feed",
+			AssistantType::JobsSuggestion => "Jobs Suggestion",
+		}
+	}
+
+	fn instructions(&self) -> &'static str {
+		match self {
+			AssistantType::JobsFeed => {
+				"Extract a complete list of job postings with descriptions from the provided inputs that match the provided criteria. \
+            Return the results in a single response as JSON. \
+            Extract the job descriptions and shorted to 200 characters. Do not miss any posting! \
+            Response format: [{{\"title\": \"\", \"description\": \"\"}}]"
+			}
+			AssistantType::JobsSuggestion => {
+				"Return a list of 10 career websites of companies similar to the company provided as input. \
+            Response format: [{{\"name\": \"\", \"url\": \"\"}}]"
+			}
+		}
+	}
+}
+
 pub struct Assistant {
 	api_key: String,
-	model: String,
+	pub model: String,
 	id: Option<String>,
+	assistant_type: AssistantType,
 	pub usage: Usage,
 }
 
 impl Assistant {
-	pub async fn new(api_key: &String, model: &String) -> Result<Self> {
+	pub async fn new(api_key: &String, model: &String, assistant_type: AssistantType) -> Result<Self> {
 		let mut assistant = Self {
 			api_key: api_key.clone(),
 			model: model.clone(),
 			id: None,
 			usage: Usage::default(),
+			assistant_type: assistant_type,
 		};
 
 		if let Some(assistant_id) = assistant.get().await? {
@@ -98,7 +128,7 @@ impl Assistant {
 		if res.status() == StatusCode::OK {
 			let response_body = res.json::<Value>().await?;
 			let data = response_body.get("data").unwrap().as_array().unwrap();
-			if let Some(assistant) = data.into_iter().find(|&a| a.get("name").unwrap().as_str().unwrap() == ASSISTANT_NAME) {
+			if let Some(assistant) = data.into_iter().find(|&a| a.get("name").unwrap().as_str().unwrap() == self.assistant_type.name()) {
 				return Ok(Some(assistant.get("id").unwrap().as_str().unwrap().to_string()));
 			}
 		}
@@ -121,11 +151,8 @@ impl Assistant {
 		let headers = self.headers()?;
 
 		let body = json!({
-			"instructions": "Extract a complete list of job postings with descriptions from the provided inputs that match the provided criteria. \
-				Return the results in a single response as JSON. \
-				Extract the job descriptions and shorted to 200 characters. Do not miss any posting! \
-				Response format: [{{\"title\": \"\", \"description\": \"\"}}]",
-			"name": "Jobs Feed",
+			"instructions": self.assistant_type.instructions(),
+			"name": self.assistant_type.name(),
 			"model": &self.model
 		});
 
@@ -179,7 +206,6 @@ impl Assistant {
 		let response_body = res.json::<Value>().await?;
 		let thread_id = response_body.get("thread_id").unwrap().as_str().unwrap();
 		let run_id = response_body.get("id").unwrap().as_str().unwrap();
-		// todo: move to separate result() method?
 		let usage = self.wait_for_run(thread_id, run_id, Duration::from_secs(30)).await?;
 		let result = self.get_run_result(thread_id, run_id, Duration::from_secs(100)).await;
 		self.usage.add(usage);

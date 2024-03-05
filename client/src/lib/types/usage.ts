@@ -1,11 +1,9 @@
 import { UsageApi } from '../api/usage';
 
 export class Usages {
-	usages: Usage[] = [];
 	api: UsageApi;
 
 	constructor() {
-		this.usages = [];
 		this.api = new UsageApi();
 	}
 

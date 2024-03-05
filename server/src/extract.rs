@@ -1,7 +1,7 @@
 use crate::util::base_url;
 use crate::{
-	assistant::Assistant,
 	assistant::Usage,
+	assistant::{Assistant, AssistantType},
 	entities::{prelude::*, *},
 };
 use anyhow::anyhow;
@@ -432,7 +432,12 @@ impl PostingsExtractor {
 	}
 
 	async fn chatgpt_extract_postings(&mut self, message_parts: &mut Vec<String>) -> Result<String> {
-		let mut assistant = Assistant::new(&self.settings.api_key.clone().unwrap_or("".to_string()), &self.settings.model.clone().unwrap_or("".to_string())).await?;
+		let mut assistant = Assistant::new(
+			&self.settings.api_key.clone().unwrap_or("".to_string()),
+			&self.settings.model.clone().unwrap_or("".to_string()),
+			AssistantType::JobsFeed,
+		)
+		.await?;
 
 		let criteria = self
 			.filters

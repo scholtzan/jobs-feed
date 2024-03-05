@@ -202,7 +202,7 @@
 		<div class="flex flex-col border-base-300 px-2 pt-4 grow">
 			<!-- Links -->
 			<div class="flex flex-col divide-y divide-base-300">
-				<ul class="menu menu px-0">
+				<ul class="menu menu-sm px-0">
 					<li class="font-bold">
 						<button
 							title="Postings Added Today"

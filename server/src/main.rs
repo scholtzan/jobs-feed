@@ -81,6 +81,8 @@ async fn rocket() -> _ {
 				routes::sources::delete_source,
 				routes::sources::update_source,
 				routes::sources::reset_source_cache,
+				routes::sources::refresh_source_suggestions,
+				routes::sources::source_suggestions,
 				routes::filters::filters,
 				routes::filters::update_filters,
 				routes::postings::unread_postings,
@@ -94,6 +96,7 @@ async fn rocket() -> _ {
 				routes::settings::update_settings,
 				routes::settings::get_models,
 				routes::usage::extraction_costs,
+				routes::suggestions::suggestions,
 			],
 		)
 		.mount("/", routes![favicon, index])

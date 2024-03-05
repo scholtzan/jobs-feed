@@ -5,3 +5,4 @@ pub use super::filter::Entity as Filter;
 pub use super::posting::Entity as Posting;
 pub use super::settings::Entity as Settings;
 pub use super::source::Entity as Source;
+pub use super::suggestion::Entity as Suggestion;

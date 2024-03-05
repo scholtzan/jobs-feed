@@ -1,4 +1,4 @@
-use crate::assistant::Assistant;
+use crate::assistant::{Assistant, AssistantType};
 use crate::entities;
 use crate::entities::prelude::*;
 
@@ -40,7 +40,7 @@ pub async fn get_models(db: &State<DatabaseConnection>) -> Result<Json<Vec<Strin
 		return Ok(Json(vec![]));
 	}
 
-	let assistant = Assistant::new(&settings.unwrap().api_key.unwrap(), &"".to_string())
+	let assistant = Assistant::new(&settings.unwrap().api_key.unwrap(), &"".to_string(), AssistantType::JobsFeed)
 		.await
 		.expect("Could not retrieve model information");
 	let models = assistant.get_models().await.expect("Could not retrieve model information");

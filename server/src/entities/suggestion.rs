@@ -4,19 +4,14 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "posting")]
+#[sea_orm(table_name = "suggestion")]
 pub struct Model {
 	#[sea_orm(primary_key)]
 	#[serde(skip_deserializing)]
 	pub id: i32,
-	pub title: String,
-	pub description: String,
-	pub url: Option<String>,
-	pub created_at: Option<DateTimeWithTimeZone>,
-	pub seen: Option<bool>,
+	pub name: String,
+	pub url: String,
 	pub source_id: Option<i32>,
-	pub bookmarked: Option<bool>,
-	pub content: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

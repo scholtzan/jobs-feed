@@ -27,6 +27,8 @@ pub enum Relation {
 	Extraction,
 	#[sea_orm(has_many = "super::posting::Entity")]
 	Posting,
+	#[sea_orm(has_many = "super::suggestion::Entity")]
+	Suggestion,
 }
 
 impl Related<super::extraction::Entity> for Entity {
@@ -38,6 +40,12 @@ impl Related<super::extraction::Entity> for Entity {
 impl Related<super::posting::Entity> for Entity {
 	fn to() -> RelationDef {
 		Relation::Posting.def()
+	}
+}
+
+impl Related<super::suggestion::Entity> for Entity {
+	fn to() -> RelationDef {
+		Relation::Suggestion.def()
 	}
 }
 
