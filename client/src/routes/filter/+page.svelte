@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { Filters, Filter } from '../../lib/types/filters';
 	import { NotificationHandler } from '../../lib/types/notifications';
+	import { browser } from '$app/environment';
 
 	const filterSuggestions = ['Skills', 'Location', 'Job Title'];
 	let notificationHandler = new NotificationHandler();
@@ -24,7 +25,7 @@
 				notificationHandler.addError('Could not update filters', res.message);
 			}
 
-			goto('/');
+			if (browser) window.history.back();
 		});
 	}
 

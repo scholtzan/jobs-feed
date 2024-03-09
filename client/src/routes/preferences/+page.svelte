@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { Source } from '../../lib/types/sources';
+	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import { Settings, SettingsHandler } from '../../lib/types/settings';
 	import { NotificationHandler } from '../../lib/types/notifications';
@@ -21,7 +20,7 @@
 	});
 
 	function closeDrawer(e) {
-		goto('/');
+		if (browser) window.history.back();
 	}
 
 	function updateSettings() {

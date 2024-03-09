@@ -4,6 +4,7 @@
 	import { NotificationHandler } from '../../../lib/types/notifications';
 	import ValidatedInput from '../../../lib/components/ValidatedInput.svelte';
 	import { Filters } from '../../../lib/types/filters';
+	import { browser } from '$app/environment';
 
 	let notificationHandler = new NotificationHandler();
 	let filtersHandler = new Filters();
@@ -36,7 +37,7 @@
 	};
 
 	function closeDrawer(e) {
-		goto('/');
+		if (browser) window.history.back();
 	}
 
 	function saveSource() {
@@ -89,7 +90,7 @@
 				notificationHandler.addError('Could not reset source cache', res.message);
 			}
 		});
-		goto('/');
+		if (browser) window.history.back();
 	}
 
 	function openSource() {

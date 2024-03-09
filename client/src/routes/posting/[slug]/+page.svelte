@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
 	import type { PageData } from './$types';
 	import { Postings, Posting } from '../../../lib/types/postings';
 	import { NotificationHandler } from '../../../lib/types/notifications';
@@ -41,7 +40,7 @@
 	}
 
 	function closeDrawer(e) {
-		goto('/');
+		if (browser) window.history.back();
 	}
 
 	function getContent() {

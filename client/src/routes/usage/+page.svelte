@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { Usages, Usage } from '../../lib/types/usage';
+	import { browser } from '$app/environment';
+	import { Usages } from '../../lib/types/usage';
 	import { Sources } from '../../lib/types/sources';
 	import { NotificationHandler } from '../../lib/types/notifications';
-	import { sources } from '../../lib/store';
 
 	let notificationHandler = new NotificationHandler();
 	let usageHandler = new Usages();
@@ -16,7 +14,7 @@
 	getUsage(14);
 
 	function closeDrawer() {
-		goto('/');
+		if (browser) window.history.back();
 	}
 
 	function getUsage(days: number) {
