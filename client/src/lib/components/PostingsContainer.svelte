@@ -114,7 +114,8 @@
 			filtersHandler.filters.forEach((filter) => {
 				filter.value.split(',').forEach((v) => {
 					v = v.trim();
-					if (content.toLowerCase().includes(v.toLowerCase())) {
+					let regex = new RegExp(`\\b${v}\\b`, 'gi');
+					if (content.match(regex)) {
 						matchingFilters.push(v);
 					}
 				});
