@@ -1,27 +1,27 @@
-# ![icon](https://raw.githubusercontent.com/scholtzan/jobs-feed/main/client/static/favicon.svg?token=GHSAT0AAAAAACNB6FEFVTJTJA2V3LRJ6RL4ZPOB4WA) jobs-feed
+# jobs-feed <img src="https://raw.githubusercontent.com/scholtzan/jobs-feed/main/client/static/favicon.svg?token=GHSAT0AAAAAACNB6FEFVTJTJA2V3LRJ6RL4ZPOB4WA" width="26">
 
 Jobs Feed streamlines the job search process by tracking job postings from various career pages and matching users with roles that align with their skills and preferences.
 
-<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/main-screen.png" width="1000">
+<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/img/main-screen.png" width="1000">
 
 ## Features
 
 * View, navigate, and bookmark job postings
 
-<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/main-screen.png" width="1000">
+<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/img/main-screen.png" width="800">
 
 * Add career pages or other sources to extract job postings from
   * Use CSS selectors to specify pagination links and HTML elements that contain job postings
 
-<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/add-source.png" width="1000">
+<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/img/add-source.png" width="800">
 
 * Configure filters and criterias based on which job postings are selected
 
-<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/set-filters.png" width="1000">
+<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/img/set-filters.png" width="800">
   
 * Suggestions of similar companies that might offer relevant roles
 
-<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/similar-companies.png" width="1000">
+<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/img/similar-companies.png" width="400">
  
 ## Installation
 
