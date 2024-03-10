@@ -64,7 +64,7 @@ impl AssistantType {
 			AssistantType::JobsFeed => {
 				"Extract a complete list of job postings with descriptions from the provided inputs that match the provided criteria. \
             Return the results in a single response as JSON. \
-            Extract the job descriptions and shorted to 200 characters. Do not miss any posting! \
+            Extract the job descriptions and shorted to 200 characters, if available. Do not invent a job description! Do not miss any posting! \
             Response format: [{{\"title\": \"\", \"description\": \"\"}}]"
 			}
 			AssistantType::JobsSuggestion => {
