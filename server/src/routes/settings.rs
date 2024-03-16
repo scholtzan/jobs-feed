@@ -1,6 +1,6 @@
-use crate::assistant::{Assistant, AssistantType};
 use crate::entities;
 use crate::entities::prelude::*;
+use crate::openai::assistant::{Assistant, AssistantType};
 
 use rocket::http::Status;
 use rocket::serde::json::Json;

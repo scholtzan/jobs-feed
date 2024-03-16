@@ -6,6 +6,7 @@ mod m20240121_000001_create_postings_table;
 mod m20240121_000001_create_filters_table;
 mod m20240121_000001_create_extractions_table;
 mod m20240121_000001_create_suggestions_table;
+mod m20240121_000001_create_embeddings_table;
 
 pub struct Migrator;
 
@@ -19,6 +20,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20240121_000001_create_postings_table::Migration),
             Box::new(m20240121_000001_create_extractions_table::Migration),
             Box::new(m20240121_000001_create_suggestions_table::Migration),
+            Box::new(m20240121_000001_create_embeddings_table::Migration),
         ]
     }
 }

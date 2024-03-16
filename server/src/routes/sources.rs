@@ -1,7 +1,7 @@
 use crate::entities::{prelude::*, *};
 use chrono::FixedOffset;
 
-use crate::assistant::{Assistant, AssistantType};
+use crate::openai::assistant::{Assistant, AssistantType};
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;

@@ -1,6 +1,6 @@
-mod assistant;
 mod entities;
 mod extract;
+mod openai;
 mod routes;
 mod util;
 
