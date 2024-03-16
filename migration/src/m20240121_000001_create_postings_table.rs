@@ -28,6 +28,8 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Posting::SourceId).integer())
                     .col(ColumnDef::new(Posting::Bookmarked).boolean().default(false))
                     .col(ColumnDef::new(Posting::Content).string())
+                    .col(ColumnDef::new(Posting::IsMatch).boolean())
+                    .col(ColumnDef::new(Posting::MatchSimilarity).float())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-posting-source_id")
@@ -47,7 +49,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum Posting {
+pub enum Posting {
     Table,
     Id,
     Title,
@@ -57,5 +59,7 @@ enum Posting {
     Seen,
     SourceId,
     Bookmarked,
-    Content
+    Content,
+    IsMatch,
+    MatchSimilarity
 }

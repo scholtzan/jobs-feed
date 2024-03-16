@@ -123,4 +123,6 @@ export class Posting {
 	created_at: Date = new Date();
 	bookmarked: boolean = false;
 	content: string = '';
+	is_match: boolean | null = null;
+	match_similarity: number | null = null;
 }

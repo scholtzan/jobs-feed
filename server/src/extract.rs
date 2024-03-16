@@ -1,8 +1,9 @@
+use crate::openai::embeddings::Embeddings;
 use crate::util::base_url;
 use crate::{
-	assistant::Usage,
-	assistant::{Assistant, AssistantType},
 	entities::{prelude::*, *},
+	openai::assistant::Usage,
+	openai::assistant::{Assistant, AssistantType},
 };
 use anyhow::anyhow;
 use anyhow::Result;
@@ -81,31 +82,54 @@ impl PostingsExtractorHandler {
 	}
 
 	pub async fn save(&self, db: &DatabaseConnection) -> Result<()> {
-		let postings: Vec<posting::ActiveModel> = self
-			.extractors
-			.iter()
-			.flat_map(|e| {
-				let active_postings: Vec<posting::ActiveModel> = e
-					.extracted_postings
-					.clone()
-					.unwrap_or(vec![])
-					.into_iter()
-					.map(|p| {
-						let mut active_posting: posting::ActiveModel = p.into();
-						active_posting.id = NotSet;
-						active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
-						active_posting.seen = Set(Some(false));
-						active_posting.source_id = Set(Some(e.source_id));
+		let settings = Settings::find().one(db).await?.expect("No settings stored");
+		let liked_postings: Vec<Vec<f32>> = Embedding::find()
+			.select_only()
+			.column(embedding::Column::Vector)
+			.filter(posting::Column::IsMatch.eq(true))
+			.join(JoinType::InnerJoin, embedding::Relation::Posting.def())
+			.order_by_desc(posting::Column::CreatedAt)
+			.limit(30)
+			.into_tuple()
+			.all(db)
+			.await?;
+		let disliked_postings: Vec<Vec<f32>> = Embedding::find()
+			.select_only()
+			.column(embedding::Column::Vector)
+			.filter(posting::Column::IsMatch.eq(false))
+			.join(JoinType::InnerJoin, embedding::Relation::Posting.def())
+			.order_by_desc(posting::Column::CreatedAt)
+			.limit(30)
+			.into_tuple()
+			.all(db)
+			.await?;
 
-						active_posting
-					})
-					.collect();
+		let embedding = Embeddings::new(&settings.api_key.unwrap());
 
-				active_postings
-			})
-			.collect();
+		for extractor in &self.extractors {
+			for posting in extractor.extracted_postings.clone().unwrap_or(vec![]) {
+				let content = posting.content.clone();
+				let mut active_posting: posting::ActiveModel = posting.into();
+				active_posting.id = NotSet;
+				active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
+				active_posting.seen = Set(Some(false));
+				active_posting.source_id = Set(Some(extractor.source_id));
+				let embedding_vector = embedding.create(&content.unwrap_or("".to_string())).await?;
+				let like_similarity = embedding.get_similarity(&embedding_vector, &liked_postings);
+				let dislike_similarity = embedding.get_similarity(&embedding_vector, &disliked_postings);
+				active_posting.match_similarity = Set(Some(like_similarity - dislike_similarity));
 
-		let _ = Posting::insert_many(postings).exec(db).await;
+				let inserted_posting = active_posting.insert(db).await?;
+
+				let active_embedding = embedding::ActiveModel {
+					id: NotSet,
+					posting_id: Set(Some(inserted_posting.id)),
+					vector: Set(Some(embedding_vector)),
+				};
+
+				active_embedding.insert(db).await?;
+			}
+		}
 
 		for extractor in &self.extractors {
 			let _ = Source::update_many()

@@ -7,11 +7,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_json::Value;
 
+use crate::openai::OpenAIApi;
+use crate::openai::BASE_URL;
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
-
-const BASE_URL: &str = "https://api.openai.com/v1";
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Usage {
@@ -72,6 +72,12 @@ impl AssistantType {
             Response format: [{{\"name\": \"\", \"url\": \"\"}}]"
 			}
 		}
+	}
+}
+
+impl OpenAIApi for Assistant {
+	fn api_key(&self) -> &String {
+		return &self.api_key;
 	}
 }
 
@@ -136,16 +142,6 @@ impl Assistant {
 		return Ok(None);
 	}
 
-	fn headers(&self) -> Result<HeaderMap> {
-		let bearer = format!("Bearer {}", self.api_key);
-		let mut headers = HeaderMap::new();
-		headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-		headers.insert(AUTHORIZATION, bearer.parse()?);
-		headers.insert(HeaderName::from_static("openai-beta"), HeaderValue::from_static("assistants=v1"));
-
-		Ok(headers)
-	}
-
 	async fn create(&self) -> Result<Option<String>> {
 		let url = format!("{BASE_URL}/assistants");
 		let headers = self.headers()?;
@@ -172,11 +168,7 @@ impl Assistant {
 	pub async fn run(&mut self, messages: &Vec<String>) -> Result<String> {
 		self.usage = Usage::default();
 		let url = format!("{BASE_URL}/threads/runs");
-		let bearer = format!("Bearer {}", self.api_key);
-		let mut headers = HeaderMap::new();
-		headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-		headers.insert(AUTHORIZATION, bearer.parse()?);
-		headers.insert(HeaderName::from_static("openai-beta"), HeaderValue::from_static("assistants=v1"));
+		let headers = self.headers()?;
 
 		let messages_json: Vec<Value> = messages
 			.into_iter()
