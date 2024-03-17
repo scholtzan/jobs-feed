@@ -1,7 +1,6 @@
 use anyhow::anyhow;
 use anyhow::Result;
 
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -12,8 +11,7 @@ use crate::openai::BASE_URL;
 use futures_util::StreamExt;
 use std::collections::HashMap;
 use std::io::Read;
-use std::thread::sleep;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Usage {
@@ -167,7 +165,7 @@ impl Assistant {
 		}
 	}
 
-	pub async fn run(&mut self, messages: &Vec<String>) -> Result<String> {
+	pub async fn run(&mut self, messages: &Vec<String>) -> Result<Vec<String>> {
 		self.usage = Usage::default();
 		let url = format!("{BASE_URL}/threads/runs");
 		let headers = self.headers()?;
@@ -227,7 +225,7 @@ impl Assistant {
 		result
 	}
 
-	async fn get_run_result(&self, thread_id: &str, run_id: &str) -> Result<String> {
+	async fn get_run_result(&self, thread_id: &str, run_id: &str) -> Result<Vec<String>> {
 		let url = format!("{BASE_URL}/threads/{thread_id}/messages");
 		let headers = self.headers()?;
 		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
@@ -243,29 +241,27 @@ impl Assistant {
 				.filter(|&m| m.get("run_id").unwrap_or(&Value::String("".to_string())).as_str() == Some(run_id))
 				.collect();
 
-			eprintln!("total messages {:?}", messages.len());
-			for message in messages {
-				let content = message
-					.get("content")
-					.unwrap()
-					.as_array()
-					.unwrap()
-					.first()
-					.unwrap()
-					.get("text")
-					.unwrap()
-					.get("value")
-					.unwrap()
-					.as_str()
-					.unwrap();
+			let result: Vec<String> = messages
+				.iter()
+				.map(|m| {
+					m.get("content")
+						.unwrap()
+						.as_array()
+						.unwrap()
+						.first()
+						.unwrap()
+						.get("text")
+						.unwrap()
+						.get("value")
+						.unwrap()
+						.as_str()
+						.unwrap()
+						.to_string()
+				})
+				.collect();
 
-				// todo: support multiple messages
-				return Ok(content.to_string());
-			}
-		} else {
-			return Err(anyhow!("Cannot get run"));
+			return Ok(result);
 		}
-
-		return Err(anyhow!("No message returned by run"));
+		return Err(anyhow!("Cannot get run"));
 	}
 }
