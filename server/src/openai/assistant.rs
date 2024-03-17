@@ -9,7 +9,9 @@ use serde_json::Value;
 
 use crate::openai::OpenAIApi;
 use crate::openai::BASE_URL;
+use futures_util::StreamExt;
 use std::collections::HashMap;
+use std::io::Read;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
@@ -182,129 +184,86 @@ impl Assistant {
 
 		let body = json!({
 			"assistant_id": self.id.clone().unwrap_or("".to_string()),
+			"stream": true,
 			"thread": json!({
 				"messages": messages_json
 			})
 		});
 
 		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
+		let mut stream = client.post(url).headers(headers).json(&body).send().await?.bytes_stream();
 
-		let res = client.post(url).headers(headers).json(&body).send().await?;
-
-		if res.status() != StatusCode::OK {
-			return Err(anyhow!("Cannot create thread"));
+		let mut thread_id: String = "".to_string();
+		let mut run_id: String = "".to_string();
+		let mut is_run_metadata = false;
+		let mut buffer = Vec::new();
+		while let Some(item) = stream.next().await {
+			for byte in item? {
+				// Might need to consider carriage returns too depending
+				// on how the server is expected to send the data.
+				let mut buf: String = "".to_string();
+				if byte == b'\n' {
+					let _ = buffer.as_slice().read_to_string(&mut buf);
+					if buf == "data: [DONE]" {
+						break;
+					} else if buf == "event: thread.run.created" {
+						is_run_metadata = true;
+					} else if is_run_metadata {
+						let json_metadata = buf.replace("data: ", "");
+						let run_metadata: Value = serde_json::from_str(&json_metadata).unwrap();
+						thread_id = run_metadata.get("thread_id").unwrap().as_str().unwrap().to_string();
+						run_id = run_metadata.get("id").unwrap().as_str().unwrap().to_string();
+						is_run_metadata = false;
+					}
+					buffer.clear();
+				} else {
+					buffer.push(byte);
+				}
+			}
 		}
 
-		let response_body = res.json::<Value>().await?;
-		let thread_id = response_body.get("thread_id").unwrap().as_str().unwrap();
-		let run_id = response_body.get("id").unwrap().as_str().unwrap();
-		let usage = self.wait_for_run(thread_id, run_id, Duration::from_secs(30)).await?;
-		let result = self.get_run_result(thread_id, run_id, Duration::from_secs(100)).await;
-		self.usage.add(usage);
+		let result = self.get_run_result(&thread_id, &run_id).await;
+
 		result
 	}
 
-	async fn wait_for_run(&self, thread_id: &str, run_id: &str, timeout: Duration) -> Result<Usage> {
-		let interval = Duration::from_secs(1);
-		let end = Instant::now() + timeout;
-		let mut next_time = Instant::now() + interval;
-		let mut finished = false;
-		let mut usage = Usage::default();
-
-		let url = format!("{BASE_URL}/threads/{thread_id}/runs/{run_id}");
-		let bearer = format!("Bearer {}", self.api_key);
-		let mut headers = HeaderMap::new();
-		headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-		headers.insert(AUTHORIZATION, bearer.parse()?);
-		headers.insert(HeaderName::from_static("openai-beta"), HeaderValue::from_static("assistants=v1"));
-		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
-
-		while next_time < end || !finished {
-			let res = client.get(&url).headers(headers.clone()).send().await?;
-
-			if res.status() == StatusCode::OK {
-				let response_body = res.json::<Value>().await?;
-				let status = response_body.get("status").unwrap().as_str().unwrap();
-
-				if status == "completed" {
-					let run_usage: Usage = serde_json::from_value(response_body.get("usage").unwrap().clone())?;
-					usage.add(run_usage);
-					finished = true;
-				} else if status != "queued" && status != "in_progress" {
-					return Err(anyhow!("Run failed"));
-				}
-			} else {
-				return Err(anyhow!("Cannot get run"));
-			}
-
-			sleep(next_time - Instant::now());
-			next_time += interval;
-		}
-
-		if !finished {
-			return Err(anyhow!("Run timed out"));
-		}
-
-		Ok(usage)
-	}
-
-	async fn get_run_result(&self, thread_id: &str, run_id: &str, timeout: Duration) -> Result<String> {
-		let interval = Duration::from_secs(1);
-		let end = Instant::now() + timeout;
-		let mut next_time = Instant::now() + interval;
-
+	async fn get_run_result(&self, thread_id: &str, run_id: &str) -> Result<String> {
 		let url = format!("{BASE_URL}/threads/{thread_id}/messages");
-		let bearer = format!("Bearer {}", self.api_key);
-		let mut headers = HeaderMap::new();
-		headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-		headers.insert(AUTHORIZATION, bearer.parse()?);
-		headers.insert(HeaderName::from_static("openai-beta"), HeaderValue::from_static("assistants=v1"));
+		let headers = self.headers()?;
 		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
-		let mut messages_received = 0;
 
-		while next_time < end {
-			let res = client.get(&url).headers(headers.clone()).send().await?;
+		let res = client.get(&url).headers(headers.clone()).send().await?;
 
-			if res.status() == StatusCode::OK {
-				let response_body = res.json::<Value>().await?;
-				let data = response_body.get("data").unwrap().as_array().unwrap();
+		if res.status() == StatusCode::OK {
+			let response_body = res.json::<Value>().await?;
+			let data = response_body.get("data").unwrap().as_array().unwrap();
 
-				let messages: Vec<&Value> = data
-					.into_iter()
-					.filter(|&m| m.get("run_id").unwrap_or(&Value::String("".to_string())).as_str() == Some(run_id))
-					.collect();
+			let messages: Vec<&Value> = data
+				.into_iter()
+				.filter(|&m| m.get("run_id").unwrap_or(&Value::String("".to_string())).as_str() == Some(run_id))
+				.collect();
 
-				let total_messages = messages.len();
+			eprintln!("total messages {:?}", messages.len());
+			for message in messages {
+				let content = message
+					.get("content")
+					.unwrap()
+					.as_array()
+					.unwrap()
+					.first()
+					.unwrap()
+					.get("text")
+					.unwrap()
+					.get("value")
+					.unwrap()
+					.as_str()
+					.unwrap();
 
-				if total_messages == messages_received {
-					for message in messages {
-						let content = message
-							.get("content")
-							.unwrap()
-							.as_array()
-							.unwrap()
-							.first()
-							.unwrap()
-							.get("text")
-							.unwrap()
-							.get("value")
-							.unwrap()
-							.as_str()
-							.unwrap();
-
-						if total_messages > 0 && content != "" {
-							return Ok(content.to_string());
-						}
-					}
-				} else {
-					messages_received = total_messages;
-				}
-			} else {
-				return Err(anyhow!("Cannot get run"));
+				// todo: support multiple messages
+				return Ok(content.to_string());
 			}
-
-			sleep(next_time - Instant::now());
-			next_time += interval;
+		} else {
+			return Err(anyhow!("Cannot get run"));
 		}
 
 		return Err(anyhow!("No message returned by run"));
