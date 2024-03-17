@@ -4,7 +4,6 @@ mod m20240121_000001_create_sources_table;
 mod m20240121_000001_create_settings_table;
 mod m20240121_000001_create_postings_table;
 mod m20240121_000001_create_filters_table;
-mod m20240121_000001_create_extractions_table;
 mod m20240121_000001_create_suggestions_table;
 mod m20240121_000001_create_embeddings_table;
 
@@ -18,7 +17,6 @@ impl MigratorTrait for Migrator {
             Box::new(m20240121_000001_create_sources_table::Migration),
             Box::new(m20240121_000001_create_filters_table::Migration),
             Box::new(m20240121_000001_create_postings_table::Migration),
-            Box::new(m20240121_000001_create_extractions_table::Migration),
             Box::new(m20240121_000001_create_suggestions_table::Migration),
             Box::new(m20240121_000001_create_embeddings_table::Migration),
         ]

@@ -2,7 +2,6 @@ use crate::openai::embeddings::Embeddings;
 use crate::util::base_url;
 use crate::{
 	entities::{prelude::*, *},
-	openai::assistant::Usage,
 	openai::assistant::{Assistant, AssistantType},
 };
 use anyhow::anyhow;
@@ -138,18 +137,6 @@ impl PostingsExtractorHandler {
 				.filter(source::Column::Id.eq(extractor.source_id))
 				.exec(db)
 				.await;
-
-			let model = extractor.settings.model.clone();
-			let extraction_usage: extraction::ActiveModel = extraction::ActiveModel {
-				id: NotSet,
-				created_at: Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap()))),
-				model: Set(model.clone()),
-				prompt_tokens: Set(Some(extractor.usage.prompt_tokens)),
-				completion_tokens: Set(Some(extractor.usage.completion_tokens)),
-				source_id: Set(Some(extractor.source_id)),
-				cost: Set(extractor.usage.get_cost(&model.unwrap_or("".to_string()))),
-			};
-			extraction_usage.insert(db).await?;
 		}
 
 		Ok(())
@@ -217,8 +204,6 @@ pub struct PostingsExtractor {
 	cached_content: Option<String>,
 	extracted_postings: Option<Vec<posting::Model>>,
 	unreachable: bool,
-
-	usage: Usage,
 }
 
 impl PostingsExtractor {
@@ -243,7 +228,6 @@ impl PostingsExtractor {
 			parsed_content: ParsedSource::default(),
 			extracted_postings: None,
 			browser,
-			usage: Usage::default(),
 			unreachable: false,
 		}
 	}
@@ -477,7 +461,6 @@ impl PostingsExtractor {
 		message_parts.push(last_message);
 
 		let response = assistant.run(message_parts).await?;
-		self.usage.add(assistant.usage);
 
 		Ok(response)
 	}

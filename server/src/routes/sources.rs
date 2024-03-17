@@ -113,17 +113,6 @@ pub async fn refresh_source_suggestions(db: &State<DatabaseConnection>, id: i32)
 
 	let _ = Suggestion::insert_many(active_suggestions).exec(db).await;
 
-	let suggestion_usage: extraction::ActiveModel = extraction::ActiveModel {
-		id: NotSet,
-		created_at: Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap()))),
-		model: Set(Some(assistant.model.clone())),
-		prompt_tokens: Set(Some(assistant.usage.prompt_tokens)),
-		completion_tokens: Set(Some(assistant.usage.completion_tokens)),
-		source_id: Set(Some(id)),
-		cost: Set(assistant.usage.get_cost(&assistant.model)),
-	};
-	suggestion_usage.insert(db).await.expect("Could not update suggestion usage");
-
 	Ok(Json(
 		Suggestion::find()
 			.filter(suggestion::Column::SourceId.eq(id))

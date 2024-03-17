@@ -3,7 +3,6 @@
 pub mod prelude;
 
 pub mod embedding;
-pub mod extraction;
 pub mod filter;
 pub mod posting;
 pub mod settings;

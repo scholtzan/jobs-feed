@@ -9,42 +9,8 @@ use serde_json::Value;
 use crate::openai::OpenAIApi;
 use crate::openai::BASE_URL;
 use futures_util::StreamExt;
-use std::collections::HashMap;
 use std::io::Read;
 use std::time::Duration;
-
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
-pub struct Usage {
-	pub prompt_tokens: i32,
-	pub completion_tokens: i32,
-	pub total_tokens: i32,
-}
-
-impl Usage {
-	pub fn add(&mut self, other: Usage) {
-		self.prompt_tokens += other.prompt_tokens;
-		self.completion_tokens += other.completion_tokens;
-		self.total_tokens += other.total_tokens;
-	}
-
-	pub fn get_cost(&self, model: &str) -> Option<f32> {
-		// todo: better configuration
-		let pricing = HashMap::from([
-			("gpt-4", (0.03, 0.06)),
-			("gpt-4-32k", (0.06, 0.12)),
-			("gpt-4-0125-preview", (0.01, 0.03)),
-			("gpt-4-1106-preview", (0.01, 0.03)),
-			("gpt-3.5-turbo-0125", (0.0005, 0.0015)),
-			("gpt-3.5-turbo-instruct", (0.0015, 0.0020)),
-			("gpt-3.5-turbo", (0.0005, 0.0015)),
-		]);
-
-		match pricing.get(model) {
-			Some((input, output)) => Some(self.prompt_tokens as f32 / 1000.0 * *input + self.completion_tokens as f32 / 1000.0 * *output),
-			None => None,
-		}
-	}
-}
 
 pub enum AssistantType {
 	JobsFeed,
@@ -86,7 +52,6 @@ pub struct Assistant {
 	pub model: String,
 	id: Option<String>,
 	assistant_type: AssistantType,
-	pub usage: Usage,
 }
 
 impl Assistant {
@@ -95,7 +60,6 @@ impl Assistant {
 			api_key: api_key.clone(),
 			model: model.clone(),
 			id: None,
-			usage: Usage::default(),
 			assistant_type: assistant_type,
 		};
 
@@ -166,7 +130,6 @@ impl Assistant {
 	}
 
 	pub async fn run(&mut self, messages: &Vec<String>) -> Result<Vec<String>> {
-		self.usage = Usage::default();
 		let url = format!("{BASE_URL}/threads/runs");
 		let headers = self.headers()?;
 
