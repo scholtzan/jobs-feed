@@ -94,9 +94,65 @@ export class Postings {
 				posting.bookmarked = !posting.bookmarked;
 
 				return this.api.updatePosting(posting).then((res) => {
-					if (!res.isSuccessful) {
-						posting.bookmarked = !posting.bookmarked;
-					} else {
+					if (res.isSuccessful) {
+						let postingIndex = this.postings.findIndex((p) => p.id == id);
+						if (postingIndex != -1) {
+							this.postings[postingIndex] = res.data;
+						}
+						this.store();
+					}
+
+					return res;
+				});
+			}
+		});
+	}
+
+	public likePosting(id: number) {
+		return this.postingById(id).then((res) => {
+			if (!res.isSuccessful) {
+				return res;
+			} else {
+				let posting = res.data;
+				if (posting.is_match == true) {
+					posting.is_match = null;
+				} else {
+					posting.is_match = true;
+				}
+
+				return this.api.updatePosting(posting).then((res) => {
+					if (res.isSuccessful) {
+						let postingIndex = this.postings.findIndex((p) => p.id == id);
+						if (postingIndex != -1) {
+							this.postings[postingIndex] = res.data;
+						}
+						this.store();
+					}
+
+					return res;
+				});
+			}
+		});
+	}
+
+	public dislikePosting(id: number) {
+		return this.postingById(id).then((res) => {
+			if (!res.isSuccessful) {
+				return res;
+			} else {
+				let posting = res.data;
+				if (posting.is_match == false) {
+					posting.is_match = null;
+				} else {
+					posting.is_match = false;
+				}
+
+				return this.api.updatePosting(posting).then((res) => {
+					if (res.isSuccessful) {
+						let postingIndex = this.postings.findIndex((p) => p.id == id);
+						if (postingIndex != -1) {
+							this.postings[postingIndex] = res.data;
+						}
 						this.store();
 					}
 
