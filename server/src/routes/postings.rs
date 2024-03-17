@@ -110,6 +110,7 @@ pub async fn update_posting(db: &State<DatabaseConnection>, id: i32, input: Json
 
 	existing_posting.seen = Set(updated_posting.seen);
 	existing_posting.bookmarked = Set(updated_posting.bookmarked);
+	existing_posting.is_match = Set(updated_posting.is_match);
 
 	let existing_posting: posting::Model = existing_posting.update(db).await.expect("Could not update posting");
 
