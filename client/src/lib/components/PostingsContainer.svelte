@@ -156,7 +156,7 @@
 </script>
 
 <div class="justify-center w-full flex mt-8">
-	<div class="max-w-[50em] min-w-[35em] w-2/3">
+	<div class="max-w-[70em] min-w-[35em] w-2/3">
 		<div class="flex flex-row grow justify-end px-4 gap-x-2">
 			<button
 				title="Mark As Read"
@@ -285,7 +285,7 @@
 		</h1>
 
 		<div class="flex justify-center w-full">
-			<div>
+			<div class="w-full">
 				{#if source != undefined && source.unreachable}
 					<div role="alert" class="alert alert-error">
 						<svg
@@ -314,7 +314,7 @@
 						<div class="card-body items-left text-left">
 							<div class="flex flex-row grow">
 								<a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
-									<h2 class="card-title flex grow mb-0">
+									<h2 class="card-title flex grow" style="margin-bottom: -4px;">
 										{#if sourcesHandler.sourceById(posting.source_id) != undefined}
 											<img
 												width="16"
@@ -331,7 +331,7 @@
 									</h2>
 								</a>
 
-								<div class="flex flex-row grow justify-end px-4 gap-2">
+								<div class="flex flex-row grow justify-end px-4 gap-2 w-48">
 									<button
 										title="Mark As Read"
 										class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
@@ -521,8 +521,8 @@
 					</div>
 				{/if}
 			</div>
-			{#if suggestions.length > 0}
-				<div class="min-w-48 max-w-48 ml-6">
+			{#if ![SelectedSource.All, SelectedSource.Bookmarked, SelectedSource.Today].includes(selectedSourceId)}
+				<div class="w-64 ml-6">
 					<div class="menu-title flex grow">
 						Similar Companies
 
@@ -540,7 +540,7 @@
 									xmlns="http://www.w3.org/2000/svg"
 									viewBox="0 0 24 24"
 									fill="currentColor"
-									class="w-4 h-4"
+									class="w-3 h-3"
 								>
 									<path
 										fill-rule="evenodd"
