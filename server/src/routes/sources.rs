@@ -100,7 +100,7 @@ pub async fn refresh_source_suggestions(db: &State<DatabaseConnection>, id: i32)
 	);
 	let response = assistant.run(&vec![message]).await.expect("Could not get source suggestions");
 
-	let parsed_response: Vec<suggestion::Model> = serde_json::from_str(&response).expect("Could not extract suggestions");
+	let parsed_response: Vec<suggestion::Model> = serde_json::from_str(response.first().expect("Did not get suggestions")).expect("Could not extract suggestions");
 	let active_suggestions: Vec<suggestion::ActiveModel> = parsed_response
 		.into_iter()
 		.map(|res| {

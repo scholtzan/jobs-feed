@@ -384,14 +384,15 @@ impl PostingsExtractor {
 
 		for page in &content.parsed_pages {
 			let mut content_chunks = self.chunk_message(&page.content);
-			let r = self.chatgpt_extract_postings(&mut content_chunks).await;
-			let chatgpt_result = r?;
-			let resp = serde_json::from_str(&chatgpt_result);
-			let response: Vec<posting::Model> = resp?;
+			let chatgpt_result = self.chatgpt_extract_postings(&mut content_chunks).await?;
 
-			for mut posting in response {
-				self.add_posting_details(&mut posting, &page)?;
-				postings.push(posting);
+			for response in chatgpt_result {
+				let parsed_response: Vec<posting::Model> = serde_json::from_str(&response)?;
+
+				for mut posting in parsed_response {
+					self.add_posting_details(&mut posting, &page)?;
+					postings.push(posting);
+				}
 			}
 		}
 
@@ -455,7 +456,7 @@ impl PostingsExtractor {
 			.collect::<Vec<String>>()
 	}
 
-	async fn chatgpt_extract_postings(&mut self, message_parts: &mut Vec<String>) -> Result<String> {
+	async fn chatgpt_extract_postings(&mut self, message_parts: &mut Vec<String>) -> Result<Vec<String>> {
 		let mut assistant = Assistant::new(
 			&self.settings.api_key.clone().unwrap_or("".to_string()),
 			&self.settings.model.clone().unwrap_or("".to_string()),
