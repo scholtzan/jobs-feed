@@ -19,6 +19,7 @@ use std::time::Duration;
 use url::Url;
 
 const MESSAGE_MAX_CHARS: usize = 32000;
+const MAX_EXTRACT_CHARS: usize = 1000000;
 
 pub struct PostingsExtractorHandler {
 	extractors: Vec<PostingsExtractor>,
@@ -181,6 +182,20 @@ impl ParsedSource {
 			content: content.clone(),
 			url: url.clone(),
 		})
+	}
+
+	pub fn limit_content(&self, max_chars: usize) -> Self {
+		let mut content_len = 0;
+		let mut parsed_source = ParsedSource { parsed_pages: vec![] };
+
+		for parsed_page in self.parsed_pages.iter() {
+			if content_len + parsed_page.content.len() <= max_chars {
+				parsed_source.parsed_pages.push(parsed_page.clone());
+				content_len += parsed_page.content.len();
+			}
+		}
+
+		parsed_source
 	}
 }
 
@@ -360,7 +375,7 @@ impl PostingsExtractor {
 			};
 		}
 
-		return new_content;
+		return new_content.limit_content(MAX_EXTRACT_CHARS);
 	}
 
 	async fn extract_postings(&mut self, content: &ParsedSource) -> Result<Vec<posting::Model>> {

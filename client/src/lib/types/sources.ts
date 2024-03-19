@@ -118,6 +118,7 @@ export class Source {
 	name: string = '';
 	url: string = '';
 	id: number | null = null;
+	content: string | null = '';
 	pagination: string | null = null;
 	selector: string | null = null;
 	favicon: string | null = null;

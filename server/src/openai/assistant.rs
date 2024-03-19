@@ -2,7 +2,6 @@ use anyhow::anyhow;
 use anyhow::Result;
 
 use reqwest::StatusCode;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_json::Value;
 
