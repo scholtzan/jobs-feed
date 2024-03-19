@@ -21,6 +21,7 @@ services:
       DB_PASSWORD: postgres
       DB_HOST: postgres
       ENVIRONMENT: "${ENVIRONMENT:-release}"
+      API_KEY: "${API_KEY:-}"
       RUST_BACKTRACE: 1
       ROCKET_ADDRESS: "0.0.0.0"
     depends_on:

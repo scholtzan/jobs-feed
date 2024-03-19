@@ -23,6 +23,7 @@ use std::{
 	path::{Path, PathBuf},
 };
 
+use crate::entities::prelude::*;
 use migration::MigratorTrait;
 
 // todo: make configurable
@@ -65,6 +66,19 @@ async fn rocket() -> _ {
 
 	let db = Database::connect(config.url).await.unwrap();
 	migration::Migrator::up(&db, None).await.unwrap();
+	match env::var("API_KEY") {
+		Ok(api_key) => {
+			if Settings::find().count(&db).await.unwrap() == 0 {
+				let new_settings = entities::settings::ActiveModel {
+					id: NotSet,
+					api_key: Set(Some(api_key)),
+					model: Set(Some("gpt-3.5-turbo".to_string())),
+				};
+				let _ = new_settings.insert(&db).await;
+			}
+		}
+		_ => {}
+	};
 
 	let postings_extractor_handler = PostingsExtractorHandler::new();
 
