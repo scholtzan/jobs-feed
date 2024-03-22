@@ -62,7 +62,7 @@
 	<div class="drawer-side">
 		<label for="settings-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
-		<div class="w-3/4 min-h-full bg-base-200 text-base-content">
+		<div class="lg:w-3/4 w-[95%] min-h-full bg-base-200 text-base-content">
 			<nav class="navbar py-4">
 				<div class="flex-none">
 					<a href="/" class="btn btn-square btn-ghost btn-sm">
@@ -87,7 +87,7 @@
 			</nav>
 
 			<div class="px-8">
-				<h1 class="text-4xl font-bold py-8">Settings</h1>
+				<h1 class="lg:text-4xl text-2xl font-bold py-8">Settings</h1>
 
 				<ValidatedInput
 					label={'API Key'}

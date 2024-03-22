@@ -156,7 +156,7 @@
 </script>
 
 <div class="justify-center w-full flex mt-8">
-	<div class="max-w-[70em] min-w-[35em] w-2/3">
+	<div class="lg:max-w-[50em] lg:min-w-[35em] w-[95%]">
 		<div class="flex flex-row grow justify-end px-4 gap-x-2">
 			<button
 				title="Mark As Read"
@@ -219,7 +219,7 @@
 			{/if}
 		</div>
 
-		<h1 class="flex grow text-4xl font-bold py-8 px-4">
+		<h1 class="flex grow lg:text-4xl text-2xl font-bold py-4 px-4">
 			{#if selectedSourceId == SelectedSource.All}
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -227,7 +227,7 @@
 					viewBox="0 0 24 24"
 					stroke-width="1.5"
 					stroke="currentColor"
-					class="w-11 h-11 mr-2"
+					class="w-11 h-11 mr-2 max-md:w-8 max-md:h-8"
 				>
 					<path
 						stroke-linecap="round"
@@ -243,7 +243,7 @@
 					viewBox="0 0 24 24"
 					stroke-width="1.5"
 					stroke="currentColor"
-					class="w-11 h-11 mr-2"
+					class="w-11 h-11 mr-2 max-md:w-8 max-md:h-8"
 				>
 					<path
 						stroke-linecap="round"
@@ -257,7 +257,7 @@
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 24 24"
 					fill="currentColor"
-					class="w-11 h-11 mr-2"
+					class="w-11 h-11 mr-2 max-md:w-8 max-md:h-8"
 				>
 					<path
 						fill-rule="evenodd"
@@ -270,7 +270,7 @@
 			{:else}
 				{#if source != undefined}
 					<img
-						class="mr-2"
+						class="mr-2 max-md:w-8 max-md:h-8"
 						width="40"
 						height="40"
 						alt=""
@@ -314,7 +314,10 @@
 						<div class="card-body items-left text-left">
 							<div class="flex flex-row grow">
 								<a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
-									<h2 class="card-title flex grow" style="margin-bottom: -4px;">
+									<h2
+										class="card-title flex grow lg:text-xl text-base"
+										style="margin-bottom: -4px;"
+									>
 										{#if sourcesHandler.sourceById(posting.source_id) != undefined}
 											<img
 												width="16"
@@ -331,7 +334,7 @@
 									</h2>
 								</a>
 
-								<div class="flex flex-row grow justify-end px-4 gap-2 w-48">
+								<div class="flex flex-row grow justify-end px-4 gap-2 w-48 max-md:hidden">
 									<button
 										title="Mark As Read"
 										class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
@@ -497,9 +500,7 @@
 						>
 					</div>
 				{:else if selectedSourceId != 'bookmarked' && postings.length == 0}
-					<div
-						class="py-8 flex-none px-4 justify-items-center grid max-w w-full max-w-[50em] min-w-[35em]"
-					>
+					<div class="py-8 flex-none px-4 justify-items-center grid max-w w-full">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
@@ -522,7 +523,7 @@
 				{/if}
 			</div>
 			{#if ![SelectedSource.All, SelectedSource.Bookmarked, SelectedSource.Today].includes(selectedSourceId)}
-				<div class="w-64 ml-6">
+				<div class="w-64 ml-6 md:block hidden">
 					<div class="menu-title flex grow">
 						Similar Companies
 

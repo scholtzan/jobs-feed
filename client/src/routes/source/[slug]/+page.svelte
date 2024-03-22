@@ -124,7 +124,7 @@
 	<div class="drawer-side">
 		<label for="new-source-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
-		<div class="w-3/4 min-h-full bg-base-200 text-base-content">
+		<div class="lg:w-3/4 w-[95%] min-h-full bg-base-200 text-base-content">
 			<nav class="navbar py-4">
 				<div class="flex-none">
 					<a href="/" class="btn btn-square btn-ghost btn-sm">
@@ -149,7 +149,7 @@
 			</nav>
 
 			<div class="px-8">
-				<h1 class="text-4xl font-bold py-8">
+				<h1 class="lg:text-4xl text-2xl font-bold py-8">
 					<div class="dropdown dropdown-right">
 						<div tabindex="0" role="button" class="btn btn-square">
 							{#if source.favicon}
@@ -325,7 +325,7 @@
 											be evaluated.</span
 										>
 									</div>
-									<button class="btn btn-outline btn-error w-1/5" on:click={resetCache}>
+									<button class="btn btn-outline btn-error w-1/5 min-w-[9ex]" on:click={resetCache}>
 										Reset Cache
 									</button>
 								</div>
@@ -334,7 +334,7 @@
 										<span class="label-text">Delete the source and all associated data.</span>
 									</div>
 									<button
-										class="btn btn-outline btn-error w-1/5"
+										class="btn btn-outline btn-error w-1/5 min-w-[9ex]"
 										onclick="confirm_remove_modal.showModal()"
 									>
 										Remove

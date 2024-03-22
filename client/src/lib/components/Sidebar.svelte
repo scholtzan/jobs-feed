@@ -5,6 +5,9 @@
 	import { goto } from '$app/navigation';
 	import { Settings, SettingsHandler } from '../types/settings';
 	import { constants } from '../constants';
+	import { showSidebar } from '../store';
+	import { onMount, onDestroy } from 'svelte';
+	import { get, writable } from 'svelte/store';
 
 	let notificationHandler = new NotificationHandler();
 	let sourceContextMenu = null;
@@ -21,6 +24,7 @@
 	let storedSources = sourcesHandler.sortedSources();
 	let selected = sourcesHandler.selectedSource;
 	let isRefreshing = false;
+	let isSidebarVisible = false;
 
 	settingsHandler.subscribe((value) => {
 		settings = settingsHandler.settings;
@@ -33,6 +37,8 @@
 	sourcesHandler.subscribeSelectedSource((value) => {
 		selected = sourcesHandler.selectedSource;
 	});
+
+	showSidebar.subscribe((_) => (isSidebarVisible = get(showSidebar)));
 
 	postingsHandler.subscribe((_) => {
 		newPostings = postingsHandler.postings.filter((p) => !p.seen);
@@ -81,13 +87,39 @@
 			notificationHandler.addError('Could not open link to source. Source does not exist');
 		}
 	}
+
+	function toggleSidebar() {
+		isSidebarVisible = !get(showSidebar);
+		showSidebar.set(isSidebarVisible);
+	}
 </script>
 
-<div class="max-w-[20em] min-w-[16em]">
+<div class="max-w-[20em] min-w-[16em] lg:block {isSidebarVisible ? 'block' : 'hidden'}">
 	<aside class="h-screen sticky top-0 flex flex-col bg-base-200 overflow-y-auto">
 		<!-- Header -->
 		<div class="flex gap-x-20 justify-between p-2 h-16 border-b border-base-300 align-bottom">
-			<a title="Jobs Feed" href="/" class="h-12 w-12">
+			<button
+				class="btn btn-ghost btn-square lg:hidden visible {isSidebarVisible ? 'btn-active' : ''}"
+				title="Show sources"
+				on:click={toggleSidebar}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke-width="1.5"
+					stroke="currentColor"
+					class="w-7 h-7"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+					/>
+				</svg>
+			</button>
+
+			<a title="Jobs Feed" href="/" class="h-12 w-12 lg:block hidden">
 				<svg
 					width="100%"
 					height="100%"
@@ -207,7 +239,10 @@
 					<li class="font-bold">
 						<button
 							title="Postings Added Today"
-							on:click={() => goto('/postings/today')}
+							on:click={() => {
+								toggleSidebar();
+								goto('/postings/today');
+							}}
 							class={selected == 'today' ? 'active' : ''}
 						>
 							<svg
@@ -234,7 +269,10 @@
 					<li class="font-bold">
 						<button
 							title="All Postings"
-							on:click={() => goto('/postings/all')}
+							on:click={() => {
+								toggleSidebar();
+								goto('/postings/all');
+							}}
 							class={selected == 'all' ? 'active' : ''}
 						>
 							<svg
@@ -261,7 +299,10 @@
 					<li class="font-bold">
 						<button
 							title="Bookmarked Postings"
-							on:click={() => goto('/postings/bookmarked')}
+							on:click={() => {
+								toggleSidebar();
+								goto('/postings/bookmarked');
+							}}
 							class={selected == 'bookmarked' ? 'active' : ''}
 						>
 							<svg
@@ -308,7 +349,10 @@
 						<li class="font-bold">
 							<button
 								title={source.name}
-								on:click={() => goto(`/postings/${source.id}`)}
+								on:click={() => {
+									toggleSidebar();
+									goto(`/postings/${source.id}`);
+								}}
 								class={selected == source.id ? 'active' : ''}
 								on:contextmenu={(e) => contextMenu(e, source.id, source.name)}
 							>

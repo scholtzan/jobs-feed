@@ -95,7 +95,7 @@
 	<div class="drawer-side">
 		<label for="posting-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
-		<div class="w-3/4 min-h-full bg-base-200 text-base-content">
+		<div class="lg:w-3/4 w-[95%] min-h-full bg-base-200 text-base-content">
 			<nav class="navbar py-4">
 				<div class="flex-none">
 					<a href="/" class="btn btn-square btn-ghost btn-sm">
@@ -116,24 +116,7 @@
 					</a>
 				</div>
 				<div class="flex-1"></div>
-				<div class="flex-none"></div>
-			</nav>
-
-			<div class="px-8">
-				<h1 class="flex grow text-4xl font-bold py-4">
-					{#if sourcesHandler.sourceById(posting.source_id) != undefined}
-						<img
-							width="48"
-							class="mr-2"
-							alt=""
-							src="https://www.google.com/s2/favicons?sz=48&domain={sourcesHandler.sourceById(
-								posting.source_id
-							).favicon != null
-								? sourcesHandler.sourceById(posting.source_id).favicon
-								: sourcesHandler.sourceById(posting.source_id).url}&amp;alt=feed"
-						/>
-					{/if}
-					{posting.title}
+				<div class="flex-none px-6">
 					<button class="btn btn-ghost btn-square px-2" on:click={bookmark}>
 						{#if posting.bookmarked}
 							<svg
@@ -223,6 +206,25 @@
 							</svg>
 						{/if}
 					</button>
+				</div>
+			</nav>
+
+			<div class="px-8">
+				<h1 class="flex grow lg:text-4xl text-2xl font-bold py-4">
+					{#if sourcesHandler.sourceById(posting.source_id) != undefined}
+						<img
+							width="48"
+							height="48"
+							class="mr-2 block lg:w-10 lg:h-10 h-8 w-8"
+							alt=""
+							src="https://www.google.com/s2/favicons?sz=48&domain={sourcesHandler.sourceById(
+								posting.source_id
+							).favicon != null
+								? sourcesHandler.sourceById(posting.source_id).favicon
+								: sourcesHandler.sourceById(posting.source_id).url}&amp;alt=feed"
+						/>
+					{/if}
+					{posting.title}
 				</h1>
 
 				<p class="w-full max-w">

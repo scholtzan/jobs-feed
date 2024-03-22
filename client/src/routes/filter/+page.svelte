@@ -51,7 +51,7 @@
 	<div class="drawer-side">
 		<label for="filters-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
-		<div class="w-3/4 min-h-full bg-base-200 text-base-content">
+		<div class="lg:w-3/4 w-[95%] min-h-full bg-base-200 text-base-content">
 			<nav class="navbar py-4">
 				<div class="flex-none">
 					<a href="/" class="btn btn-square btn-ghost btn-sm">
@@ -76,11 +76,11 @@
 			</nav>
 
 			<form class="px-8" id="filters-form" on:submit|preventDefault={updateFilters}>
-				<h1 class="text-4xl font-bold py-8">Filters</h1>
+				<h1 class="lg:text-4xl text-2xl font-bold py-8">Filters</h1>
 
 				{#each filters as filter}
-					<div class="flex items-end gap-2 py-2">
-						<label class="form-control w-1/3 max-w">
+					<div class="md:flex items-end gap-2 py-2">
+						<label class="form-control md:w-1/3 max-w w-full">
 							<div class="label">
 								<span class="label-text">Filter Name</span>
 							</div>
@@ -117,7 +117,7 @@
 							</div>
 						</label>
 
-						<label class="form-control w-3/5 max-w">
+						<label class="form-control md:w-3/5 max-w w-full">
 							<div class="label">
 								<span class="label-text">
 									Filter Value
@@ -153,7 +153,7 @@
 
 						<button
 							title="Remove Filter"
-							class="btn btn-active btn-square"
+							class="btn btn-active md:btn-square max-sm:mt-4"
 							on:click|preventDefault={() => removeFilter(filter)}
 						>
 							<svg
@@ -162,7 +162,7 @@
 								viewBox="0 0 24 24"
 								stroke-width="1.5"
 								stroke="currentColor"
-								class="w-6 h-6"
+								class="w-6 h-6 max-sm:hidden"
 							>
 								<path
 									stroke-linecap="round"
@@ -170,11 +170,12 @@
 									d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
 								/>
 							</svg>
+							<span class="max-sm:block hidden">Delete Filter</span>
 						</button>
 					</div>
 				{/each}
 
-				<button title="Add Filter" class="btn btn-active" on:click|preventDefault={addFilter}>
+				<button title="Add Filter" class="btn btn-active mt-2" on:click|preventDefault={addFilter}>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"

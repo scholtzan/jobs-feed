@@ -6,3 +6,4 @@ export const postings = writable([]);
 export const settings = writable({});
 export const selectedSource = writable('all');
 export const notifications = writable([]);
+export const showSidebar = writable(false);
