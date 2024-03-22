@@ -16,10 +16,12 @@ use similar::{ChangeTag, TextDiff};
 use std::sync::Arc;
 use std::time::Duration;
 
+use std::cmp::min;
 use url::Url;
 
 const MESSAGE_MAX_CHARS: usize = 32000;
 const MAX_EXTRACT_CHARS: usize = 1000000;
+const EMBEDDING_MAX_CHARS: usize = 8000;
 
 pub struct PostingsExtractorHandler {
 	extractors: Vec<PostingsExtractor>,
@@ -109,12 +111,14 @@ impl PostingsExtractorHandler {
 		for extractor in &self.extractors {
 			for posting in extractor.extracted_postings.clone().unwrap_or(vec![]) {
 				let content = posting.content.clone();
+				let title = posting.title.clone();
 				let mut active_posting: posting::ActiveModel = posting.into();
 				active_posting.id = NotSet;
 				active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
 				active_posting.seen = Set(Some(false));
 				active_posting.source_id = Set(Some(extractor.source_id));
-				let embedding_vector = embedding.create(&content.unwrap_or("".to_string())).await?;
+				let embedding_content = content.unwrap_or(title.to_string());
+				let embedding_vector = embedding.create(&&embedding_content[..min(EMBEDDING_MAX_CHARS, embedding_content.len() - 1)].to_string()).await?;
 				let like_similarity = embedding.get_similarity(&embedding_vector, &liked_postings);
 				let dislike_similarity = embedding.get_similarity(&embedding_vector, &disliked_postings);
 				active_posting.match_similarity = Set(Some(like_similarity - dislike_similarity));
