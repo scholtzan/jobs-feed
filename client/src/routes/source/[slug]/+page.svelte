@@ -127,7 +127,7 @@
 		<div class="lg:w-3/4 w-[95%] min-h-full bg-base-200 text-base-content">
 			<nav class="navbar py-4">
 				<div class="flex-none">
-					<a href="/" class="btn btn-square btn-ghost btn-sm">
+					<button class="btn btn-square btn-ghost" title="Close" on:click={closeDrawer}>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
@@ -142,7 +142,7 @@
 								d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5"
 							/>
 						</svg>
-					</a>
+					</button>
 				</div>
 				<div class="flex-1"></div>
 				<div class="flex-none"></div>
