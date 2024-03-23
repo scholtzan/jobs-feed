@@ -3,11 +3,10 @@
 	import { Sources } from '../types/sources';
 	import { NotificationHandler } from '../types/notifications';
 	import { goto } from '$app/navigation';
-	import { Settings, SettingsHandler } from '../types/settings';
+	import { SettingsHandler } from '../types/settings';
 	import { constants } from '../constants';
 	import { showSidebar } from '../store';
-	import { onMount, onDestroy } from 'svelte';
-	import { get, writable } from 'svelte/store';
+	import { get } from 'svelte/store';
 
 	let notificationHandler = new NotificationHandler();
 	let sourceContextMenu = null;
@@ -94,7 +93,7 @@
 	}
 </script>
 
-<div class="max-w-[20em] min-w-[16em] lg:block {isSidebarVisible ? 'block' : 'hidden'}">
+<div class="max-w-[20em] min-w-[16em]">
 	<aside class="h-screen sticky top-0 flex flex-col bg-base-200 overflow-y-auto">
 		<!-- Header -->
 		<div class="flex gap-x-20 justify-between p-2 h-16 border-b border-base-300 align-bottom">
