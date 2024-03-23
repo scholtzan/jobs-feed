@@ -5,20 +5,38 @@
 	import PostingsContainer from '../lib/components/PostingsContainer.svelte';
 	import SourceDrawer from '../lib/components/SourceDrawer.svelte';
 	import NotificationContainer from '../lib/components/NotificationContainer.svelte';
+	import { showSidebar } from '../lib/store';
+	import { get } from 'svelte/store';
+
+	let isSidebarVisible = false;
+	showSidebar.subscribe((_) => (isSidebarVisible = get(showSidebar)));
+
+	function toggleSidebar() {
+		isSidebarVisible = !get(showSidebar);
+		showSidebar.set(isSidebarVisible);
+	}
 </script>
 
-<div class="flex flex-column">
-	<div class="static flex flex-column">
-		<Sidebar></Sidebar>
+<div class="drawer lg:drawer-open">
+	<input
+		id="sidebar-drawer"
+		type="checkbox"
+		class="drawer-toggle"
+		checked={isSidebarVisible}
+		on:click={toggleSidebar}
+	/>
+	<div class=" drawer-side overflow-visible">
+		<label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
-		<NotificationContainer></NotificationContainer>
+		<Sidebar></Sidebar>
 	</div>
 
-	<div class="grow">
+	<div class="drawer-content">
 		<div>
 			<Toolbar></Toolbar>
 		</div>
 		<PostingsContainer></PostingsContainer>
+		<NotificationContainer></NotificationContainer>
 	</div>
 
 	<div>
