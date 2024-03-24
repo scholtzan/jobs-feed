@@ -16,7 +16,7 @@
 	}
 </script>
 
-<div class="absolute bottom-6 left-6 gap-y-4 grid grid-cols-1">
+<div class="absolute bottom-6 left-6 right-6 gap-y-4 grid grid-cols-1 max-w-[35em] w-[88%]">
 	{#each notifications as notification}
 		<div
 			role="alert"
@@ -24,7 +24,7 @@
 				? 'alert-error'
 				: notification.type == NotificationType.Warning
 					? 'alert-warning'
-					: ''} shadow-lg max-w-96 z-40"
+					: ''} shadow-lg w-full z-40"
 		>
 			{#if notification.type == NotificationType.Error}
 				<svg

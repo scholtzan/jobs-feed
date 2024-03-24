@@ -17,7 +17,7 @@
 	}
 </script>
 
-<div class="drawer lg:drawer-open">
+<div class="drawer lg:drawer-open min-h-screen">
 	<input
 		id="sidebar-drawer"
 		type="checkbox"
