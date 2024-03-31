@@ -48,7 +48,8 @@ impl PostingsExtractorHandler {
 				let filters = filters.clone();
 
 				tokio::spawn(async move {
-					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(120_000)).build().unwrap();
+					// todo: one browser
+					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(60_000)).build().unwrap();
 					let browser = Browser::new(opt).unwrap();
 
 					let mut extractor = PostingsExtractor::new(
@@ -83,6 +84,7 @@ impl PostingsExtractorHandler {
 		Ok(postings)
 	}
 
+	// todo: save as part of extract to make results available earlier
 	pub async fn save(&self, db: &DatabaseConnection) -> Result<()> {
 		let settings = Settings::find().one(db).await?.expect("No settings stored");
 		let liked_postings: Vec<Vec<f32>> = Embedding::find()
@@ -283,7 +285,6 @@ impl PostingsExtractor {
 		}
 
 		tab.wait_until_navigated()?;
-		std::thread::sleep(std::time::Duration::from_secs(5)); // todo: needed?
 
 		let head = tab.wait_for_element("head")?.get_content()?;
 		if head == "<head><meta name=\"color-scheme\" content=\"light dark\"></head>" {
@@ -440,18 +441,34 @@ impl PostingsExtractor {
 							tab.wait_until_navigated()?;
 						}
 
-						if el.click().is_ok() {
-							std::thread::sleep(std::time::Duration::from_secs(15));
-							tab.wait_until_navigated()?;
-							let new_url = &tab.get_url();
-
-							if new_url != tab_url {
-								if let Ok(page_element) = tab.wait_for_element("body") {
-									posting.url = Some(new_url.to_string());
-									let content = page_element.get_content()?;
-									let markdown_content = parse_html(&content);
-									posting.content = Some(markdown_content);
+						match el.tag_name.as_str() {
+							"A" => {
+								if let Some(base_url) = base_url(Url::parse(&tab_url)?) {
+									let a_attributes = el.attributes.unwrap_or(vec![]);
+									let next_page_url_index = a_attributes.clone().into_iter().position(|r| r == "href".to_string());
+									if let Some(next_page_url_index) = next_page_url_index {
+										let paginated_url = base_url.join(&a_attributes[next_page_url_index + 1])?;
+										tab.navigate_to(paginated_url.as_str())?;
+										tab.wait_until_navigated()?;
+									}
 								}
+							}
+							_ => {
+								if el.click().is_ok() {
+									std::thread::sleep(std::time::Duration::from_secs(10));
+									tab.wait_until_navigated()?;
+								}
+							}
+						};
+
+						let new_url = &tab.get_url();
+
+						if new_url != tab_url {
+							if let Ok(page_element) = tab.wait_for_element("body") {
+								posting.url = Some(new_url.to_string());
+								let content = page_element.get_content()?;
+								let markdown_content = parse_html(&content);
+								posting.content = Some(markdown_content);
 							}
 						}
 					}

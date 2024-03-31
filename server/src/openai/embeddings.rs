@@ -6,8 +6,6 @@ use std::cmp;
 use serde_json::json;
 use serde_json::Value;
 
-use std::time::Duration;
-
 use anyhow::anyhow;
 use anyhow::Result;
 
