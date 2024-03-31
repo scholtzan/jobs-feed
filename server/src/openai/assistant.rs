@@ -9,7 +9,6 @@ use crate::openai::OpenAIApi;
 use crate::openai::BASE_URL;
 use futures_util::StreamExt;
 use std::io::Read;
-use std::time::Duration;
 
 pub enum AssistantType {
 	JobsFeed,
@@ -27,15 +26,14 @@ impl AssistantType {
 	fn instructions(&self) -> &'static str {
 		match self {
 			AssistantType::JobsFeed => {
-				"Extract a complete list of job postings with descriptions from the provided inputs that match the provided criteria. \
+				"Extract a complete list of job posting titles from the provided inputs that are related to the provided criteria. \
             Return the results in a single response as JSON. \
-            Extract the job descriptions and shorted to 200 characters, if available. Do not invent a job postings or descriptions! \
 			Only return postings that are in the input. Do not miss any posting! \
-            Response format: [{{\"title\": \"\", \"description\": \"\"}}]"
+            Response format: [{{\"title\":\"\"}}]"
 			}
 			AssistantType::JobsSuggestion => {
 				"Return a list of 10 career websites of companies similar to the company provided as input. \
-            Response format: [{{\"name\": \"\", \"url\": \"\"}}]"
+            Response format: [{{\"name\":\"\",\"url\":\"\"}}]"
 			}
 		}
 	}
@@ -75,7 +73,7 @@ impl Assistant {
 	pub async fn get_models(&self) -> Result<Vec<String>> {
 		let url = format!("{BASE_URL}/models");
 		let headers = self.headers()?;
-		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
+		let client = self.client();
 		let res = client.get(url).headers(headers).send().await?;
 
 		if res.status() == StatusCode::OK {
@@ -91,8 +89,7 @@ impl Assistant {
 	async fn get(&self) -> Result<Option<String>> {
 		let url = format!("{BASE_URL}/assistants");
 		let headers = self.headers()?;
-
-		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
+		let client = self.client();
 		let res = client.get(url).headers(headers).send().await?;
 
 		if res.status() == StatusCode::OK {
@@ -109,14 +106,13 @@ impl Assistant {
 	async fn create(&self) -> Result<Option<String>> {
 		let url = format!("{BASE_URL}/assistants");
 		let headers = self.headers()?;
+		let client = self.client();
 
 		let body = json!({
 			"instructions": self.assistant_type.instructions(),
 			"name": self.assistant_type.name(),
 			"model": &self.model
 		});
-
-		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
 
 		let res = client.post(url).headers(headers).json(&body).send().await?;
 
@@ -132,6 +128,7 @@ impl Assistant {
 	pub async fn run(&mut self, messages: &Vec<String>) -> Result<Vec<String>> {
 		let url = format!("{BASE_URL}/threads/runs");
 		let headers = self.headers()?;
+		let client = self.client();
 
 		let messages_json: Vec<Value> = messages
 			.into_iter()
@@ -151,7 +148,6 @@ impl Assistant {
 			})
 		});
 
-		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
 		let mut stream = client.post(url).headers(headers).json(&body).send().await?.bytes_stream();
 
 		let mut thread_id: String = "".to_string();
@@ -191,7 +187,7 @@ impl Assistant {
 	async fn get_run_result(&self, thread_id: &str, run_id: &str) -> Result<Vec<String>> {
 		let url = format!("{BASE_URL}/threads/{thread_id}/messages");
 		let headers = self.headers()?;
-		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
+		let client = self.client();
 
 		let res = client.get(&url).headers(headers.clone()).send().await?;
 

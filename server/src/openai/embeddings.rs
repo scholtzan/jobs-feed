@@ -42,7 +42,7 @@ impl Embeddings {
 			"encoding_format": "float"
 		});
 
-		let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
+		let client = self.client();
 		let res = client.post(url).headers(headers).json(&body).send().await?;
 
 		if res.status() == StatusCode::OK {
@@ -76,7 +76,7 @@ impl Embeddings {
 
 				return dist;
 			})
-			.min_by(|a, b| a.total_cmp(b))
+			.max_by(|a, b| a.total_cmp(b))
 			.unwrap_or(0.0)
 	}
 }

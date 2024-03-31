@@ -21,7 +21,7 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Posting::Title).string().not_null())
-                    .col(ColumnDef::new(Posting::Description).string().not_null())
+                    .col(ColumnDef::new(Posting::Description).string())
                     .col(ColumnDef::new(Posting::Url).string())
                     .col(ColumnDef::new(Posting::CreatedAt).timestamp_with_time_zone().default(Expr::current_timestamp()))
                     .col(ColumnDef::new(Posting::Seen).boolean().default(false))

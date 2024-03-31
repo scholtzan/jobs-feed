@@ -20,7 +20,7 @@ use std::cmp::min;
 use url::Url;
 
 const MESSAGE_MAX_CHARS: usize = 32000;
-const MAX_EXTRACT_CHARS: usize = 1000000;
+const MAX_EXTRACT_CHARS: usize = 10000000;
 const EMBEDDING_MAX_CHARS: usize = 8000;
 
 pub struct PostingsExtractorHandler {
@@ -48,7 +48,7 @@ impl PostingsExtractorHandler {
 				let filters = filters.clone();
 
 				tokio::spawn(async move {
-					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(60_000)).build().unwrap();
+					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(120_000)).build().unwrap();
 					let browser = Browser::new(opt).unwrap();
 
 					let mut extractor = PostingsExtractor::new(
@@ -118,7 +118,8 @@ impl PostingsExtractorHandler {
 				active_posting.seen = Set(Some(false));
 				active_posting.source_id = Set(Some(extractor.source_id));
 				let embedding_content = content.unwrap_or(title.to_string());
-				let embedding_vector = embedding.create(&&embedding_content[..min(EMBEDDING_MAX_CHARS, embedding_content.len() - 1)].to_string()).await?;
+				let end_index = embedding_content.char_indices().map(|(i, _)| i).nth(min(EMBEDDING_MAX_CHARS, embedding_content.len() - 1)).unwrap();
+				let embedding_vector = embedding.create(&&embedding_content[..end_index].to_string()).await?;
 				let like_similarity = embedding.get_similarity(&embedding_vector, &liked_postings);
 				let dislike_similarity = embedding.get_similarity(&embedding_vector, &disliked_postings);
 				active_posting.match_similarity = Set(Some(like_similarity - dislike_similarity));
@@ -145,6 +146,10 @@ impl PostingsExtractorHandler {
 		}
 
 		Ok(())
+	}
+
+	pub fn reset(&mut self) {
+		self.extractors = vec![];
 	}
 }
 
@@ -261,6 +266,8 @@ impl PostingsExtractor {
 			return Ok(postings);
 		}
 
+		self.close_tabs()?;
+
 		return Ok(vec![]);
 	}
 
@@ -276,6 +283,7 @@ impl PostingsExtractor {
 		}
 
 		tab.wait_until_navigated()?;
+		std::thread::sleep(std::time::Duration::from_secs(5)); // todo: needed?
 
 		let head = tab.wait_for_element("head")?.get_content()?;
 		if head == "<head><meta name=\"color-scheme\" content=\"light dark\"></head>" {
@@ -291,6 +299,13 @@ impl PostingsExtractor {
 		}
 
 		return Ok(());
+	}
+
+	fn close_tabs(&self) -> Result<()> {
+		self.browser.get_tabs().lock().unwrap().iter().for_each(|t| {
+			let _ = t.close(true);
+		});
+		Ok(())
 	}
 
 	fn parse_source_pages(&self, tab: Arc<Tab>, prev_content: &ParsedPage) -> Result<Vec<ParsedPage>> {
@@ -387,6 +402,7 @@ impl PostingsExtractor {
 
 		for page in &content.parsed_pages {
 			let mut content_chunks = self.chunk_message(&page.content);
+
 			let chatgpt_result = self.chatgpt_extract_postings(&mut content_chunks).await?;
 
 			for response in chatgpt_result {
@@ -474,8 +490,9 @@ impl PostingsExtractor {
 
 		let last_message = format!(
 			"Criteria: {criteria} Provide a single response. \
-            Response format: [{{\"title\": \"\", \"description\": \"\"}}]. \
-            Description should not contain location. Description should be up to 200 characters. Only return complete and valid JSON."
+            Response format: [{{\"title\": \"\"}}]. \
+			Extract a complete list of job posting titles from the provided inputs that are related to the provided criteria. \
+            Only return complete and valid JSON."
 		);
 		message_parts.push(last_message);
 

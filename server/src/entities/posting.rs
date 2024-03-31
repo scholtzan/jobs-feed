@@ -10,12 +10,13 @@ pub struct Model {
 	#[serde(skip_deserializing)]
 	pub id: i32,
 	pub title: String,
-	pub description: String,
+	pub description: Option<String>,
 	pub url: Option<String>,
 	pub created_at: Option<DateTimeWithTimeZone>,
 	pub seen: Option<bool>,
 	pub source_id: Option<i32>,
 	pub bookmarked: Option<bool>,
+	#[sea_orm(column_type = "Text", nullable)]
 	pub content: Option<String>,
 	pub is_match: Option<bool>,
 	#[sea_orm(column_type = "Float", nullable)]

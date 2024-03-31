@@ -32,7 +32,7 @@ pub async fn add_source(db: &State<DatabaseConnection>, input: Json<source::Mode
 	new_source.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
 	let inserted_source: source::Model = new_source.insert(db_connection).await.expect("Could not insert source");
 
-	let _ = refresh_source_suggestions(db, inserted_source.id);
+	let _ = refresh_source_suggestions(db, inserted_source.id).await;
 
 	Ok(Json(inserted_source))
 }

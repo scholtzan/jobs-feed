@@ -464,11 +464,11 @@
 										{sourcesHandler.sourceById(posting.source_id).name} // {new Date(
 											posting.created_at
 										).toLocaleString()}
-										{#if posting.match_similarity > 0.8}
+										{#if posting.match_similarity > 0.7}
 											<span class="inline text-orange-400"> • Good Match </span>
 										{/if}
 									</p>
-									{#if getMatchingFilters(posting.content + posting.description).length > 0.85}
+									{#if getMatchingFilters(posting.content + posting.title).length > 0}
 										<p class="flex grow pb-1 text-orange-400">
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
@@ -482,11 +482,10 @@
 													clip-rule="evenodd"
 												/>
 											</svg>
-											{getMatchingFilters(posting.content + posting.description).join(', ')}
+											{getMatchingFilters(posting.content + posting.title).join(', ')}
 										</p>
 									{/if}
 								{/if}
-								<p class="text-justify">{posting.description}</p>
 							</a>
 						</div>
 					</div>
