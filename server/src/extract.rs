@@ -8,6 +8,7 @@ use anyhow::anyhow;
 use anyhow::Result;
 
 use chrono::FixedOffset;
+use chrono::Utc;
 use headless_chrome::{Browser, LaunchOptionsBuilder, Tab};
 use html2md::parse_html;
 use sea_orm::entity::prelude::*;
@@ -48,7 +49,6 @@ impl PostingsExtractorHandler {
 				let filters = filters.clone();
 
 				tokio::spawn(async move {
-					// todo: one browser
 					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(60_000)).build().unwrap();
 					let browser = Browser::new(opt).unwrap();
 
@@ -310,8 +310,6 @@ impl PostingsExtractor {
 	}
 
 	fn parse_source_pages(&self, tab: Arc<Tab>, prev_content: &ParsedPage) -> Result<Vec<ParsedPage>> {
-		std::thread::sleep(std::time::Duration::from_secs(5)); // todo: needed?
-
 		let selector = match &self.selector {
 			Some(s) => s,
 			None => "body",
@@ -354,8 +352,13 @@ impl PostingsExtractor {
 							_ => {
 								let pagination_click = pagination_element.click();
 								if pagination_click.is_ok() {
-									std::thread::sleep(std::time::Duration::from_secs(15));
-									tab.wait_until_navigated()?;
+									let tab_url = &tab.get_url();
+									let start_time = Utc::now().time();
+									let site_content = tab.wait_for_element("body").unwrap().get_inner_text()?;
+									while &tab.get_url() == tab_url && (Utc::now().time() - start_time).num_seconds() < 15 && site_content == tab.wait_for_element("body").unwrap().get_inner_text()? {
+										tab.wait_until_navigated()?;
+									}
+
 									let mut parsed_pages = self.parse_source_pages(tab, &parsed_page)?;
 									parsed_pages.insert(0, parsed_page);
 									return Ok(parsed_pages);
@@ -455,8 +458,12 @@ impl PostingsExtractor {
 							}
 							_ => {
 								if el.click().is_ok() {
-									std::thread::sleep(std::time::Duration::from_secs(10));
-									tab.wait_until_navigated()?;
+									let tab_url = &tab.get_url();
+									let start_time = Utc::now().time();
+									let site_content = tab.wait_for_element("body").unwrap().get_inner_text()?;
+									while &tab.get_url() == tab_url && (Utc::now().time() - start_time).num_seconds() < 15 && site_content == tab.wait_for_element("body").unwrap().get_inner_text()? {
+										tab.wait_until_navigated()?;
+									}
 								}
 							}
 						};
