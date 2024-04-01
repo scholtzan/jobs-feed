@@ -7,6 +7,7 @@ use crate::{
 use anyhow::anyhow;
 use anyhow::Result;
 
+use chrono;
 use chrono::FixedOffset;
 use chrono::Utc;
 use headless_chrome::{Browser, LaunchOptionsBuilder, Tab};
@@ -47,6 +48,7 @@ impl PostingsExtractorHandler {
 			.map(|source: source::Model| {
 				let settings = settings.clone();
 				let filters = filters.clone();
+				let db = db.clone();
 
 				tokio::spawn(async move {
 					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(60_000)).build().unwrap();
@@ -63,7 +65,7 @@ impl PostingsExtractorHandler {
 						browser,
 					);
 
-					let _ = extractor.extract().await;
+					let _ = extractor.extract(&db).await;
 					extractor
 				})
 			})
@@ -258,12 +260,12 @@ impl PostingsExtractor {
 		}
 	}
 
-	pub async fn extract(&mut self) -> Result<Vec<posting::Model>> {
+	pub async fn extract(&mut self, db: &DatabaseConnection) -> Result<Vec<posting::Model>> {
 		self.parse_source_content().await?;
 		let content_diff = self.new_source_content();
 
 		if !content_diff.parsed_pages.is_empty() {
-			let postings = self.extract_postings(&content_diff).await?;
+			let postings = self.extract_postings(&content_diff, db).await?;
 			self.extracted_postings = Some(postings.clone());
 			return Ok(postings);
 		}
@@ -401,7 +403,7 @@ impl PostingsExtractor {
 		return new_content.limit_content(MAX_EXTRACT_CHARS);
 	}
 
-	async fn extract_postings(&mut self, content: &ParsedSource) -> Result<Vec<posting::Model>> {
+	async fn extract_postings(&mut self, content: &ParsedSource, db: &DatabaseConnection) -> Result<Vec<posting::Model>> {
 		let mut postings: Vec<posting::Model> = vec![];
 
 		for page in &content.parsed_pages {
@@ -411,10 +413,24 @@ impl PostingsExtractor {
 
 			for response in chatgpt_result {
 				let parsed_response: Vec<posting::Model> = serde_json::from_str(&response)?;
+				let posting_titles: Vec<&String> = parsed_response.iter().map(|p| &p.title).collect();
+
+				// filter postings that were seen recently
+				let existing_postings = Posting::find()
+					.filter(posting::Column::SourceId.eq(self.source_id))
+					.filter(posting::Column::Title.is_in(posting_titles))
+					.filter(posting::Column::CreatedAt.gte(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap()) - chrono::Duration::days(30)))
+					.all(db)
+					.await
+					.expect("Could not get existing postings")
+					.into_iter()
+					.collect::<Vec<_>>();
 
 				for mut posting in parsed_response {
-					self.add_posting_details(&mut posting, &page)?;
-					postings.push(posting);
+					if existing_postings.iter().find(|ep| ep.title == posting.title).is_none() {
+						self.add_posting_details(&mut posting, &page)?;
+						postings.push(posting);
+					}
 				}
 			}
 		}
