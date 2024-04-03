@@ -236,9 +236,9 @@
 						</p>
 					{/if}
 
-					{#if posting.content != null}
+					{#if posting.content}
 						<SvelteMarkdown source={getContent()} />
-					{:else if posting.description != null}
+					{:else if posting.description}
 						{posting.description}
 					{:else}
 						Could not extract posting contents.

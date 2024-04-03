@@ -13,6 +13,7 @@
 	let isNewSource = data.sourceId == 'new';
 	let sourcesHandler = new Sources();
 	let source = new Source();
+	let isSaving = false;
 
 	if (isNewSource) {
 		source = new Source();
@@ -37,10 +38,13 @@
 	};
 
 	function closeDrawer(e) {
+		isSaving = false;
 		if (browser) window.history.back();
 	}
 
 	function saveSource() {
+		isSaving = true;
+
 		if (source.name.trim() == '') {
 			validation.nameValidation = 'Give this source a name';
 		}
@@ -70,7 +74,7 @@
 						);
 					}
 
-					goto('/');
+					closeDrawer();
 				});
 			} else {
 				sourcesHandler.updateSource(source).then((res) => {
@@ -78,7 +82,7 @@
 						notificationHandler.addError('Could not update source', res.message);
 					}
 
-					goto('/');
+					closeDrawer();
 				});
 			}
 		}
@@ -309,7 +313,15 @@
 				</div>
 
 				<div class="py-8 flex-none">
-					<button class="btn btn-active btn-primary" on:click={saveSource}>Save</button>
+					<button
+						class="btn btn-active btn-primary {isSaving ? 'btn-disabled' : ''}"
+						on:click={saveSource}
+					>
+						{#if isSaving}
+							<span class="loading loading-spinner"></span>
+						{/if}
+						Save
+					</button>
 					<a href="/" class="btn btn-active">Cancel</a>
 				</div>
 

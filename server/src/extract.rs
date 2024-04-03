@@ -51,7 +51,7 @@ impl PostingsExtractorHandler {
 				let db = db.clone();
 
 				tokio::spawn(async move {
-					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(60_000)).build().unwrap();
+					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(120_000)).build().unwrap();
 					let browser = Browser::new(opt).unwrap();
 
 					let mut extractor = PostingsExtractor::new(
@@ -428,8 +428,10 @@ impl PostingsExtractor {
 
 				for mut posting in parsed_response {
 					if existing_postings.iter().find(|ep| ep.title == posting.title).is_none() {
-						self.add_posting_details(&mut posting, &page)?;
-						postings.push(posting);
+						if page.content.contains(&posting.title) {
+							self.add_posting_details(&mut posting, &page)?;
+							postings.push(posting);
+						}
 					}
 				}
 			}
