@@ -19,8 +19,13 @@ export class PostingsApi {
 		});
 	};
 
-	public refreshPostings = async () => {
-		return fetch(`/api/${constants.API_VERSION}/postings/refresh`, {
+	public refreshPostings = async (source_id: number | null = null) => {
+		let url = `/api/${constants.API_VERSION}/postings/refresh`;
+		if (source_id != null) {
+			url += `?source_id=${source_id}`;
+		}
+
+		return fetch(url, {
 			method: 'GET'
 		}).then((response) => {
 			if (response.status == 200) {

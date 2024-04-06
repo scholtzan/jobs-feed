@@ -34,12 +34,16 @@ impl PostingsExtractorHandler {
 		PostingsExtractorHandler { extractors: vec![] }
 	}
 
-	pub async fn refresh(&mut self, db: &DatabaseConnection) -> Result<Vec<posting::Model>> {
-		self.fetch(db).await
+	pub async fn refresh(&mut self, db: &DatabaseConnection, source_id: Option<i32>) -> Result<Vec<posting::Model>> {
+		self.fetch(db, source_id).await
 	}
 
-	async fn fetch(&mut self, db: &DatabaseConnection) -> Result<Vec<posting::Model>> {
-		let sources = Source::find().filter(source::Column::Deleted.eq(false)).all(db).await?;
+	async fn fetch(&mut self, db: &DatabaseConnection, source_id: Option<i32>) -> Result<Vec<posting::Model>> {
+		let sources = match source_id {
+			None => Source::find().filter(source::Column::Deleted.eq(false)).all(db).await?,
+			Some(source_id) => Source::find().filter(source::Column::Deleted.eq(false)).filter(source::Column::Id.eq(source_id)).all(db).await?,
+		};
+
 		let settings = Settings::find().one(db).await?.expect("No settings stored");
 		let filters = Filter::find().all(db).await?;
 
@@ -122,7 +126,7 @@ impl PostingsExtractorHandler {
 				active_posting.seen = Set(Some(false));
 				active_posting.source_id = Set(Some(extractor.source_id));
 				let embedding_content = content.unwrap_or(title.to_string());
-				let end_index = embedding_content.char_indices().map(|(i, _)| i).nth(min(EMBEDDING_MAX_CHARS, embedding_content.len() - 1)).unwrap();
+				let end_index = embedding_content.char_indices().map(|(i, _)| i).nth(min(EMBEDDING_MAX_CHARS, embedding_content.len() - 1)).unwrap_or(0);
 				let embedding_vector = embedding.create(&&embedding_content[..end_index].to_string()).await?;
 				let like_similarity = embedding.get_similarity(&embedding_vector, &liked_postings);
 				let dislike_similarity = embedding.get_similarity(&embedding_vector, &disliked_postings);
@@ -357,7 +361,7 @@ impl PostingsExtractor {
 									let tab_url = &tab.get_url();
 									let start_time = Utc::now().time();
 									let site_content = tab.wait_for_element("body").unwrap().get_inner_text()?;
-									while &tab.get_url() == tab_url && (Utc::now().time() - start_time).num_seconds() < 15 && site_content == tab.wait_for_element("body").unwrap().get_inner_text()? {
+									while &tab.get_url() == tab_url && (Utc::now().time() - start_time).num_seconds() < 10 && site_content == tab.wait_for_element("body").unwrap().get_inner_text()? {
 										tab.wait_until_navigated()?;
 									}
 
@@ -479,7 +483,7 @@ impl PostingsExtractor {
 									let tab_url = &tab.get_url();
 									let start_time = Utc::now().time();
 									let site_content = tab.wait_for_element("body").unwrap().get_inner_text()?;
-									while &tab.get_url() == tab_url && (Utc::now().time() - start_time).num_seconds() < 15 && site_content == tab.wait_for_element("body").unwrap().get_inner_text()? {
+									while &tab.get_url() == tab_url && (Utc::now().time() - start_time).num_seconds() < 10 && site_content == tab.wait_for_element("body").unwrap().get_inner_text()? {
 										tab.wait_until_navigated()?;
 									}
 								}
@@ -495,6 +499,9 @@ impl PostingsExtractor {
 								let markdown_content = parse_html(&content);
 								posting.content = Some(markdown_content);
 							}
+						} else {
+							// pages are not changing on click; skip further elements
+							return Ok(());
 						}
 					}
 

@@ -43,18 +43,30 @@ export class Postings {
 		});
 	}
 
-	public refresh(useCached: boolean = true) {
+	public refresh(useCached: boolean = true, source_id: number | null = null) {
 		if (useCached) {
-			return this.api.getUnreadPostings().then((res) => {
-				if (res.isSuccessful) {
-					this.postings = res.data;
-					this.store();
-				}
+			if (source_id == null) {
+				return this.api.getUnreadPostings().then((res) => {
+					if (res.isSuccessful) {
+						if (source_id == null) {
+							this.postings = res.data;
+						} else {
+							for (var posting of res.data) {
+								if (this.postings.indexOf(posting) == -1) {
+									this.postings.push(posting);
+								}
+							}
+						}
+						this.store();
+					}
 
-				return res;
-			});
+					return res;
+				});
+			} else {
+				return this.getReadPostingsOfSource(source_id);
+			}
 		} else {
-			return this.api.refreshPostings().then((res) => {
+			return this.api.refreshPostings(source_id).then((res) => {
 				if (res.isSuccessful) {
 					this.postings = res.data as Posting[];
 					this.store();

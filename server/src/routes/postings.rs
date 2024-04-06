@@ -44,16 +44,20 @@ pub async fn bookmarked_postings(db: &State<DatabaseConnection>) -> Result<Json<
 	))
 }
 
-#[get("/postings/refresh")]
-pub async fn refresh_postings(db: &State<DatabaseConnection>, extractor_handler: &State<Arc<Mutex<PostingsExtractorHandler>>>) -> Result<Json<Vec<posting::Model>>, Status> {
+#[get("/postings/refresh?<source_id>")]
+pub async fn refresh_postings(db: &State<DatabaseConnection>, extractor_handler: &State<Arc<Mutex<PostingsExtractorHandler>>>, source_id: Option<i32>) -> Result<Json<Vec<posting::Model>>, Status> {
 	let db_connection = db as &DatabaseConnection;
 	let mut extractor_handler = extractor_handler.inner().lock().await;
 
-	extractor_handler.refresh(db_connection).await.expect("Could not refresh postings");
+	extractor_handler.refresh(db_connection, source_id).await.expect("Could not refresh postings");
 	extractor_handler.save(db_connection).await.expect("Could not cache source content");
 	extractor_handler.reset();
 
-	unread_postings(db).await
+	if let Some(source_id) = source_id {
+		get_postings(db, Some(source_id), Some(false)).await
+	} else {
+		unread_postings(db).await
+	}
 }
 
 #[get("/postings/<id>")]
