@@ -2,15 +2,16 @@ use crate::entities::{prelude::*, *};
 use chrono::FixedOffset;
 
 use crate::openai::assistant::{Assistant, AssistantType};
+use crate::pool::Db;
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::State;
+use sea_orm_rocket::Connection;
 
 use sea_orm::*;
 
 #[get("/sources")]
-pub async fn sources(db: &State<DatabaseConnection>) -> Result<Json<Vec<source::Model>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn sources(conn: Connection<'_, Db>) -> Result<Json<Vec<source::Model>>, Status> {
+	let db = conn.into_inner();
 
 	Ok(Json(
 		Source::find()
@@ -24,22 +25,22 @@ pub async fn sources(db: &State<DatabaseConnection>) -> Result<Json<Vec<source::
 }
 
 #[post("/sources", data = "<input>")]
-pub async fn add_source(db: &State<DatabaseConnection>, input: Json<source::Model>) -> Result<Json<source::Model>, Status> {
-	let db_connection = db as &DatabaseConnection;
+pub async fn add_source(conn: Connection<'_, Db>, input: Json<source::Model>) -> Result<Json<source::Model>, Status> {
+	let db = conn.into_inner();
 
 	let mut new_source: source::ActiveModel = input.into_inner().into();
 	new_source.id = NotSet;
 	new_source.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
-	let inserted_source: source::Model = new_source.insert(db_connection).await.expect("Could not insert source");
+	let inserted_source: source::Model = new_source.insert(db).await.expect("Could not insert source");
 
-	let _ = refresh_source_suggestions(db, inserted_source.id).await;
+	let _ = _refresh_source_suggestions(&db, inserted_source.id).await?;
 
 	Ok(Json(inserted_source))
 }
 
 #[delete("/sources/<id>")]
-pub async fn delete_source(db: &State<DatabaseConnection>, id: i32) -> Result<(), Status> {
-	let db = db as &DatabaseConnection;
+pub async fn delete_source(conn: Connection<'_, Db>, id: i32) -> Result<(), Status> {
+	let db = conn.into_inner();
 
 	let source: Option<source::Model> = Source::find_by_id(id).one(db).await.expect("Could not find source");
 	let mut source: source::ActiveModel = source.unwrap().into();
@@ -51,15 +52,15 @@ pub async fn delete_source(db: &State<DatabaseConnection>, id: i32) -> Result<()
 }
 
 #[get("/sources/<id>")]
-pub async fn source_by_id(db: &State<DatabaseConnection>, id: i32) -> Result<Json<Option<source::Model>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn source_by_id(conn: Connection<'_, Db>, id: i32) -> Result<Json<Option<source::Model>>, Status> {
+	let db = conn.into_inner();
 
 	Ok(Json(Source::find().filter(source::Column::Id.eq(id)).one(db).await.expect("Could not retrieve source")))
 }
 
 #[get("/sources/<id>/suggestions")]
-pub async fn source_suggestions(db: &State<DatabaseConnection>, id: i32) -> Result<Json<Vec<suggestion::Model>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn source_suggestions(conn: Connection<'_, Db>, id: i32) -> Result<Json<Vec<suggestion::Model>>, Status> {
+	let db = conn.into_inner();
 
 	Ok(Json(
 		Suggestion::find()
@@ -71,10 +72,7 @@ pub async fn source_suggestions(db: &State<DatabaseConnection>, id: i32) -> Resu
 	))
 }
 
-#[put("/sources/<id>/suggestions/refresh")]
-pub async fn refresh_source_suggestions(db: &State<DatabaseConnection>, id: i32) -> Result<Json<Vec<suggestion::Model>>, Status> {
-	let db = db as &DatabaseConnection;
-
+async fn _refresh_source_suggestions(db: &DatabaseConnection, id: i32) -> Result<Json<Vec<suggestion::Model>>, Status> {
 	let source = Source::find().filter(source::Column::Id.eq(id)).one(db).await.expect("Could not retrieve source");
 	let sources = Source::find().filter(source::Column::Deleted.eq(false)).limit(20).all(db).await.expect("Could not retrieve sources");
 	let suggestions = Suggestion::find()
@@ -123,9 +121,16 @@ pub async fn refresh_source_suggestions(db: &State<DatabaseConnection>, id: i32)
 	))
 }
 
+#[put("/sources/<id>/suggestions/refresh")]
+pub async fn refresh_source_suggestions(conn: Connection<'_, Db>, id: i32) -> Result<Json<Vec<suggestion::Model>>, Status> {
+	let db = conn.into_inner();
+
+	_refresh_source_suggestions(&db, id).await
+}
+
 #[put("/sources/<id>", data = "<input>")]
-pub async fn update_source(db: &State<DatabaseConnection>, id: i32, input: Json<source::Model>) -> Result<Json<source::Model>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn update_source(conn: Connection<'_, Db>, id: i32, input: Json<source::Model>) -> Result<Json<source::Model>, Status> {
+	let db = conn.into_inner();
 
 	let existing_source = Source::find_by_id(id).one(db).await.expect("Could not find source").unwrap();
 	let updated_source: source::Model = input.into_inner();
@@ -149,8 +154,8 @@ pub async fn update_source(db: &State<DatabaseConnection>, id: i32, input: Json<
 }
 
 #[put("/sources/<id>/reset")]
-pub async fn reset_source_cache(db: &State<DatabaseConnection>, id: i32) -> Result<(), Status> {
-	let db = db as &DatabaseConnection;
+pub async fn reset_source_cache(conn: Connection<'_, Db>, id: i32) -> Result<(), Status> {
+	let db = conn.into_inner();
 
 	let existing_source = Source::find_by_id(id).one(db).await.expect("Could not find source").unwrap();
 	let mut existing_source_active: source::ActiveModel = existing_source.into();

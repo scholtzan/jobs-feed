@@ -1,22 +1,23 @@
 use crate::entities::{prelude::*, *};
 use chrono::FixedOffset;
 
+use crate::pool::Db;
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::State;
+use sea_orm_rocket::Connection;
 
 use sea_orm::*;
 
 #[get("/filters")]
-pub async fn filters(db: &State<DatabaseConnection>) -> Result<Json<Vec<filter::Model>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn filters(conn: Connection<'_, Db>) -> Result<Json<Vec<filter::Model>>, Status> {
+	let db = conn.into_inner();
 
 	Ok(Json(Filter::find().all(db).await.expect("Could not retrieve filters").into_iter().collect::<Vec<_>>()))
 }
 
 #[put("/filters", data = "<input>")]
-pub async fn update_filters(db_state: &State<DatabaseConnection>, input: Json<Vec<filter::Model>>) -> Result<Json<Vec<filter::Model>>, Status> {
-	let db = db_state as &DatabaseConnection;
+pub async fn update_filters(conn: Connection<'_, Db>, input: Json<Vec<filter::Model>>) -> Result<Json<Vec<filter::Model>>, Status> {
+	let db = conn.into_inner();
 
 	let txn = db.begin().await.expect("Could not create transaction.");
 
@@ -37,5 +38,5 @@ pub async fn update_filters(db_state: &State<DatabaseConnection>, input: Json<Ve
 
 	txn.commit().await.expect("Cannot commit transaction");
 
-	filters(db_state).await
+	Ok(Json(Filter::find().all(db).await.expect("Could not retrieve filters").into_iter().collect::<Vec<_>>()))
 }

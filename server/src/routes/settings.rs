@@ -2,22 +2,23 @@ use crate::entities;
 use crate::entities::prelude::*;
 use crate::openai::assistant::{Assistant, AssistantType};
 
+use crate::pool::Db;
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::State;
+use sea_orm_rocket::Connection;
 
 use sea_orm::*;
 
 #[get("/settings")]
-pub async fn settings(db: &State<DatabaseConnection>) -> Result<Json<Option<entities::settings::Model>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn settings(conn: Connection<'_, Db>) -> Result<Json<Option<entities::settings::Model>>, Status> {
+	let db = conn.into_inner();
 
 	Ok(Json(Settings::find().one(db).await.expect("Could not retrieve settings")))
 }
 
 #[put("/settings", data = "<input>")]
-pub async fn update_settings(db_state: &State<DatabaseConnection>, input: Json<entities::settings::Model>) -> Result<Json<Option<entities::settings::Model>>, Status> {
-	let db = db_state as &DatabaseConnection;
+pub async fn update_settings(conn: Connection<'_, Db>, input: Json<entities::settings::Model>) -> Result<Json<Option<entities::settings::Model>>, Status> {
+	let db = conn.into_inner();
 
 	let txn = db.begin().await.expect("Could not create transaction.");
 
@@ -28,12 +29,12 @@ pub async fn update_settings(db_state: &State<DatabaseConnection>, input: Json<e
 
 	txn.commit().await.expect("Cannot commit transaction");
 
-	settings(db_state).await
+	Ok(Json(Settings::find().one(db).await.expect("Could not retrieve settings")))
 }
 
 #[get("/settings/models")]
-pub async fn get_models(db: &State<DatabaseConnection>) -> Result<Json<Vec<String>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn get_models(conn: Connection<'_, Db>) -> Result<Json<Vec<String>>, Status> {
+	let db = conn.into_inner();
 	let settings = Settings::find().one(db).await.expect("Could not retrieve settings");
 
 	if settings.is_none() {

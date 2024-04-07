@@ -1,23 +1,19 @@
 mod entities;
 mod extract;
 mod openai;
+mod pool;
 mod routes;
 mod util;
 
 #[macro_use]
 extern crate rocket;
 
+use pool::Db;
 use rocket::fs::{relative, NamedFile};
 
-use crate::extract::PostingsExtractorHandler;
-
-use futures::lock::Mutex;
-
 use sea_orm::*;
+use sea_orm_rocket::{Config, Database};
 
-use serde::Deserialize;
-
-use std::sync::Arc;
 use std::{
 	env,
 	path::{Path, PathBuf},
@@ -55,16 +51,9 @@ async fn rocket() -> _ {
 
 	let rocket = rocket::build();
 	let figment = rocket.figment().clone().select(environment);
+	let config: Config = figment.extract::<Config>().unwrap();
 
-	#[derive(Deserialize)]
-	#[serde(crate = "rocket::serde")]
-	struct DatabaseConfig {
-		url: String,
-	}
-
-	let config: DatabaseConfig = figment.extract_inner::<DatabaseConfig>("database").unwrap();
-
-	let db = Database::connect(config.url).await.unwrap();
+	let db = sea_orm::Database::connect(config.url).await.unwrap();
 	migration::Migrator::up(&db, None).await.unwrap();
 	match env::var("API_KEY") {
 		Ok(api_key) => {
@@ -80,11 +69,8 @@ async fn rocket() -> _ {
 		_ => {}
 	};
 
-	let postings_extractor_handler = PostingsExtractorHandler::new();
-
-	rocket::build()
-		.manage(db)
-		.manage(Arc::new(Mutex::new(postings_extractor_handler)))
+	rocket::custom(figment)
+		.attach(Db::init())
 		.mount("/_app", routes![static_files])
 		.mount(
 			"/api/v1",

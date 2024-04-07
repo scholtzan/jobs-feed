@@ -1,20 +1,17 @@
 use crate::entities::{prelude::*, *};
 use crate::extract::PostingsExtractorHandler;
 
-use futures::lock::Mutex;
-
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::State;
 
+use crate::pool::Db;
+use sea_orm::sea_query::Expr;
 use sea_orm::{entity::*, query::*};
-use sea_orm::{sea_query::Expr, *};
-
-use std::sync::Arc;
+use sea_orm_rocket::Connection;
 
 #[get("/postings/unread")]
-pub async fn unread_postings(db: &State<DatabaseConnection>) -> Result<Json<Vec<posting::Model>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn unread_postings(conn: Connection<'_, Db>) -> Result<Json<Vec<posting::Model>>, Status> {
+	let db = conn.into_inner();
 
 	Ok(Json(
 		Posting::find()
@@ -29,8 +26,8 @@ pub async fn unread_postings(db: &State<DatabaseConnection>) -> Result<Json<Vec<
 }
 
 #[get("/postings/bookmarked")]
-pub async fn bookmarked_postings(db: &State<DatabaseConnection>) -> Result<Json<Vec<posting::Model>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn bookmarked_postings(conn: Connection<'_, Db>) -> Result<Json<Vec<posting::Model>>, Status> {
+	let db = conn.into_inner();
 
 	Ok(Json(
 		Posting::find()
@@ -45,31 +42,47 @@ pub async fn bookmarked_postings(db: &State<DatabaseConnection>) -> Result<Json<
 }
 
 #[get("/postings/refresh?<source_id>")]
-pub async fn refresh_postings(db: &State<DatabaseConnection>, extractor_handler: &State<Arc<Mutex<PostingsExtractorHandler>>>, source_id: Option<i32>) -> Result<Json<Vec<posting::Model>>, Status> {
-	let db_connection = db as &DatabaseConnection;
-	let mut extractor_handler = extractor_handler.inner().lock().await;
+pub async fn refresh_postings(conn: Connection<'_, Db>, source_id: Option<i32>) -> Result<Json<Vec<posting::Model>>, Status> {
+	let db = conn.into_inner();
+	let mut extractor_handler = PostingsExtractorHandler::new();
 
-	extractor_handler.refresh(db_connection, source_id).await.expect("Could not refresh postings");
-	extractor_handler.save(db_connection).await.expect("Could not cache source content");
+	extractor_handler.refresh(db, source_id).await.expect("Could not refresh postings");
+	extractor_handler.save(db).await.expect("Could not cache source content");
 	extractor_handler.reset();
 
 	if let Some(source_id) = source_id {
-		get_postings(db, Some(source_id), Some(false)).await
+		Ok(Json(
+			Posting::find()
+				.filter(posting::Column::SourceId.eq(source_id))
+				.order_by_desc(posting::Column::CreatedAt)
+				.all(db)
+				.await
+				.expect("Could not retrieve postings"),
+		))
 	} else {
-		unread_postings(db).await
+		Ok(Json(
+			Posting::find()
+				.filter(posting::Column::Seen.eq(false))
+				.order_by_desc(posting::Column::CreatedAt)
+				.all(db)
+				.await
+				.expect("Could not retrieve postings")
+				.into_iter()
+				.collect::<Vec<_>>(),
+		))
 	}
 }
 
 #[get("/postings/<id>")]
-pub async fn posting_by_id(db: &State<DatabaseConnection>, id: i32) -> Result<Json<Option<posting::Model>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn posting_by_id(conn: Connection<'_, Db>, id: i32) -> Result<Json<Option<posting::Model>>, Status> {
+	let db = conn.into_inner();
 
 	Ok(Json(Posting::find().filter(posting::Column::Id.eq(id)).one(db).await.expect("Could not retrieve posting")))
 }
 
 #[get("/postings?<source_id>&<read>")]
-pub async fn get_postings(db: &State<DatabaseConnection>, source_id: Option<i32>, read: Option<bool>) -> Result<Json<Vec<posting::Model>>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn get_postings(conn: Connection<'_, Db>, source_id: Option<i32>, read: Option<bool>) -> Result<Json<Vec<posting::Model>>, Status> {
+	let db = conn.into_inner();
 
 	let mut filter_condition = Condition::all();
 
@@ -92,8 +105,8 @@ pub async fn get_postings(db: &State<DatabaseConnection>, source_id: Option<i32>
 }
 
 #[put("/postings/mark_read", data = "<input>")]
-pub async fn mark_postings_read(db: &State<DatabaseConnection>, input: Json<Vec<i32>>) -> Result<(), Status> {
-	let db = db as &DatabaseConnection;
+pub async fn mark_postings_read(conn: Connection<'_, Db>, input: Json<Vec<i32>>) -> Result<(), Status> {
+	let db = conn.into_inner();
 
 	let _ = Posting::update_many()
 		.col_expr(posting::Column::Seen, Expr::value(true))
@@ -106,8 +119,8 @@ pub async fn mark_postings_read(db: &State<DatabaseConnection>, input: Json<Vec<
 }
 
 #[put("/postings/<id>", data = "<input>")]
-pub async fn update_posting(db: &State<DatabaseConnection>, id: i32, input: Json<posting::Model>) -> Result<Json<posting::Model>, Status> {
-	let db = db as &DatabaseConnection;
+pub async fn update_posting(conn: Connection<'_, Db>, id: i32, input: Json<posting::Model>) -> Result<Json<posting::Model>, Status> {
+	let db = conn.into_inner();
 
 	let existing_posting = Posting::find_by_id(id).one(db).await.expect("Could not find posting");
 	let mut existing_posting: posting::ActiveModel = existing_posting.unwrap().into();
