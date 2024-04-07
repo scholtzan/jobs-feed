@@ -1,5 +1,5 @@
 use crate::entities::{prelude::*, *};
-use crate::extract::PostingsExtractorHandler;
+use crate::extract::PostingsExtractor;
 
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -44,11 +44,32 @@ pub async fn bookmarked_postings(conn: Connection<'_, Db>) -> Result<Json<Vec<po
 #[get("/postings/refresh?<source_id>")]
 pub async fn refresh_postings(conn: Connection<'_, Db>, source_id: Option<i32>) -> Result<Json<Vec<posting::Model>>, Status> {
 	let db = conn.into_inner();
-	let mut extractor_handler = PostingsExtractorHandler::new();
 
-	extractor_handler.refresh(db, source_id).await.expect("Could not refresh postings");
-	extractor_handler.save(db).await.expect("Could not cache source content");
-	extractor_handler.reset();
+	let source = Source::find()
+		.filter(source::Column::Deleted.eq(false))
+		.filter(source::Column::Id.eq(source_id))
+		.all(db)
+		.await
+		.expect("Could not retrieve source information");
+	if source.is_empty() {
+		return Ok(Json(vec![]));
+	}
+
+	let filters = Filter::find().all(db).await.expect("Could not get filters");
+	let settings = Settings::find().one(db).await.expect("Could not get settings").expect("No settings stored");
+
+	let mut extractor = PostingsExtractor::new(
+		source.first().unwrap().url.clone(),
+		source.first().unwrap().id,
+		settings,
+		source.first().unwrap().selector.clone(),
+		source.first().unwrap().pagination.clone(),
+		filters,
+		source.first().unwrap().content.clone(),
+	);
+
+	extractor.extract(db).await.expect("Could not refresh postings");
+	extractor.save(db).await.expect("Could not cache source content");
 
 	if let Some(source_id) = source_id {
 		Ok(Json(

@@ -6,13 +6,13 @@ workers = 50
 [release]
 url = "postgres://postgres:postgres@localhost:5432/jobs_feed"
 max_connections = 32
-connect_timeout = 3
+connect_timeout = 10
 idle_timeout = 300
 sqlx_logging = false
 
 [debug]
 url = "postgres://postgres:postgres@localhost:5432/jobs_feed_debug"
 max_connections = 32
-connect_timeout = 3
+connect_timeout = 10
 idle_timeout = 300
 sqlx_logging = false

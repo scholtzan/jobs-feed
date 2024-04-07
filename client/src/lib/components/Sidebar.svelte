@@ -49,38 +49,26 @@
 		isRefreshing = true;
 		var doneRefreshing = 0;
 		for (var source of storedSources) {
-			console.log(source);
-			postingsHandler.refresh(false, source.id).then((res) => {
-				doneRefreshing += 1;
-				isRefreshing = doneRefreshing < storedSources.length;
+			if ((source_id != null && source.id == source_id) || source_id == null) {
+				postingsHandler.refresh(false, source.id).then((res) => {
+					doneRefreshing += 1;
+					console.log(doneRefreshing < storedSources.length || source_id != null);
+					isRefreshing = doneRefreshing < storedSources.length && source_id == null;
 
-				if (!res.isSuccessful) {
-					notificationHandler.addError('Could not refresh postings', res.message);
-				}
+					if (!res.isSuccessful) {
+						notificationHandler.addError('Could not refresh postings', res.message);
+					}
 
-				if (!isRefreshing) {
-					sourcesHandler.refresh().then((res) => {
-						if (!res.isSuccessful) {
-							notificationHandler.addError('Could not refresh sources', res.message);
-						}
-					});
-				}
-			});
+					if (!isRefreshing) {
+						sourcesHandler.refresh().then((res) => {
+							if (!res.isSuccessful) {
+								notificationHandler.addError('Could not refresh sources', res.message);
+							}
+						});
+					}
+				});
+			}
 		}
-
-		// isRefreshing = true;
-		// postingsHandler.refresh(false, source_id).then((res) => {
-		// 	if (!res.isSuccessful) {
-		// 		notificationHandler.addError('Could not refresh postings', res.message);
-		// 	}
-
-		// 	isRefreshing = false;
-		// 	sourcesHandler.refresh().then((res) => {
-		// 		if (!res.isSuccessful) {
-		// 			notificationHandler.addError('Could not refresh sources', res.message);
-		// 		}
-		// 	});
-		// });
 	}
 
 	function contextMenu(event, sourceId, sourceName) {

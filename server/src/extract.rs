@@ -25,142 +25,6 @@ const MESSAGE_MAX_CHARS: usize = 32000;
 const MAX_EXTRACT_CHARS: usize = 10000000;
 const EMBEDDING_MAX_CHARS: usize = 8000;
 
-pub struct PostingsExtractorHandler {
-	extractors: Vec<PostingsExtractor>,
-}
-
-impl PostingsExtractorHandler {
-	pub fn new() -> Self {
-		PostingsExtractorHandler { extractors: vec![] }
-	}
-
-	pub async fn refresh(&mut self, db: &DatabaseConnection, source_id: Option<i32>) -> Result<Vec<posting::Model>> {
-		self.fetch(db, source_id).await
-	}
-
-	async fn fetch(&mut self, db: &DatabaseConnection, source_id: Option<i32>) -> Result<Vec<posting::Model>> {
-		let sources = match source_id {
-			None => Source::find().filter(source::Column::Deleted.eq(false)).all(db).await?,
-			Some(source_id) => Source::find().filter(source::Column::Deleted.eq(false)).filter(source::Column::Id.eq(source_id)).all(db).await?,
-		};
-
-		let settings = Settings::find().one(db).await?.expect("No settings stored");
-		let filters = Filter::find().all(db).await?;
-
-		let tasks: Vec<_> = sources
-			.into_iter()
-			.map(|source: source::Model| {
-				let settings = settings.clone();
-				let filters = filters.clone();
-				let db = db.clone();
-
-				tokio::spawn(async move {
-					let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(120_000)).build().unwrap();
-					let browser = Browser::new(opt).unwrap();
-
-					let mut extractor = PostingsExtractor::new(
-						source.url.clone(),
-						source.id,
-						settings,
-						source.selector.clone(),
-						source.pagination.clone(),
-						filters,
-						source.content.clone(),
-						browser,
-					);
-
-					let _ = extractor.extract(&db).await;
-					extractor
-				})
-			})
-			.collect();
-
-		let res = futures::future::join_all(tasks).await;
-
-		self.extractors = res
-			.into_iter()
-			.flat_map(|e| match e {
-				Ok(r) => Some(r),
-				_ => None,
-			})
-			.collect();
-
-		let postings: Vec<posting::Model> = self.extractors.iter().map(|e| e.extracted_postings.clone()).flatten().flatten().collect();
-
-		Ok(postings)
-	}
-
-	// todo: save as part of extract to make results available earlier
-	pub async fn save(&self, db: &DatabaseConnection) -> Result<()> {
-		let settings = Settings::find().one(db).await?.expect("No settings stored");
-		let liked_postings: Vec<Vec<f32>> = Embedding::find()
-			.select_only()
-			.column(embedding::Column::Vector)
-			.filter(posting::Column::IsMatch.eq(true))
-			.join(JoinType::InnerJoin, embedding::Relation::Posting.def())
-			.order_by_desc(posting::Column::CreatedAt)
-			.limit(30)
-			.into_tuple()
-			.all(db)
-			.await?;
-		let disliked_postings: Vec<Vec<f32>> = Embedding::find()
-			.select_only()
-			.column(embedding::Column::Vector)
-			.filter(posting::Column::IsMatch.eq(false))
-			.join(JoinType::InnerJoin, embedding::Relation::Posting.def())
-			.order_by_desc(posting::Column::CreatedAt)
-			.limit(30)
-			.into_tuple()
-			.all(db)
-			.await?;
-
-		let embedding = Embeddings::new(&settings.api_key.unwrap());
-
-		for extractor in &self.extractors {
-			for posting in extractor.extracted_postings.clone().unwrap_or(vec![]) {
-				let content = posting.content.clone();
-				let title = posting.title.clone();
-				let mut active_posting: posting::ActiveModel = posting.into();
-				active_posting.id = NotSet;
-				active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
-				active_posting.seen = Set(Some(false));
-				active_posting.source_id = Set(Some(extractor.source_id));
-				let embedding_content = content.unwrap_or(title.to_string());
-				let end_index = embedding_content.char_indices().map(|(i, _)| i).nth(min(EMBEDDING_MAX_CHARS, embedding_content.len() - 1)).unwrap_or(0);
-				let embedding_vector = embedding.create(&&embedding_content[..end_index].to_string()).await?;
-				let like_similarity = embedding.get_similarity(&embedding_vector, &liked_postings);
-				let dislike_similarity = embedding.get_similarity(&embedding_vector, &disliked_postings);
-				active_posting.match_similarity = Set(Some(like_similarity - dislike_similarity));
-
-				let inserted_posting = active_posting.insert(db).await?;
-
-				let active_embedding = embedding::ActiveModel {
-					id: NotSet,
-					posting_id: Set(Some(inserted_posting.id)),
-					vector: Set(Some(embedding_vector)),
-				};
-
-				active_embedding.insert(db).await?;
-			}
-		}
-
-		for extractor in &self.extractors {
-			let _ = Source::update_many()
-				.col_expr(source::Column::Content, Expr::value(extractor.parsed_content.to_string().clone()))
-				.col_expr(source::Column::Unreachable, Expr::value(extractor.unreachable.clone()))
-				.filter(source::Column::Id.eq(extractor.source_id))
-				.exec(db)
-				.await;
-		}
-
-		Ok(())
-	}
-
-	pub fn reset(&mut self) {
-		self.extractors = vec![];
-	}
-}
-
 #[derive(Clone, Default, Debug)]
 struct ParsedSource {
 	parsed_pages: Vec<ParsedPage>,
@@ -239,16 +103,10 @@ pub struct PostingsExtractor {
 }
 
 impl PostingsExtractor {
-	pub fn new(
-		url: String,
-		source_id: i32,
-		settings: settings::Model,
-		selector: Option<String>,
-		pagination: Option<String>,
-		filters: Vec<filter::Model>,
-		cached_content: Option<String>,
-		browser: Browser,
-	) -> Self {
+	pub fn new(url: String, source_id: i32, settings: settings::Model, selector: Option<String>, pagination: Option<String>, filters: Vec<filter::Model>, cached_content: Option<String>) -> Self {
+		let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(120_000)).build().unwrap();
+		let browser = Browser::new(opt).unwrap();
+
 		PostingsExtractor {
 			url,
 			source_id,
@@ -548,5 +406,66 @@ impl PostingsExtractor {
 		let response = assistant.run(message_parts).await?;
 
 		Ok(response)
+	}
+
+	pub async fn save(&self, db: &DatabaseConnection) -> Result<()> {
+		let settings = Settings::find().one(db).await?.expect("No settings stored");
+		let liked_postings: Vec<Vec<f32>> = Embedding::find()
+			.select_only()
+			.column(embedding::Column::Vector)
+			.filter(posting::Column::IsMatch.eq(true))
+			.join(JoinType::InnerJoin, embedding::Relation::Posting.def())
+			.order_by_desc(posting::Column::CreatedAt)
+			.limit(30)
+			.into_tuple()
+			.all(db)
+			.await?;
+		let disliked_postings: Vec<Vec<f32>> = Embedding::find()
+			.select_only()
+			.column(embedding::Column::Vector)
+			.filter(posting::Column::IsMatch.eq(false))
+			.join(JoinType::InnerJoin, embedding::Relation::Posting.def())
+			.order_by_desc(posting::Column::CreatedAt)
+			.limit(30)
+			.into_tuple()
+			.all(db)
+			.await?;
+
+		let embedding = Embeddings::new(&settings.api_key.unwrap());
+
+		for posting in self.extracted_postings.clone().unwrap_or(vec![]) {
+			let content = posting.content.clone();
+			let title = posting.title.clone();
+			let mut active_posting: posting::ActiveModel = posting.into();
+			active_posting.id = NotSet;
+			active_posting.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
+			active_posting.seen = Set(Some(false));
+			active_posting.source_id = Set(Some(self.source_id));
+			let embedding_content = content.unwrap_or(title.to_string());
+			let end_index = embedding_content.char_indices().map(|(i, _)| i).nth(min(EMBEDDING_MAX_CHARS, embedding_content.len() - 1)).unwrap_or(0);
+			let embedding_vector = embedding.create(&&embedding_content[..end_index].to_string()).await?;
+			let like_similarity = embedding.get_similarity(&embedding_vector, &liked_postings);
+			let dislike_similarity = embedding.get_similarity(&embedding_vector, &disliked_postings);
+			active_posting.match_similarity = Set(Some(like_similarity - dislike_similarity));
+
+			let inserted_posting = active_posting.insert(db).await?;
+
+			let active_embedding = embedding::ActiveModel {
+				id: NotSet,
+				posting_id: Set(Some(inserted_posting.id)),
+				vector: Set(Some(embedding_vector)),
+			};
+
+			active_embedding.insert(db).await?;
+		}
+
+		let _ = Source::update_many()
+			.col_expr(source::Column::Content, Expr::value(self.parsed_content.to_string().clone()))
+			.col_expr(source::Column::Unreachable, Expr::value(self.unreachable.clone()))
+			.filter(source::Column::Id.eq(self.source_id))
+			.exec(db)
+			.await;
+
+		Ok(())
 	}
 }
