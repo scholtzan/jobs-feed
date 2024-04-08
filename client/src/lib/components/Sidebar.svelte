@@ -117,7 +117,7 @@
 </script>
 
 <div class="max-w-[20em] min-w-[16em]">
-	<aside class="h-screen sticky top-0 flex flex-col bg-base-200 overflow-y-auto">
+	<aside class="h-screen sticky top-0 flex flex-col bg-base-200">
 		<!-- Header -->
 		<div class="flex gap-x-20 justify-between p-2 h-16 border-b border-base-300 align-bottom">
 			<button
@@ -254,7 +254,7 @@
 		</div>
 
 		<!-- Body -->
-		<div class="flex flex-col border-base-300 px-2 pt-4 grow">
+		<div class="flex flex-col border-base-300 px-2 pt-4 grow overflow-y-auto">
 			<!-- Links -->
 			<div class="flex flex-col divide-y divide-base-300">
 				<ul class="menu menu-sm px-0">
