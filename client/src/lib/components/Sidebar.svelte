@@ -50,13 +50,26 @@
 		var doneRefreshing = 0;
 		for (var source of storedSources) {
 			if ((source_id != null && source.id == source_id) || source_id == null) {
+				source.refreshing = true;
+				storedSources = storedSources;
+				let sid = source.id;
+
 				postingsHandler.refresh(false, source.id).then((res) => {
 					doneRefreshing += 1;
-					console.log(doneRefreshing < storedSources.length || source_id != null);
+					let index = storedSources
+						.map(function (x) {
+							return x.id;
+						})
+						.indexOf(sid);
+					storedSources[index].refreshing = false;
+
 					isRefreshing = doneRefreshing < storedSources.length && source_id == null;
 
 					if (!res.isSuccessful) {
-						notificationHandler.addError('Could not refresh postings', res.message);
+						notificationHandler.addError(
+							`Could not refresh postings for ${storedSources[index].name}`,
+							res.message
+						);
 					}
 
 					if (!isRefreshing) {
@@ -216,7 +229,7 @@
 						? 'Refresh Postings'
 						: 'OpenAI API Key needs to be set in Settings.'}
 					class="btn btn-ghost btn-square {isRefreshing || !settings.api_key ? 'btn-disabled' : ''}"
-					on:click={refreshPostings}
+					on:click={() => refreshPostings()}
 				>
 					{#if isRefreshing}
 						<span class="loading loading-spinner"></span>
@@ -381,7 +394,12 @@
 									</div>
 								{/if}
 
-								{#if source.unreachable}
+								{#if source.refreshing}
+									<span
+										title="Looking for new job postings."
+										class="loading loading-spinner loading-sm"
+									></span>
+								{:else if source.unreachable}
 									<div title="Unreachable" class="badge badge-neutral">
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
@@ -462,22 +480,26 @@
 				Edit
 			</a>
 		</li>
-		<li>
+		<li class={storedSources.find((s) => s.id == sourceContextMenu)?.refreshing ? 'disabled' : ''}>
 			<button on:click={() => refreshPostings(sourceContextMenu)}>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					class="w-6 h-6"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-					/>
-				</svg>
+				{#if storedSources.find((s) => s.id == sourceContextMenu)?.refreshing}
+					<span class="loading loading-spinner"></span>
+				{:else}
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="1.5"
+						stroke="currentColor"
+						class="w-6 h-6"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+						/>
+					</svg>
+				{/if}
 				Refresh
 			</button>
 		</li>

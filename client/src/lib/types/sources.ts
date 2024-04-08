@@ -124,4 +124,5 @@ export class Source {
 	favicon: string | null = null;
 	unreachable: boolean = false;
 	deleted: boolean = false;
+	refreshing: boolean = false;
 }

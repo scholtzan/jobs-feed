@@ -9,10 +9,6 @@ export class Postings {
 	constructor() {
 		this.postings = get(postings);
 		this.api = new PostingsApi();
-
-		postings.subscribe((_) => {
-			this.postings = get(postings);
-		});
 	}
 
 	public store(): void {

@@ -4,7 +4,6 @@ use crate::{
 	entities::{prelude::*, *},
 	openai::assistant::{Assistant, AssistantType},
 };
-use anyhow::anyhow;
 use anyhow::Result;
 
 use chrono;
@@ -143,12 +142,18 @@ impl PostingsExtractor {
 		match tab.navigate_to(&self.url) {
 			Err(_) => {
 				self.unreachable = true;
-				return Err(anyhow!("Source is unreachable."));
+				return Ok(());
 			}
 			_ => {}
 		}
 
-		tab.wait_until_navigated()?;
+		match tab.wait_until_navigated() {
+			Err(_) => {
+				self.unreachable = true;
+				return Ok(());
+			}
+			_ => {}
+		}
 
 		let head = tab.wait_for_element("head")?.get_content()?;
 		if head == "<head><meta name=\"color-scheme\" content=\"light dark\"></head>" {
