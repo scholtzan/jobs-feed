@@ -1,3 +1,4 @@
+# Build the frontend
 FROM node as build_client
 
 ENV ENVIRONMENT=release
@@ -10,6 +11,7 @@ COPY Makefile Makefile
 RUN make build_client
 
 
+# Build the server
 FROM rust as server_build
 
 ENV ENVIRONMENT=release
@@ -26,7 +28,7 @@ RUN cd ./server && cargo build
 # Replace with real src
 RUN rm -rf ./server/src
 COPY ./server/src ./server/src
-# break the Cargo cache
+# Break the Cargo cache
 RUN touch ./server/src/main.rs
 # Build the project
 RUN make build_server

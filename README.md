@@ -70,7 +70,6 @@ To make changes to the database schema install [SeaORM](https://www.sea-ql.org/S
 
 * Find pagination links on source pages automatically
 * Pulling job postings on a schedule
-* Rate job postings to get similar recommendations
 * Grouping sources
 * Translations
 * Different layouts

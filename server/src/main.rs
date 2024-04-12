@@ -22,7 +22,6 @@ use std::{
 use crate::entities::prelude::*;
 use migration::MigratorTrait;
 
-// todo: make configurable
 const DIST: &str = relative!("dist");
 
 #[get("/<file..>", rank = 2)]
@@ -53,8 +52,11 @@ async fn rocket() -> _ {
 	let figment = rocket.figment().clone().select(environment);
 	let config: Config = figment.extract::<Config>().unwrap();
 
+	// run the migration if tables don't exist
 	let db = sea_orm::Database::connect(config.url).await.unwrap();
 	migration::Migrator::up(&db, None).await.unwrap();
+
+	// create default setting if they haven't been stored yet
 	match env::var("API_KEY") {
 		Ok(api_key) => {
 			if Settings::find().count(&db).await.unwrap() == 0 {
