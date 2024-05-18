@@ -1,3 +1,4 @@
+// OpenAI Assistant API
 use anyhow::anyhow;
 use anyhow::Result;
 
@@ -10,12 +11,17 @@ use crate::openai::BASE_URL;
 use futures_util::StreamExt;
 use std::io::Read;
 
+/// Type of assistant to use.
 pub enum AssistantType {
+	/// Assistant to extract job postings from provided inputs.
 	JobsFeed,
+
+	/// Assistant to get similar source suggestions based on provided inputs.
 	JobsSuggestion,
 }
 
 impl AssistantType {
+	/// Returns name of the assistant type.
 	fn name(&self) -> &'static str {
 		match self {
 			AssistantType::JobsFeed => "Jobs Feed",
@@ -23,6 +29,7 @@ impl AssistantType {
 		}
 	}
 
+	/// Returns prompt to be used based on assistant type.
 	fn instructions(&self) -> &'static str {
 		match self {
 			AssistantType::JobsFeed => {
@@ -45,14 +52,23 @@ impl OpenAIApi for Assistant {
 	}
 }
 
+/// OpenAI Assistant API handler.
 pub struct Assistant {
+	/// OpenAI API key.
 	api_key: String,
+
+	/// LLM model to use.
 	pub model: String,
+
+	/// Assistant ID.
 	id: Option<String>,
+
+	/// Assistant type.
 	assistant_type: AssistantType,
 }
 
 impl Assistant {
+	/// Create and return a new assistant API handler.
 	pub async fn new(api_key: &String, model: &String, assistant_type: AssistantType) -> Result<Self> {
 		let mut assistant = Self {
 			api_key: api_key.clone(),
@@ -61,15 +77,18 @@ impl Assistant {
 			assistant_type: assistant_type,
 		};
 
+		// check if an assistant has been previously created and use that one
 		if let Some(assistant_id) = assistant.get().await? {
 			assistant.id = Some(assistant_id);
 		} else {
+			// if no assistant already exists, create a new one
 			assistant.id = assistant.create().await?;
 		}
 
 		Ok(assistant)
 	}
 
+	/// Returns available LLM models.
 	pub async fn get_models(&self) -> Result<Vec<String>> {
 		let url = format!("{BASE_URL}/models");
 		let headers = self.headers()?;
@@ -86,6 +105,8 @@ impl Assistant {
 		return Err(anyhow!("Couldn't get models"));
 	}
 
+	/// Return a specific assistant ID based on the assistant type.
+	/// Returns `None` if no assistant exists.
 	async fn get(&self) -> Result<Option<String>> {
 		let url = format!("{BASE_URL}/assistants");
 		let headers = self.headers()?;
@@ -103,6 +124,7 @@ impl Assistant {
 		return Ok(None);
 	}
 
+	/// Create a new assistant.
 	async fn create(&self) -> Result<Option<String>> {
 		let url = format!("{BASE_URL}/assistants");
 		let headers = self.headers()?;
@@ -125,6 +147,9 @@ impl Assistant {
 		}
 	}
 
+	/// Run the assistant.
+	///
+	/// Returns the assistant response.
 	pub async fn run(&mut self, messages: &Vec<String>) -> Result<Vec<String>> {
 		let url = format!("{BASE_URL}/threads/runs");
 		let headers = self.headers()?;
@@ -148,24 +173,30 @@ impl Assistant {
 			})
 		});
 
+		// use streaming for better performance
 		let mut stream = client.post(url).headers(headers).json(&body).send().await?.bytes_stream();
 
 		let mut thread_id: String = "".to_string();
 		let mut run_id: String = "".to_string();
 		let mut is_run_metadata = false;
 		let mut buffer = Vec::new();
+
+		// parse the stream response
 		while let Some(item) = stream.next().await {
 			for byte in item? {
-				// Might need to consider carriage returns too depending
-				// on how the server is expected to send the data.
+				// write response to buffer
 				let mut buf: String = "".to_string();
 				if byte == b'\n' {
 					let _ = buffer.as_slice().read_to_string(&mut buf);
 					if buf == "data: [DONE]" {
+						// stream has ended; stop parsing
 						break;
 					} else if buf == "event: thread.run.created" {
+						// run has been created
+						// anything that follows contains metadata about the run which is needed to get the response
 						is_run_metadata = true;
 					} else if is_run_metadata {
+						// parse the run metadata
 						let json_metadata = buf.replace("data: ", "");
 						let run_metadata: Value = serde_json::from_str(&json_metadata).unwrap();
 						thread_id = run_metadata.get("thread_id").unwrap().as_str().unwrap().to_string();
@@ -174,16 +205,19 @@ impl Assistant {
 					}
 					buffer.clear();
 				} else {
+					// write received response to bugger
 					buffer.push(byte);
 				}
 			}
 		}
 
+		// get the assistant response
 		let result = self.get_run_result(&thread_id, &run_id).await;
 
 		result
 	}
 
+	/// Return the assistant response for a specific run.
 	async fn get_run_result(&self, thread_id: &str, run_id: &str) -> Result<Vec<String>> {
 		let url = format!("{BASE_URL}/threads/{thread_id}/messages");
 		let headers = self.headers()?;

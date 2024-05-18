@@ -1,3 +1,4 @@
+// OpenAI Embedding API
 use crate::openai::OpenAIApi;
 use crate::openai::BASE_URL;
 use reqwest::StatusCode;
@@ -9,10 +10,15 @@ use serde_json::Value;
 use anyhow::anyhow;
 use anyhow::Result;
 
+// model to create embeddings
 const EMBEDDING_MODEL: &str = "text-embedding-3-small";
 
+/// Embeddings API instance
 pub struct Embeddings {
+	/// OpenAI API key
 	api_key: String,
+
+	/// Embedding model to use
 	pub model: String,
 }
 
@@ -23,6 +29,7 @@ impl OpenAIApi for Embeddings {
 }
 
 impl Embeddings {
+	/// Create a new embedding API handler instance.
 	pub fn new(api_key: &String) -> Self {
 		Self {
 			api_key: api_key.clone(),
@@ -30,6 +37,8 @@ impl Embeddings {
 		}
 	}
 
+	/// Create embedding for text input.
+	/// Returns the embedding vector.
 	pub async fn create(&self, input: &String) -> Result<Vec<f32>> {
 		let url = format!("{BASE_URL}/embeddings");
 		let headers = self.headers()?;
@@ -54,7 +63,10 @@ impl Embeddings {
 		return Err(anyhow!("Could not get embedding"));
 	}
 
-	// https://www.simonwenkel.com/notes/ai/metrics/cosine_distance.html
+	/// Compute the similarity between one embedding vecotr and a set of embedding vectors.
+	/// Similarity score based on https://www.simonwenkel.com/notes/ai/metrics/cosine_distance.html
+	///
+	/// Returns the similarity score.
 	pub fn get_similarity(&self, vec_a: &Vec<f32>, vecs_b: &Vec<Vec<f32>>) -> f32 {
 		vecs_b
 			.iter()

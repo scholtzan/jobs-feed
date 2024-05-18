@@ -1,3 +1,4 @@
+// OpenAI API
 pub mod assistant;
 pub mod embeddings;
 
@@ -10,9 +11,12 @@ use std::time::Duration;
 
 const BASE_URL: &str = "https://api.openai.com/v1";
 
+/// OpenAI API Handler.
 pub trait OpenAIApi {
+	/// Returns the OpenAI API key.
 	fn api_key(&self) -> &String;
 
+	/// Returns the request headers needed to make requests against the OpenAI API.
 	fn headers(&self) -> Result<HeaderMap> {
 		let bearer = format!("Bearer {}", self.api_key());
 		let mut headers = HeaderMap::new();
@@ -23,6 +27,7 @@ pub trait OpenAIApi {
 		Ok(headers)
 	}
 
+	/// Creates and returns an new client for making requests against the OpenAI API.
 	fn client(&self) -> ClientWithMiddleware {
 		let retry_policy = ExponentialBackoff::builder().build_with_max_retries(3);
 		let reqwest_client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build().unwrap();
