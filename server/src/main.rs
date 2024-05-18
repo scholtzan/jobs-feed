@@ -24,16 +24,19 @@ use migration::MigratorTrait;
 
 const DIST: &str = relative!("dist");
 
+// serve any static file
 #[get("/<file..>", rank = 2)]
 async fn static_files(file: PathBuf) -> Option<NamedFile> {
 	NamedFile::open(Path::new(DIST).join("_app/").join(file)).await.ok()
 }
 
+// serve the favicon
 #[get("/favicon.svg", rank = 1)]
 async fn favicon() -> Option<NamedFile> {
 	NamedFile::open(Path::new(DIST).join("favicon.svg")).await.ok()
 }
 
+// serve the index.html
 #[get("/<_..>", rank = 3)]
 async fn index() -> Option<NamedFile> {
 	NamedFile::open(Path::new(DIST).join("index.html")).await.ok()
@@ -42,13 +45,16 @@ async fn index() -> Option<NamedFile> {
 #[launch]
 async fn rocket() -> _ {
 	let args: Vec<String> = env::args().collect();
-	let mut environment = "dev";
 
+	// determine the environment from the provided arguments
+	let mut environment = "debug";
 	if args.len() > 1 {
 		environment = &args[1];
 	}
 
 	let rocket = rocket::build();
+
+	// get the config based on the current environment
 	let figment = rocket.figment().clone().select(environment);
 	let config: Config = figment.extract::<Config>().unwrap();
 
@@ -56,7 +62,7 @@ async fn rocket() -> _ {
 	let db = sea_orm::Database::connect(config.url).await.unwrap();
 	migration::Migrator::up(&db, None).await.unwrap();
 
-	// create default setting if they haven't been stored yet
+	// create default settings if they haven't been stored yet
 	match env::var("API_KEY") {
 		Ok(api_key) => {
 			if Settings::find().count(&db).await.unwrap() == 0 {
@@ -71,6 +77,7 @@ async fn rocket() -> _ {
 		_ => {}
 	};
 
+	// mount API routes
 	rocket::custom(figment)
 		.attach(Db::init())
 		.mount("/_app", routes![static_files])

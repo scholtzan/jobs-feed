@@ -39,17 +39,44 @@ impl MigrationTrait for Migration {
     }
 }
 
+/// Source to retrieve job postings from
 #[derive(DeriveIden)]
 pub enum Source {
+    /// Table
     Table,
+
+    /// Unique identifier
     Id,
+
+    /// User-defined name for source
     Name,
+
+    /// URL to source
     Url,
+
+    /// Timestamp source was created
     CreatedAt,
+
+    /// CSS selector to extract job postings from
+    /// This is to reduce the input size and reduce cost
     Selector,
+
+    /// CSS selector to the pagination link or button
+    /// This is so the app can automatically open more source pages to extract postings 
     Pagination,
+
+    /// Cached source content
+    /// Only analyse newly added source content for new job postings
+    /// This is to reduce cost and increase performance
     Content,
+
+    /// URL to favicon shown for source
     Favicon,
+
+    /// Whether the URL could be successfully opened
     Unreachable,
+
+    /// Whether the source was deleted
+    /// Using a flag here so that related postings don't get removed
     Deleted
 }

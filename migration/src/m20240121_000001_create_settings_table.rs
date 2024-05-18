@@ -31,10 +31,18 @@ impl MigrationTrait for Migration {
     }
 }
 
+/// Application settings
 #[derive(Clone, Debug, PartialEq, Eq, Iden)]
 enum Settings {
+    /// Table
     Table,
+
+    /// OpenAI API key
     ApiKey,
+
+    /// Unique identifier for settings
     Id,
+
+    /// Selected LLM model
     Model
 }

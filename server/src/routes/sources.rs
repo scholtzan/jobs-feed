@@ -9,6 +9,7 @@ use sea_orm_rocket::Connection;
 
 use sea_orm::*;
 
+/// Return active sources.
 #[get("/sources")]
 pub async fn sources(conn: Connection<'_, Db>) -> Result<Json<Vec<source::Model>>, Status> {
 	let db = conn.into_inner();
@@ -24,6 +25,10 @@ pub async fn sources(conn: Connection<'_, Db>) -> Result<Json<Vec<source::Model>
 	))
 }
 
+/// Add a new source.
+/// The request body is expected to have the source information.
+///
+/// Return newly created source.
 #[post("/sources", data = "<input>")]
 pub async fn add_source(conn: Connection<'_, Db>, input: Json<source::Model>) -> Result<Json<source::Model>, Status> {
 	let db = conn.into_inner();
@@ -33,17 +38,21 @@ pub async fn add_source(conn: Connection<'_, Db>, input: Json<source::Model>) ->
 	new_source.created_at = Set(Some(chrono::offset::Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap())));
 	let inserted_source: source::Model = new_source.insert(db).await.expect("Could not insert source");
 
+	// get similar sources
 	let _ = _refresh_source_suggestions(&db, inserted_source.id).await?;
 
 	Ok(Json(inserted_source))
 }
 
+/// Remove a specific source.
 #[delete("/sources/<id>")]
 pub async fn delete_source(conn: Connection<'_, Db>, id: i32) -> Result<(), Status> {
 	let db = conn.into_inner();
 
 	let source: Option<source::Model> = Source::find_by_id(id).one(db).await.expect("Could not find source");
 	let mut source: source::ActiveModel = source.unwrap().into();
+	// don't actually delete the source from the database, but instead set `deleted` flag
+	// this prevents related postings from being removed
 	source.deleted = Set(true);
 
 	source.update(db).await.expect("Could not delete source");
@@ -51,6 +60,7 @@ pub async fn delete_source(conn: Connection<'_, Db>, id: i32) -> Result<(), Stat
 	Ok(())
 }
 
+/// Return a specific source.
 #[get("/sources/<id>")]
 pub async fn source_by_id(conn: Connection<'_, Db>, id: i32) -> Result<Json<Option<source::Model>>, Status> {
 	let db = conn.into_inner();
@@ -58,6 +68,7 @@ pub async fn source_by_id(conn: Connection<'_, Db>, id: i32) -> Result<Json<Opti
 	Ok(Json(Source::find().filter(source::Column::Id.eq(id)).one(db).await.expect("Could not retrieve source")))
 }
 
+/// Return source suggestions that are similar to the source with the provided ID.
 #[get("/sources/<id>/suggestions")]
 pub async fn source_suggestions(conn: Connection<'_, Db>, id: i32) -> Result<Json<Vec<suggestion::Model>>, Status> {
 	let db = conn.into_inner();
@@ -72,24 +83,37 @@ pub async fn source_suggestions(conn: Connection<'_, Db>, id: i32) -> Result<Jso
 	))
 }
 
+/// Get sources that are similar to the source with the provided `id`.
+///
+/// Returns the retrieved source suggestions.
 async fn _refresh_source_suggestions(db: &DatabaseConnection, id: i32) -> Result<Json<Vec<suggestion::Model>>, Status> {
+	// get the source similar suggestions should be determined
 	let source = Source::find().filter(source::Column::Id.eq(id)).one(db).await.expect("Could not retrieve source");
-	let sources = Source::find().filter(source::Column::Deleted.eq(false)).limit(20).all(db).await.expect("Could not retrieve sources");
+
+	// get a set of existing sources
+	// to prevent duplicate suggestions, these sources will be passed to the LLM to be ignored
+	let sources = Source::find().filter(source::Column::Deleted.eq(false)).limit(50).all(db).await.expect("Could not retrieve sources");
+
+	// get existing suggestions for source
 	let suggestions = Suggestion::find()
 		.filter(suggestion::Column::SourceId.eq(id))
-		.limit(15)
+		.limit(20)
 		.all(db)
 		.await
 		.expect("Could not retrieve existing suggestions");
 	let mut existing_suggestions: Vec<String> = suggestions.iter().map(|s| s.name.clone()).collect();
 	let existing_sources: Vec<String> = sources.iter().map(|s| s.name.clone()).collect();
+
+	// existing suggestions that should be ignored by the LLM when searching for new suggestions
 	existing_suggestions.extend(existing_sources);
 
+	// create a new assistant instance
 	let settings = Settings::find().one(db).await.expect("Could not retrieve settings").unwrap();
 	let api_key = settings.api_key.unwrap().clone();
 	let model = settings.model.unwrap().clone();
 	let mut assistant = Assistant::new(&api_key, &model, AssistantType::JobsSuggestion).await.expect("Could not retrieve assistant");
 
+	// create the prompt to get suggestions, and ignore existing ones
 	let source_name = source.unwrap().name;
 	let ignore = existing_suggestions.join(", ");
 	let message = format!(
@@ -98,6 +122,7 @@ async fn _refresh_source_suggestions(db: &DatabaseConnection, id: i32) -> Result
 	);
 	let response = assistant.run(&vec![message]).await.expect("Could not get source suggestions");
 
+	// store the retrieved suggestions
 	let parsed_response: Vec<suggestion::Model> = serde_json::from_str(response.first().expect("Did not get suggestions")).expect("Could not extract suggestions");
 	let active_suggestions: Vec<suggestion::ActiveModel> = parsed_response
 		.into_iter()
@@ -121,6 +146,9 @@ async fn _refresh_source_suggestions(db: &DatabaseConnection, id: i32) -> Result
 	))
 }
 
+/// Get new suggestions for a specific source.
+///
+/// Returns the similar source suggestions.
 #[put("/sources/<id>/suggestions/refresh")]
 pub async fn refresh_source_suggestions(conn: Connection<'_, Db>, id: i32) -> Result<Json<Vec<suggestion::Model>>, Status> {
 	let db = conn.into_inner();
@@ -128,6 +156,9 @@ pub async fn refresh_source_suggestions(conn: Connection<'_, Db>, id: i32) -> Re
 	_refresh_source_suggestions(&db, id).await
 }
 
+/// Update an existing source.
+///
+/// Returns the updated source information.
 #[put("/sources/<id>", data = "<input>")]
 pub async fn update_source(conn: Connection<'_, Db>, id: i32, input: Json<source::Model>) -> Result<Json<source::Model>, Status> {
 	let db = conn.into_inner();
@@ -153,6 +184,8 @@ pub async fn update_source(conn: Connection<'_, Db>, id: i32, input: Json<source
 	Ok(Json(existing_source))
 }
 
+/// Clear the source's content cache.
+/// The next time postings are refreshed, the source page will be parsed entirely instead of just the source page changes.
 #[put("/sources/<id>/reset")]
 pub async fn reset_source_cache(conn: Connection<'_, Db>, id: i32) -> Result<(), Status> {
 	let db = conn.into_inner();

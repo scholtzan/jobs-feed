@@ -41,11 +41,21 @@ impl MigrationTrait for Migration {
     }
 }
 
+/// Suggestions that are similar to a specific source
 #[derive(DeriveIden)]
 pub enum Suggestion {
+    /// Table
     Table,
+
+    /// Unique identifier
     Id,
+
+    /// Name of a source that is similar to an existing one
     Name,
+
+    /// URL to similar source
     Url,
+
+    /// ID to source that was used as reference to find the source suggestion
     SourceId,
 }

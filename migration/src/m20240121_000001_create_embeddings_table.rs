@@ -40,10 +40,19 @@ impl MigrationTrait for Migration {
     }
 }
 
+/// Representation of posting as LLM embedding.
+/// Used to determine similar postings.
 #[derive(DeriveIden)]
 pub enum Embedding {
+    /// Table
     Table,
+
+    /// Unique identifier for embedding
     Id,
+
+    /// Embedding vector
     Vector,
+
+    /// ID of posting represented by embedding
     PostingId,
 }

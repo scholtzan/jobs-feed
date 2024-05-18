@@ -9,6 +9,7 @@ use sea_orm::sea_query::Expr;
 use sea_orm::{entity::*, query::*};
 use sea_orm_rocket::Connection;
 
+/// Return all postings that have not been seen by the user.
 #[get("/postings/unread")]
 pub async fn unread_postings(conn: Connection<'_, Db>) -> Result<Json<Vec<posting::Model>>, Status> {
 	let db = conn.into_inner();
@@ -25,6 +26,7 @@ pub async fn unread_postings(conn: Connection<'_, Db>) -> Result<Json<Vec<postin
 	))
 }
 
+/// Return all postings that have been bookmarked, order by creation time descending.
 #[get("/postings/bookmarked")]
 pub async fn bookmarked_postings(conn: Connection<'_, Db>) -> Result<Json<Vec<posting::Model>>, Status> {
 	let db = conn.into_inner();
@@ -41,6 +43,9 @@ pub async fn bookmarked_postings(conn: Connection<'_, Db>) -> Result<Json<Vec<po
 	))
 }
 
+/// Retrieve new postings from a specific source.
+///
+/// Return unread postings.
 #[get("/postings/refresh?<source_id>")]
 pub async fn refresh_postings(conn: Connection<'_, Db>, source_id: Option<i32>) -> Result<Json<Vec<posting::Model>>, Status> {
 	let db = conn.into_inner();
@@ -58,6 +63,7 @@ pub async fn refresh_postings(conn: Connection<'_, Db>, source_id: Option<i32>) 
 	let filters = Filter::find().all(db).await.expect("Could not get filters");
 	let settings = Settings::find().one(db).await.expect("Could not get settings").expect("No settings stored");
 
+	// start extraction process
 	let mut extractor = PostingsExtractor::new(
 		source.first().unwrap().url.clone(),
 		source.first().unwrap().id,
@@ -67,33 +73,22 @@ pub async fn refresh_postings(conn: Connection<'_, Db>, source_id: Option<i32>) 
 		filters,
 		source.first().unwrap().content.clone(),
 	);
-
 	extractor.extract(db).await.expect("Could not refresh postings");
+
+	// save extracted postings to database
 	extractor.save(db).await.expect("Could not cache source content");
 
-	if let Some(source_id) = source_id {
-		Ok(Json(
-			Posting::find()
-				.filter(posting::Column::SourceId.eq(source_id))
-				.order_by_desc(posting::Column::CreatedAt)
-				.all(db)
-				.await
-				.expect("Could not retrieve postings"),
-		))
-	} else {
-		Ok(Json(
-			Posting::find()
-				.filter(posting::Column::Seen.eq(false))
-				.order_by_desc(posting::Column::CreatedAt)
-				.all(db)
-				.await
-				.expect("Could not retrieve postings")
-				.into_iter()
-				.collect::<Vec<_>>(),
-		))
-	}
+	Ok(Json(
+		Posting::find()
+			.filter(posting::Column::SourceId.eq(source.first().unwrap().id))
+			.order_by_desc(posting::Column::CreatedAt)
+			.all(db)
+			.await
+			.expect("Could not retrieve postings"),
+	))
 }
 
+/// Return a specific posting.
 #[get("/postings/<id>")]
 pub async fn posting_by_id(conn: Connection<'_, Db>, id: i32) -> Result<Json<Option<posting::Model>>, Status> {
 	let db = conn.into_inner();
@@ -101,6 +96,11 @@ pub async fn posting_by_id(conn: Connection<'_, Db>, id: i32) -> Result<Json<Opt
 	Ok(Json(Posting::find().filter(posting::Column::Id.eq(id)).one(db).await.expect("Could not retrieve posting")))
 }
 
+/// Return postings.
+/// If `source_id` has been provided then only return postings associated with that source.
+/// If `read` has been provided then only return postings based on their `seen` state.
+///
+/// Return list of postings, ordered by creation timestamp descending.
 #[get("/postings?<source_id>&<read>")]
 pub async fn get_postings(conn: Connection<'_, Db>, source_id: Option<i32>, read: Option<bool>) -> Result<Json<Vec<posting::Model>>, Status> {
 	let db = conn.into_inner();
@@ -125,6 +125,8 @@ pub async fn get_postings(conn: Connection<'_, Db>, source_id: Option<i32>, read
 	))
 }
 
+/// Update the `seen` state of a set of postings.
+/// The request body is expected to contain a list of posting IDs to update.
 #[put("/postings/mark_read", data = "<input>")]
 pub async fn mark_postings_read(conn: Connection<'_, Db>, input: Json<Vec<i32>>) -> Result<(), Status> {
 	let db = conn.into_inner();
@@ -139,6 +141,10 @@ pub async fn mark_postings_read(conn: Connection<'_, Db>, input: Json<Vec<i32>>)
 	Ok(())
 }
 
+/// Update a specific posting.
+/// Onlye `seen`, `bookmarked` and `is_match` properties can be updated, any other property update is ignored.
+///
+/// Return updated posting.
 #[put("/postings/<id>", data = "<input>")]
 pub async fn update_posting(conn: Connection<'_, Db>, id: i32, input: Json<posting::Model>) -> Result<Json<posting::Model>, Status> {
 	let db = conn.into_inner();

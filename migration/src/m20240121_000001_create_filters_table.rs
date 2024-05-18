@@ -33,11 +33,21 @@ impl MigrationTrait for Migration {
     }
 }
 
+/// Filter to determine matching job postings from source.
 #[derive(DeriveIden)]
 enum Filter {
+    /// Table
     Table,
+
+    /// Unique identifier
     Id,
+
+    /// Custom name for filter
     Name,
+
+    /// Custom fiter value
     Value,
+
+    /// Timestamp when filter was created
     CreatedAt
 }

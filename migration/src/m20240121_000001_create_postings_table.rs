@@ -48,18 +48,45 @@ impl MigrationTrait for Migration {
     }
 }
 
+/// Job posting
 #[derive(DeriveIden)]
 pub enum Posting {
+    /// Table
     Table,
+
+    /// Unique identifier
     Id,
+
+    /// Extracted title of job posting
     Title,
+
+    /// Extracted job posting description
     Description,
+
+    /// Url to job posting
     Url,
+
+    /// Timestamp when job posting was extracted and stored
     CreatedAt,
+
+    /// Whether the job posting has been read
     Seen,
+
+    /// ID to source posting was extracted from
     SourceId,
+
+    /// Whether the posting has been bookmarked
     Bookmarked,
+
+    /// Full text content of the job posting page
     Content,
+
+    /// Whether the posting is a good match
+    /// true = good match
+    /// false = not a good match
+    /// null = neutral
     IsMatch,
+
+    /// Similarity score based on previously liked/disliked postings
     MatchSimilarity
 }
