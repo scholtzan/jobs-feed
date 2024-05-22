@@ -1,27 +1,35 @@
-<!-- Navbar -->
+<!--
+  @component
+  Top navigation bar
+-->
 <script lang="ts">
 	import { SettingsHandler } from '../types/settings';
-	import { Postings } from '../types/postings';
+	import { PostingsHandler } from '../types/postings';
 	import { NotificationHandler } from '../types/notifications';
-	import { Sources } from '../types/sources';
-	import { get, writable } from 'svelte/store';
+	import { SourcesHandler } from '../types/sources';
+	import { get } from 'svelte/store';
 	import { showSidebar } from '../store';
 
 	let settingsHandler = new SettingsHandler();
 	let settings = settingsHandler.settings;
-	let postingsHandler = new Postings();
+	let postingsHandler = new PostingsHandler();
 	let notificationHandler = new NotificationHandler();
-	let sourcesHandler = new Sources();
-	let isSidebarVisible = get(showSidebar);
+	let sourcesHandler = new SourcesHandler();
 
+	// whether the source sidebar is shown
+	let isSidebarVisible = get(showSidebar);
+	// whether postings are refreshing
 	let isRefreshing = false;
 
-	settingsHandler.subscribe((value) => {
+	settingsHandler.subscribe((_value) => {
 		settings = settingsHandler.settings;
 	});
 
 	showSidebar.subscribe((_) => (isSidebarVisible = get(showSidebar)));
 
+	/**
+	 * Refresh postings.
+	 */
 	function refreshPostings() {
 		isRefreshing = true;
 		postingsHandler.refresh(false).then((res) => {
@@ -38,6 +46,9 @@
 		});
 	}
 
+	/**
+	 * Show or hide the source side bar.
+	 */
 	function toggleSidebar() {
 		isSidebarVisible = !get(showSidebar);
 		showSidebar.set(isSidebarVisible);
@@ -46,6 +57,7 @@
 
 <nav class="navbar border-b border-base-300 h-16">
 	<div class="flex-none lg:hidden {isSidebarVisible ? 'hidden' : 'visible'}">
+		<!-- Button to toggle the side bar, only visible on smaller devices -->
 		<button class="btn btn-ghost btn-square" title="Show sources" on:click={toggleSidebar}>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
@@ -63,6 +75,7 @@
 			</svg>
 		</button>
 
+		<!-- Button to add a new source -->
 		<a title="Add Source" class="btn btn-ghost btn-square" href="/source/new">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
@@ -80,6 +93,7 @@
 			</svg>
 		</a>
 
+		<!-- Button to manage filters -->
 		<a title="Set Filters" class="btn btn-ghost btn-square" href="/filter">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
@@ -97,12 +111,14 @@
 			</svg>
 		</a>
 
+		<!-- Button to refresh postings -->
 		<button
 			title={settings.api_key ? 'Refresh Postings' : 'OpenAI API Key needs to be set in Settings.'}
 			class="btn btn-ghost btn-square {isRefreshing || !settings.api_key ? 'btn-disabled' : ''}"
 			on:click={refreshPostings}
 		>
 			{#if isRefreshing}
+				<!-- Disable button while refresh is in progress -->
 				<span class="loading loading-spinner"></span>
 			{:else}
 				<svg
@@ -125,6 +141,7 @@
 
 	<div class="flex-1"></div>
 	<div class="flex-none">
+		<!-- Button to open the settings drawer dialog -->
 		<a title="Settings" class="btn btn-square btn-ghost" href="/preferences">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"

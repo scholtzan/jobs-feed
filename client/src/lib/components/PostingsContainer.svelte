@@ -1,24 +1,25 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { Postings } from '../types/postings';
-	import { Sources, SelectedSource, Source } from '../types/sources';
+	import { Posting, PostingsHandler } from '../types/postings';
+	import { SelectedSource, Source, SourcesHandler } from '../types/sources';
 	import { NotificationHandler } from '../types/notifications';
-	import { Filters } from '../types/filters';
-	import { Suggestions } from '../types/suggestions';
+	import { FiltersHandler } from '../types/filters';
+	import { Suggestion, SuggestionsHandler } from '../types/suggestions';
 
 	let notificationHandler = new NotificationHandler();
-	let sourcesHandler = new Sources();
-	let postingsHandler = new Postings();
-	let filtersHandler = new Filters();
-	let suggestionsHandler = new Suggestions();
+	let sourcesHandler = new SourcesHandler();
+	let postingsHandler = new PostingsHandler();
+	let filtersHandler = new FiltersHandler();
+	let suggestionsHandler = new SuggestionsHandler();
 
-	let selectedSourceId = sourcesHandler.selectedSource;
+	let selectedSourceId: string | number | null = sourcesHandler.selectedSource;
 	let sources = sourcesHandler.sources;
 	let postings = postingsHandler.postings;
-	let source;
-	let suggestions = [];
+	let source: Source | undefined;
+	let suggestions: Suggestion[] = [];
 	let isRefreshingSuggestions = false;
 
+	// refresh postings data if any data changes
 	getPostingsForSelectedSource();
 
 	postingsHandler.subscribe((_) => {
@@ -35,7 +36,10 @@
 		getPostingsForSelectedSource();
 	});
 
-	function getPostingsForSelectedSource() {
+	/**
+	 * Fetch postings, based on which source is currently selected.
+	 */
+	function getPostingsForSelectedSource(): void {
 		suggestions = [];
 		if (selectedSourceId == SelectedSource.All) {
 			postings = postingsHandler.postings;
@@ -46,14 +50,14 @@
 				if (!res.isSuccessful) {
 					notificationHandler.addError('Could not get bookmarked postings', res.message);
 				} else {
-					postings = res.data;
+					postings = res.data as Posting[];
 				}
 			});
 		} else {
 			source = sourcesHandler.sourceById(selectedSourceId);
 			let postingsBySource = postingsHandler.postingsBySource();
-			if (selectedSourceId in postingsBySource) {
-				postings = postingsBySource[selectedSourceId].filter((p) => !p.seen);
+			if (selectedSourceId != null && selectedSourceId in postingsBySource) {
+				postings = postingsBySource[selectedSourceId as number].filter((p: Posting) => !p.seen);
 			} else {
 				postings = [];
 			}
@@ -61,7 +65,7 @@
 				if (!res.isSuccessful) {
 					notificationHandler.addError('Could not get source suggestions', res.message);
 				} else {
-					suggestions = res.data;
+					suggestions = res.data as Suggestion[];
 				}
 			});
 		}
@@ -71,7 +75,11 @@
 		sources = sourcesHandler.sources;
 	});
 
-	function markAsRead(ids) {
+	/**
+	 * Mark a set of postings as seen.
+	 * @param ids set of postings IDs
+	 */
+	function markAsRead(ids: number[]) {
 		postingsHandler.markAsRead(ids).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not mark posting as read', res.message);
@@ -79,7 +87,11 @@
 		});
 	}
 
-	function bookmark(id: number) {
+	/**
+	 * Bookmark a specific posting.
+	 * @param id ID of posting to bookmark
+	 */
+	function bookmark(id: number | null) {
 		postingsHandler.bookmarkPosting(id).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not bookmark posting', res.message);
@@ -87,7 +99,11 @@
 		});
 	}
 
-	function like(id: number) {
+	/**
+	 * Mark a specific posting as liked
+	 * @param id ID of posting to like
+	 */
+	function like(id: number | null) {
 		postingsHandler.likePosting(id).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not like posting', res.message);
@@ -95,7 +111,11 @@
 		});
 	}
 
-	function dislike(id: number) {
+	/**
+	 * Mark a specific posting as disliked
+	 * @param id ID of posting to dislike
+	 */
+	function dislike(id: number | null) {
 		postingsHandler.dislikePosting(id).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not dislike posting', res.message);
@@ -103,17 +123,24 @@
 		});
 	}
 
+	/**
+	 * Show only postings that were seen before.
+	 */
 	function viewRead() {
 		postingsHandler.getReadPostingsOfSource(selectedSourceId).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not fetch read postings', res.message);
 			} else {
-				postings = res.data;
+				postings = res.data as Posting[];
 			}
 		});
 	}
 
-	function openSource(sourceId: number) {
+	/**
+	 * Open URL to a specific source page.
+	 * @param sourceId ID of source to open URL for
+	 */
+	function openSource(sourceId: number | string | null) {
 		let source = sourcesHandler.sourceById(sourceId);
 
 		if (source != undefined) {
@@ -123,8 +150,12 @@
 		}
 	}
 
+	/**
+	 * Filters that found matches in the posting content.
+	 * @param content posting content to search for matching filter values
+	 */
 	function getMatchingFilters(content: string) {
-		let matchingFilters = [];
+		let matchingFilters: string[] = [];
 
 		if (content != null) {
 			filtersHandler.filters.forEach((filter) => {
@@ -141,13 +172,16 @@
 		return matchingFilters;
 	}
 
+	/**
+	 * Refresh suggestions for a specific source.
+	 */
 	function refreshSuggestions() {
 		isRefreshingSuggestions = true;
 		suggestionsHandler.refreshSourceSuggestions(selectedSourceId).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not refresh suggestions', res.message);
 			} else {
-				suggestions = res.data;
+				suggestions = res.data as Suggestion[];
 			}
 
 			isRefreshingSuggestions = false;
@@ -157,7 +191,9 @@
 
 <div class="justify-center w-full flex mt-8">
 	<div class="lg:max-w-[50em] lg:min-w-[35em] w-[95%]">
+		<!-- Buttons next to selected source header -->
 		<div class="flex flex-row grow justify-end px-4 gap-x-2">
+			<!-- Button to mark all posts as read -->
 			<button
 				title="Mark As Read"
 				class="btn btn-ghost btn-square"
@@ -174,7 +210,9 @@
 					<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
 				</svg>
 			</button>
+
 			{#if ![SelectedSource.All, SelectedSource.Bookmarked, SelectedSource.Today].includes(selectedSourceId)}
+				<!-- Edit source button -->
 				<a title="Edit Source" class="btn btn-ghost btn-square" href="/source/{selectedSourceId}">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -196,6 +234,8 @@
 						/>
 					</svg>
 				</a>
+
+				<!-- Button to open source URL -->
 				<button
 					title="Visit Page"
 					class="btn btn-ghost btn-square"
@@ -219,6 +259,7 @@
 			{/if}
 		</div>
 
+		<!-- Headers based on selected sources -->
 		<h1 class="flex grow lg:text-4xl text-2xl font-bold py-4 px-4">
 			{#if selectedSourceId == SelectedSource.All}
 				<svg
@@ -287,6 +328,7 @@
 		<div class="flex justify-center w-full">
 			<div class="w-full">
 				{#if source != undefined && source.unreachable}
+					<!-- Error text if source could not be reached to fetch postings -->
 					<div role="alert" class="alert alert-error">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -312,6 +354,7 @@
 							: ''}"
 					>
 						<div class="card-body items-left text-left">
+							<!-- Posting header -->
 							<div class="flex flex-row grow">
 								<a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
 									<h2
@@ -319,6 +362,7 @@
 										style="margin-bottom: -4px;"
 									>
 										{#if sourcesHandler.sourceById(posting.source_id) != undefined}
+											<!-- Source favicon -->
 											<img
 												width="16"
 												height="16"
@@ -330,11 +374,14 @@
 													: sourcesHandler.sourceById(posting.source_id).url}&amp;alt=feed"
 											/>
 										{/if}
+
 										{posting.title}
 									</h2>
 								</a>
 
+								<!-- Buttons next to posting title -->
 								<div class="flex flex-row grow justify-end px-4 gap-2 w-48 max-md:hidden">
+									<!-- Mark as read button -->
 									<button
 										title="Mark As Read"
 										class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
@@ -355,6 +402,8 @@
 											/>
 										</svg>
 									</button>
+
+									<!-- Bookmark button -->
 									<button
 										title="Bookmark Posting"
 										class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
@@ -390,6 +439,8 @@
 											</svg>
 										{/if}
 									</button>
+
+									<!-- Like button -->
 									<button
 										title="More like this"
 										class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
@@ -423,6 +474,8 @@
 											</svg>
 										{/if}
 									</button>
+
+									<!-- Dislike button -->
 									<button
 										title="Less like this"
 										class="btn btn-ghost btn-square btn-xs hidden group-hover:block"
@@ -458,16 +511,23 @@
 									</button>
 								</div>
 							</div>
+
+							<!-- Posting sub header -->
 							<a href="/posting/{posting.id}" on:click={() => markAsRead([posting.id])}>
 								{#if sourcesHandler.sourceById(posting.source_id) != undefined}
 									<p class="pb-1 text-slate-500">
+										<!-- Created timestamp and source name -->
 										{sourcesHandler.sourceById(posting.source_id).name} // {new Date(
 											posting.created_at
 										).toLocaleString()}
-										{#if posting.match_similarity > 0.7}
+
+										<!-- Indicate whether the posting is a good match -->
+										{#if posting.match_similarity != null && posting.match_similarity > 0.7}
 											<span class="inline text-orange-400"> • Good Match </span>
 										{/if}
 									</p>
+
+									<!-- Show filter values that matched the posting content -->
 									{#if getMatchingFilters(posting.content + posting.title).length > 0}
 										<p class="flex grow pb-1 text-orange-400">
 											<svg
@@ -492,6 +552,7 @@
 				{/each}
 
 				{#if postings && postings.filter((p) => !p.seen).length > 0}
+					<!-- Bottom button to mark postings as read -->
 					<div class="py-8 flex-none px-4">
 						<button
 							on:click={() => markAsRead(postings.map((p) => p.id))}
@@ -499,6 +560,7 @@
 						>
 					</div>
 				{:else if selectedSourceId != 'bookmarked' && postings.length == 0}
+					<!-- Bottom button to view read postings -->
 					<div class="py-8 flex-none px-4 justify-items-center grid max-w w-full">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -521,6 +583,8 @@
 					</div>
 				{/if}
 			</div>
+
+			<!-- List of similar sources -->
 			{#if ![SelectedSource.All, SelectedSource.Bookmarked, SelectedSource.Today].includes(selectedSourceId)}
 				<div class="w-64 ml-6 md:block hidden">
 					<div class="menu-title flex grow">

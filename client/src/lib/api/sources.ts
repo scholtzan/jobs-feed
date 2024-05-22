@@ -2,9 +2,16 @@ import { error, success } from '.';
 import { Source } from '../types/sources';
 import { constants } from '../constants';
 
+/**
+ * Functions to make calls against the sources API.
+ */
 export class SourcesApi {
 	constructor() {}
 
+	/**
+	 * Make API call to get all sources.
+	 * @returns request response
+	 */
 	public getSources = async () => {
 		return fetch(`/api/${constants.API_VERSION}/sources`, {
 			method: 'GET'
@@ -19,6 +26,11 @@ export class SourcesApi {
 		});
 	};
 
+	/**
+	 * Make API call to create a new source.
+	 * @param source data of new source
+	 * @returns request response
+	 */
 	public createSource = async (source: Source) => {
 		return fetch(`/api/${constants.API_VERSION}/sources`, {
 			method: 'POST',
@@ -35,6 +47,11 @@ export class SourcesApi {
 		});
 	};
 
+	/**
+	 * Make API call to update a specific source.
+	 * @param source updated source data
+	 * @returns request response
+	 */
 	public updateSource = async (source: Source) => {
 		return fetch(`/api/${constants.API_VERSION}/sources/${source.id}`, {
 			method: 'PUT',
@@ -51,7 +68,12 @@ export class SourcesApi {
 		});
 	};
 
-	public deleteSource = async (sourceId: number) => {
+	/**
+	 * Make API call to remove a specific source.
+	 * @param sourceId ID of source to delete
+	 * @returns request response
+	 */
+	public deleteSource = async (sourceId: number | null) => {
 		return fetch(`/api/${constants.API_VERSION}/sources/${sourceId}`, {
 			method: 'DELETE'
 		}).then((response) => {
@@ -63,7 +85,12 @@ export class SourcesApi {
 		});
 	};
 
-	public resetSourceCache = async (sourceId: number) => {
+	/**
+	 * Delete cached content for a specific source.
+	 * @param sourceId ID of source to reset cache
+	 * @returns request response
+	 */
+	public resetSourceCache = async (sourceId: number | null) => {
 		return fetch(`/api/${constants.API_VERSION}/sources/${sourceId}/reset`, {
 			method: 'PUT'
 		}).then((response) => {

@@ -3,26 +3,30 @@ export const csr = true;
 export const trailingSlash = 'always';
 
 import '../app.postcss';
-import { SettingsHandler } from '../lib/types/settings';
-import { Sources } from '../lib/types/sources';
-import { Postings } from '../lib/types/postings';
-import { Filters } from '../lib/types/filters';
+import { SettingsHandler, Settings } from '../lib/types/settings';
+import { SourcesHandler } from '../lib/types/sources';
+import { PostingsHandler } from '../lib/types/postings';
+import { FiltersHandler } from '../lib/types/filters';
+import { NotificationHandler } from '../lib/types/notifications';
 
 import type { PageLoad } from './$types';
-import { NotificationHandler } from '../lib/types/notifications';
 
 export const load: PageLoad = async () => {
 	let settingsHandler = new SettingsHandler();
-	let sourcesHandler = new Sources();
-	let postingsHandler = new Postings();
-	let filtersHandler = new Filters();
+	let sourcesHandler = new SourcesHandler();
+	let postingsHandler = new PostingsHandler();
+	let filtersHandler = new FiltersHandler();
 	let notificationHandler = new NotificationHandler();
 
+	// refresh all data
 	settingsHandler.refresh().then((res) => {
 		if (!res.isSuccessful) {
 			notificationHandler.addError('Cannot get settings', res.message);
-		} else if (!res.data || !res.data.api_key) {
-			notificationHandler.addMessage('[Please set an OpenAI API key in Settings](/preferences).');
+		} else if (!res.data) {
+			let settings = res.data as Settings;
+			if (!settings.api_key) {
+				notificationHandler.addMessage('[Please set an OpenAI API key in Settings](/preferences).');
+			}
 		}
 	});
 

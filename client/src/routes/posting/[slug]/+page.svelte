@@ -1,36 +1,47 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import type { PageData } from './$types';
-	import { Postings, Posting } from '../../../lib/types/postings';
+	import { PostingsHandler, Posting } from '../../../lib/types/postings';
 	import { NotificationHandler } from '../../../lib/types/notifications';
 	import SvelteMarkdown from 'svelte-markdown';
-	import { Sources } from '../../../lib/types/sources';
+	import { SourcesHandler } from '../../../lib/types/sources';
+
+	export let data: PageData;
 
 	let notificationHandler = new NotificationHandler();
-	let postingsHandler = new Postings();
+	let postingsHandler = new PostingsHandler();
+	let sourcesHandler = new SourcesHandler();
+
+	// whether the drawer dialog for the posting is open
 	let drawerOpen = true;
+	// posting data
 	let posting = new Posting();
-	let sourcesHandler = new Sources();
-	export let data: PageData;
+	// ID of selected posting
 	let postingId = data.postingId;
+
+	// fetch data for specific posting from server
 	postingsHandler.postingById(postingId).then((res) => {
 		if (!res.isSuccessful) {
 			notificationHandler.addError('Could not fetch posting', res.message);
 		} else {
-			posting = res.data;
+			posting = res.data as Posting;
 		}
 	});
 
+	// whenever posting data changes, refetch data
 	postingsHandler.subscribe((_) => {
 		postingsHandler.postingById(postingId).then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not fetch posting', res.message);
 			} else {
-				posting = res.data;
+				posting = res.data as Posting;
 			}
 		});
 	});
 
+	/**
+	 * Bookmark the posting.
+	 */
 	function bookmark() {
 		postingsHandler.bookmarkPosting(postingId).then((res) => {
 			if (!res.isSuccessful) {
@@ -39,6 +50,9 @@
 		});
 	}
 
+	/**
+	 * Like the posting to get more similar recommendations.
+	 */
 	function like() {
 		postingsHandler.likePosting(postingId).then((res) => {
 			if (!res.isSuccessful) {
@@ -47,6 +61,9 @@
 		});
 	}
 
+	/**
+	 * Dislike posting to get fewer postings that are similar.
+	 */
 	function dislike() {
 		postingsHandler.dislikePosting(postingId).then((res) => {
 			if (!res.isSuccessful) {
@@ -55,10 +72,18 @@
 		});
 	}
 
+	/**
+	 * Close the posting drawer dialog.
+	 */
 	function closeDrawer() {
 		if (browser) window.history.back();
 	}
 
+	/**
+	 * Get the content of the posting if available.
+	 * Try to extract only relevant content. Usually "Apply now" is at the end of a job posting,
+	 * so ignore everything that comes after. Ignore any footer content.
+	 */
 	function getContent() {
 		let content = posting.content;
 		let startIndex = content.indexOf(posting.title);
@@ -84,6 +109,7 @@
 </script>
 
 <div class="drawer drawer-end">
+	<!-- Checkbox to keep track if posting container is open or closed -->
 	<input
 		id="posting-drawer"
 		type="checkbox"
@@ -93,10 +119,14 @@
 	/>
 
 	<div class="drawer-side">
+		<!-- Background overlay -->
 		<label for="posting-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
+		<!-- Dialog content -->
 		<div class="lg:w-3/4 w-[95%] min-h-full bg-base-200 text-base-content">
+			<!-- Button toolbar -->
 			<nav class="navbar py-4">
+				<!-- Close button -->
 				<div class="flex-none">
 					<button class="btn btn-square btn-ghost" title="Close" on:click={closeDrawer}>
 						<svg
@@ -117,6 +147,7 @@
 				</div>
 				<div class="flex-1"></div>
 				<div class="flex-none px-6">
+					<!-- Bookmark button -->
 					<button class="btn btn-ghost btn-square px-2" on:click={bookmark}>
 						{#if posting.bookmarked}
 							<svg
@@ -148,6 +179,8 @@
 							</svg>
 						{/if}
 					</button>
+
+					<!-- Like button -->
 					<button class="btn btn-ghost btn-square px-2" on:click={like}>
 						{#if posting.is_match}
 							<svg
@@ -177,6 +210,8 @@
 							</svg>
 						{/if}
 					</button>
+
+					<!-- Dislike button -->
 					<button class="btn btn-ghost btn-square px-2" on:click={dislike}>
 						{#if posting.is_match == false}
 							<svg
@@ -211,6 +246,7 @@
 
 			<div class="px-8">
 				<h1 class="flex grow lg:text-4xl text-2xl font-bold py-4">
+					<!-- Favicon -->
 					{#if sourcesHandler.sourceById(posting.source_id) != undefined}
 						<img
 							width="48"
@@ -224,11 +260,14 @@
 								: sourcesHandler.sourceById(posting.source_id).url}&amp;alt=feed"
 						/>
 					{/if}
+
+					<!-- Posting title -->
 					{posting.title}
 				</h1>
 
 				<p class="w-full max-w">
 					{#if sourcesHandler.sourceById(posting.source_id) != undefined}
+						<!-- Posting created data and source name -->
 						<p class="pb-2 text-slate-500">
 							{sourcesHandler.sourceById(posting.source_id).name} // {new Date(
 								posting.created_at
@@ -236,6 +275,7 @@
 						</p>
 					{/if}
 
+					<!-- Posting content -->
 					{#if posting.content}
 						<SvelteMarkdown source={getContent()} />
 					{:else if posting.description}
@@ -245,6 +285,7 @@
 					{/if}
 				</p>
 
+				<!-- Link to open URL of posting -->
 				<div class="py-8 flex-none">
 					{#if sourcesHandler.sourceById(posting.source_id) != undefined}
 						<a

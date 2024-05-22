@@ -1,5 +1,6 @@
-import { RequestResponse } from '../types/index';
+import { type RequestResponse } from '../types/index';
 
+// API request response if an error occurred
 export const error = (error: string, data?: any): RequestResponse => {
 	return {
 		status: 'error',
@@ -9,6 +10,7 @@ export const error = (error: string, data?: any): RequestResponse => {
 	};
 };
 
+// API request response if successfull
 export const success = (data: any): RequestResponse => {
 	return {
 		status: 'success',

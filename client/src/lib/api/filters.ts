@@ -2,9 +2,16 @@ import { error, success } from '.';
 import { Filter } from '../types/filters';
 import { constants } from '../constants';
 
+/**
+ * Functions to make calls against the filters API.
+ */
 export class FiltersApi {
 	constructor() {}
 
+	/**
+	 * Make API request to get all filters.
+	 * @returns request response
+	 */
 	public getFilters = async () => {
 		return fetch(`/api/${constants.API_VERSION}/filters`, {
 			method: 'GET'
@@ -19,6 +26,11 @@ export class FiltersApi {
 		});
 	};
 
+	/**
+	 * Make API request to update all filters
+	 * @param filters updated filters data
+	 * @returns request response
+	 */
 	public updateFilters = async (filters: Filter[]) => {
 		return fetch(`/api/${constants.API_VERSION}/filters`, {
 			method: 'PUT',

@@ -1,30 +1,42 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { page } from '$app/stores';
-	import { Settings, SettingsHandler } from '../../lib/types/settings';
+	import { SettingsHandler } from '../../lib/types/settings';
 	import { NotificationHandler } from '../../lib/types/notifications';
 	import ValidatedInput from '../../lib/components/ValidatedInput.svelte';
 
-	let drawerOpen = true;
-
 	let notificationHandler = new NotificationHandler();
 	let settingsHandler = new SettingsHandler();
+
+	// whether the settings drawer dialog is open
+	let drawerOpen = true;
+	// fetch settings
 	let settings = settingsHandler.settings;
-	let models = getModels();
-	let validation = {
+	// get OpenAI models
+	let models: string[] = [];
+	getModels();
+	// validation results for certain form inputs
+	let validation: { apiKeyValidation: null | string } = {
 		apiKeyValidation: null
 	};
 
-	settingsHandler.subscribe((value) => {
+	// get most recent settings whenever data changes
+	settingsHandler.subscribe((_value) => {
 		settings = settingsHandler.settings;
 	});
 
-	function closeDrawer(e) {
+	/**
+	 * Close the settings drawer
+	 * @param _e close event
+	 */
+	function closeDrawer(_e: any) {
 		if (browser) window.history.back();
 	}
 
+	/**
+	 * Send updated settings to the server.
+	 */
 	function updateSettings() {
-		if (settings.api_key.trim() == '') {
+		if (settings.api_key == null || settings.api_key.trim() == '') {
 			validation.apiKeyValidation = 'Please provide an API key';
 		}
 
@@ -34,23 +46,27 @@
 					notificationHandler.addError('Could not update settings', res.message);
 				}
 
-				closeDrawer();
+				closeDrawer(null);
 			});
 		}
 	}
 
+	/**
+	 * Get available OpenAI models from the server.
+	 */
 	function getModels() {
 		return settingsHandler.getModels().then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not retrieve model information', res.message);
 			} else {
-				models = res.data;
+				models = res.data as string[];
 			}
 		});
 	}
 </script>
 
 <div class="drawer drawer-end">
+	<!-- Checkbox to keep track of whether settings drawer is open or closed -->
 	<input
 		id="settings-drawer"
 		type="checkbox"
@@ -59,10 +75,13 @@
 		on:click|preventDefault={closeDrawer}
 	/>
 
+	<!-- Drawer content -->
 	<div class="drawer-side">
+		<!-- Background overlay -->
 		<label for="settings-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
 		<div class="lg:w-3/4 w-[95%] min-h-full bg-base-200 text-base-content">
+			<!-- Close button -->
 			<nav class="navbar py-4">
 				<div class="flex-none">
 					<button class="btn btn-square btn-ghost" title="Close" on:click={closeDrawer}>
@@ -87,8 +106,10 @@
 			</nav>
 
 			<div class="px-8">
+				<!-- Header -->
 				<h1 class="lg:text-4xl text-2xl font-bold py-8">Settings</h1>
 
+				<!-- API key input -->
 				<ValidatedInput
 					label={'API Key'}
 					placeholder={'******'}
@@ -97,6 +118,7 @@
 					bind:validation={validation.apiKeyValidation}
 				/>
 
+				<!-- Model dropdown -->
 				<label class="form-control w-full max-w">
 					<div class="label">
 						<span class="label-text">OpenAI Model</span>
@@ -108,6 +130,7 @@
 					</select>
 				</label>
 
+				<!-- Close and save button -->
 				<div class="py-8 flex-none">
 					<button class="btn btn-active btn-primary" on:click={updateSettings}>Save</button>
 					<a href="/" class="btn btn-active">Close</a>

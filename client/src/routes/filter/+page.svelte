@@ -1,23 +1,33 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { Filters, Filter } from '../../lib/types/filters';
+	import { FiltersHandler, Filter } from '../../lib/types/filters';
 	import { NotificationHandler } from '../../lib/types/notifications';
-	import { browser } from '$app/environment';
 
-	const filterSuggestions = ['Skills', 'Location', 'Job Title'];
 	let notificationHandler = new NotificationHandler();
-	let filtersHandler = new Filters();
+	let filtersHandler = new FiltersHandler();
+
+	// some suggestions for criteria to filter postings on
+	const filterSuggestions = ['Skills', 'Location', 'Job Title'];
+	// get stored filters
 	let filters = filtersHandler.filters;
+	// whether the filters drawer dialog is open or closed
 	let drawerOpen = true;
 
-	filtersHandler.subscribe((value) => {
+	// get filter data if it has changed
+	filtersHandler.subscribe((_value) => {
 		filters = filtersHandler.filters;
 	});
 
+	/**
+	 * Close the filters drawer dialog.
+	 */
 	function closeDrawer() {
 		if (browser) window.history.back();
 	}
 
+	/**
+	 * Update filters.
+	 */
 	function updateFilters() {
 		filtersHandler.updateFilters(filters).then((res) => {
 			if (!res.isSuccessful) {
@@ -28,10 +38,17 @@
 		});
 	}
 
-	function removeFilter(filter) {
+	/**
+	 * Delete the passed filter
+	 * @param filter Filter
+	 */
+	function removeFilter(filter: Filter) {
 		filters = filters.filter((f) => f != filter);
 	}
 
+	/**
+	 * Add a new filter.
+	 */
 	function addFilter() {
 		let newFilter = new Filter();
 		filters = [...filters, newFilter];
@@ -39,6 +56,7 @@
 </script>
 
 <div class="drawer drawer-end">
+	<!-- Checkbox for keeping track of whether filter drawer dialog is open -->
 	<input
 		id="filters-drawer"
 		type="checkbox"
@@ -48,10 +66,12 @@
 	/>
 
 	<div class="drawer-side">
+		<!-- Background overlay -->
 		<label for="filters-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
 		<div class="lg:w-3/4 w-[95%] min-h-full bg-base-200 text-base-content">
 			<nav class="navbar py-4">
+				<!-- Close button -->
 				<div class="flex-none">
 					<button class="btn btn-square btn-ghost" title="Close" on:click={closeDrawer}>
 						<svg
@@ -75,20 +95,20 @@
 			</nav>
 
 			<form class="px-8" id="filters-form" on:submit|preventDefault={updateFilters}>
+				<!-- Header -->
 				<h1 class="lg:text-4xl text-2xl font-bold py-8">Filters</h1>
 
+				<!-- Create a separate form input for each existing filter -->
 				{#each filters as filter}
 					<div class="md:flex items-end gap-2 py-2">
 						<label class="form-control md:w-1/3 max-w w-full">
+							<!-- Filter name input -->
 							<div class="label">
 								<span class="label-text">Filter Name</span>
 							</div>
 
-							<!-- <div
-                            class="inline-block {newSource.name.trim() == "" && nameValidation ? 'tooltip tooltip-open tooltip-error' : ''}"
-                            data-tip={nameValidation || null}
-                        > -->
 							<div class="dropdown">
+								<!-- Filter value input -->
 								<input
 									type="text"
 									placeholder="Filter name"
@@ -96,8 +116,10 @@
 									class="input input-bordered w-full max-w"
 									bind:value={filter.name}
 								/>
-								<!-- </div> -->
+
+								<!-- Dropdown with filter suggestions -->
 								{#if !filterSuggestions.every((s) => filters.find((f) => f.name == s))}
+									<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 									<ul
 										tabindex="0"
 										class="dropdown-content dropdown-open menu p-2 shadow bg-base-100 rounded-box w-full z-40"
@@ -105,6 +127,8 @@
 										{#each filterSuggestions as filterSuggestion}
 											{#if !filters.find((f) => f.name == filterSuggestion)}
 												<li>
+													<!-- svelte-ignore a11y-no-static-element-interactions -->
+													<!-- svelte-ignore a11y-click-events-have-key-events -->
 													<span on:click={() => (filter.name = filterSuggestion)}
 														>{filterSuggestion}</span
 													>
@@ -116,6 +140,7 @@
 							</div>
 						</label>
 
+						<!-- Filter value input -->
 						<label class="form-control md:w-3/5 max-w w-full">
 							<div class="label">
 								<span class="label-text">
@@ -150,6 +175,7 @@
 							/>
 						</label>
 
+						<!-- Button to delete filter -->
 						<button
 							title="Remove Filter"
 							class="btn btn-active md:btn-square max-sm:mt-4"
@@ -174,6 +200,7 @@
 					</div>
 				{/each}
 
+				<!-- Button to add new filter -->
 				<button title="Add Filter" class="btn btn-active mt-2" on:click|preventDefault={addFilter}>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -192,6 +219,7 @@
 					Add Filter
 				</button>
 
+				<!-- Save and cancel button -->
 				<div class="py-8 flex-none">
 					<button class="btn btn-active btn-primary" form="filters-form">Save</button>
 					<a href="/" class="btn btn-active">Cancel</a>

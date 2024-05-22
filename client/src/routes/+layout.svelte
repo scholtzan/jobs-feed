@@ -1,13 +1,12 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
 	import Sidebar from '../lib/components/Sidebar.svelte';
 	import Toolbar from '../lib/components/Toolbar.svelte';
 	import PostingsContainer from '../lib/components/PostingsContainer.svelte';
-	import SourceDrawer from '../lib/components/SourceDrawer.svelte';
 	import NotificationContainer from '../lib/components/NotificationContainer.svelte';
 	import { showSidebar } from '../lib/store';
 	import { get } from 'svelte/store';
 
+	// check if side bar needs to be toggled
 	let isSidebarVisible = false;
 	showSidebar.subscribe((_) => (isSidebarVisible = get(showSidebar)));
 
@@ -18,6 +17,7 @@
 </script>
 
 <div class="drawer lg:drawer-open min-h-screen">
+	<!-- Side bar for sources -->
 	<input
 		id="sidebar-drawer"
 		type="checkbox"
@@ -27,10 +27,10 @@
 	/>
 	<div class=" drawer-side overflow-visible">
 		<label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-
 		<Sidebar></Sidebar>
 	</div>
 
+	<!-- Center content -->
 	<div class="drawer-content">
 		<div>
 			<Toolbar></Toolbar>
@@ -39,6 +39,7 @@
 		<NotificationContainer></NotificationContainer>
 	</div>
 
+	<!-- Opened sub pages -->
 	<div>
 		<slot />
 	</div>

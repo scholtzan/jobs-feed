@@ -1,32 +1,61 @@
 import { postings } from '../store';
 import { get } from 'svelte/store';
 import { PostingsApi } from '../api/postings';
+import type { RequestResponse } from '.';
 
-export class Postings {
+/**
+ * Handler to interact with postings API
+ */
+export class PostingsHandler {
+	// posting data
 	postings: Posting[] = [];
+	// posting API instance
 	api: PostingsApi;
 
+	/**
+	 * Create a new posting handler instance.
+	 */
 	constructor() {
 		this.postings = get(postings);
 		this.api = new PostingsApi();
 	}
 
+	/**
+	 * Write posting data to Svelte store.
+	 */
 	public store(): void {
 		postings.set(this.postings);
 	}
 
+	/**
+	 * Call callback when posting data changes.
+	 * @param callback function to call when data changes
+	 */
 	public subscribe(callback: (value: any) => void): void {
 		postings.subscribe(callback);
 	}
 
-	public async getBookmarked() {
+	/**
+	 * Get bookmarked postings.
+	 * @returns request response
+	 */
+	public async getBookmarked(): Promise<RequestResponse> {
 		return this.api.getBookmarkedPostings();
 	}
 
-	public postingById(id: number) {
+	/**
+	 * Get a specific posting by its ID.
+	 * @param id posting ID
+	 * @returns request response
+	 */
+	public postingById(id: number | null): Promise<RequestResponse> {
 		return this.api.getPostingById(id);
 	}
 
+	/**
+	 * Get all postings that were fetched today.
+	 * @returns postings
+	 */
 	public getTodaysPostings(): Posting[] {
 		let currentDate = new Date();
 		return this.postings.filter((p) => {
@@ -39,15 +68,24 @@ export class Postings {
 		});
 	}
 
-	public refresh(useCached: boolean = true, source_id: number | null = null) {
+	/**
+	 * Fetch postings.
+	 * @param useCached whether cached postings should be returned, or postings should be scraped from sources.
+	 * @param source_id [optional] ID of source to get postings for
+	 * @returns request response
+	 */
+	public refresh(
+		useCached: boolean = true,
+		source_id: number | null = null
+	): Promise<RequestResponse> {
 		if (useCached) {
 			if (source_id == null) {
 				return this.api.getUnreadPostings().then((res) => {
 					if (res.isSuccessful) {
 						if (source_id == null) {
-							this.postings = res.data;
+							this.postings = res.data as Posting[];
 						} else {
-							for (var posting of res.data) {
+							for (var posting of res.data as Posting[]) {
 								if (this.postings.indexOf(posting) == -1) {
 									this.postings.push(posting);
 								}
@@ -73,15 +111,24 @@ export class Postings {
 		}
 	}
 
-	public postingsBySource(): Posting[] {
-		return Object.groupBy(this.postings, (p: Posting) => p.source_id);
+	/**
+	 * Group postings by source ID.
+	 * @returns
+	 */
+	public postingsBySource(): Partial<Record<number, Posting[]>> {
+		return Object.groupBy(this.postings, (p: Posting) => p.source_id as number);
 	}
 
-	public markAsRead(ids: number[]) {
+	/**
+	 * Mark specific posts as seen.
+	 * @param ids IDs of posts that should be marked as seen.
+	 * @returns request response
+	 */
+	public markAsRead(ids: number[]): Promise<RequestResponse> {
 		return this.api.markPostingsAsRead(ids).then((res) => {
 			if (res.isSuccessful) {
 				this.postings.forEach((p) => {
-					if (ids.includes(p.id)) {
+					if (ids != null && ids.includes(p.id as number)) {
 						p.seen = true;
 					}
 				});
@@ -93,19 +140,24 @@ export class Postings {
 		});
 	}
 
-	public bookmarkPosting(id: number) {
+	/**
+	 * Bookmark a specific posting
+	 * @param id ID of posting to bookmark
+	 * @returns request response
+	 */
+	public bookmarkPosting(id: number | null): Promise<RequestResponse> {
 		return this.postingById(id).then((res) => {
 			if (!res.isSuccessful) {
 				return res;
 			} else {
-				let posting = res.data;
+				let posting = res.data as Posting;
 				posting.bookmarked = !posting.bookmarked;
 
 				return this.api.updatePosting(posting).then((res) => {
 					if (res.isSuccessful) {
 						let postingIndex = this.postings.findIndex((p) => p.id == id);
 						if (postingIndex != -1) {
-							this.postings[postingIndex] = res.data;
+							this.postings[postingIndex] = res.data as Posting;
 						}
 						this.store();
 					}
@@ -116,12 +168,17 @@ export class Postings {
 		});
 	}
 
-	public likePosting(id: number) {
+	/**
+	 * Mark a specific posting as "liked".
+	 * @param id ID of posting
+	 * @returns request response
+	 */
+	public likePosting(id: number | null): Promise<RequestResponse> {
 		return this.postingById(id).then((res) => {
 			if (!res.isSuccessful) {
 				return res;
 			} else {
-				let posting = res.data;
+				let posting = res.data as Posting;
 				if (posting.is_match == true) {
 					posting.is_match = null;
 				} else {
@@ -132,7 +189,7 @@ export class Postings {
 					if (res.isSuccessful) {
 						let postingIndex = this.postings.findIndex((p) => p.id == id);
 						if (postingIndex != -1) {
-							this.postings[postingIndex] = res.data;
+							this.postings[postingIndex] = res.data as Posting;
 						}
 						this.store();
 					}
@@ -143,12 +200,17 @@ export class Postings {
 		});
 	}
 
-	public dislikePosting(id: number) {
+	/**
+	 * Mark as specific posting as disliked.
+	 * @param id ID of posting
+	 * @returns request response
+	 */
+	public dislikePosting(id: number | null): Promise<RequestResponse> {
 		return this.postingById(id).then((res) => {
 			if (!res.isSuccessful) {
 				return res;
 			} else {
-				let posting = res.data;
+				let posting = res.data as Posting;
 				if (posting.is_match == false) {
 					posting.is_match = null;
 				} else {
@@ -159,7 +221,7 @@ export class Postings {
 					if (res.isSuccessful) {
 						let postingIndex = this.postings.findIndex((p) => p.id == id);
 						if (postingIndex != -1) {
-							this.postings[postingIndex] = res.data;
+							this.postings[postingIndex] = res.data as Posting;
 						}
 						this.store();
 					}
@@ -170,13 +232,21 @@ export class Postings {
 		});
 	}
 
-	public getReadPostingsOfSource(sourceId: number) {
+	/**
+	 * Get all postings of a specific source that were seen before.
+	 * @param sourceId ID of source
+	 * @returns request response
+	 */
+	public getReadPostingsOfSource(sourceId: number | null | string): Promise<RequestResponse> {
 		return this.api.getReadPostingsOfSource(sourceId).then((res) => {
 			return res;
 		});
 	}
 }
 
+/**
+ * Data container for a posting.
+ */
 export class Posting {
 	id: number | null = null;
 	title: string = '';

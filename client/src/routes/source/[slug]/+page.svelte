@@ -1,29 +1,34 @@
+<!-- Dialog to create or edit source -->
+
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { Sources, Source } from '../../../lib/types/sources';
+	import { SourcesHandler, Source } from '../../../lib/types/sources';
 	import { NotificationHandler } from '../../../lib/types/notifications';
 	import ValidatedInput from '../../../lib/components/ValidatedInput.svelte';
-	import { Filters } from '../../../lib/types/filters';
+	import { FiltersHandler } from '../../../lib/types/filters';
 	import { browser } from '$app/environment';
 
-	let notificationHandler = new NotificationHandler();
-	let filtersHandler = new Filters();
-	let drawerOpen = true;
 	export let data: PageData;
+
+	let notificationHandler = new NotificationHandler();
+	let filtersHandler = new FiltersHandler();
+	let sourcesHandler = new SourcesHandler();
+
+	let drawerOpen = true;
 	let isNewSource = data.sourceId == 'new';
-	let sourcesHandler = new Sources();
 	let source = new Source();
 	let isSaving = false;
 
 	if (isNewSource) {
+		// create a new source
 		source = new Source();
 	} else {
+		// edit an existing source
 		sourcesHandler.refresh().then((res) => {
 			if (!res.isSuccessful) {
 				notificationHandler.addError('Could not get sources.');
 				source = new Source();
 			} else {
-				source = sourcesHandler.sourceById(data.sourceId);
+				source = sourcesHandler.sourceById(data.sourceId) as Source;
 				if (source == undefined) {
 					source = new Source();
 					notificationHandler.addError('No such source');
@@ -32,19 +37,29 @@
 		});
 	}
 
-	let validation = {
+	// Validation results for certain form fields
+	let validation: { nameValidation: null | string; urlValidation: null | string } = {
 		nameValidation: null,
 		urlValidation: null
 	};
 
-	function closeDrawer(e) {
+	/**
+	 * Close the dialog window.
+	 *
+	 * @param _e: Close event
+	 */
+	function closeDrawer(_e: any) {
 		isSaving = false;
 		if (browser) window.history.back();
 	}
 
+	/**
+	 * Send created/changed source to the server.
+	 */
 	function saveSource() {
 		isSaving = true;
 
+		// check if some value has been entered
 		if (source.name.trim() == '') {
 			validation.nameValidation = 'Give this source a name';
 		}
@@ -53,6 +68,7 @@
 			validation.urlValidation = 'Set a URL for this source';
 		}
 
+		// check if the URL is valid
 		try {
 			let urlToValidate = source.url;
 			if (!source.url.includes('://')) {
@@ -65,6 +81,7 @@
 
 		if (validation.nameValidation == null && validation.urlValidation == null) {
 			if (isNewSource) {
+				// create a new source
 				sourcesHandler.createSource(source).then((res) => {
 					if (!res.isSuccessful) {
 						notificationHandler.addError('Could not add source', res.message);
@@ -74,20 +91,24 @@
 						);
 					}
 
-					closeDrawer();
+					closeDrawer(null);
 				});
 			} else {
+				// udpate existing source
 				sourcesHandler.updateSource(source).then((res) => {
 					if (!res.isSuccessful) {
 						notificationHandler.addError('Could not update source', res.message);
 					}
 
-					closeDrawer();
+					closeDrawer(null);
 				});
 			}
 		}
 	}
 
+	/**
+	 * Delete the content that was cached for this specfic source.
+	 */
 	function resetCache() {
 		sourcesHandler.resetSourceCache(source.id).then((res) => {
 			if (!res.isSuccessful) {
@@ -97,6 +118,9 @@
 		if (browser) window.history.back();
 	}
 
+	/**
+	 * Open the URL to the source in a new tab/window.
+	 */
 	function openSource() {
 		let s = sourcesHandler.sourceById(source.id);
 
@@ -107,6 +131,9 @@
 		}
 	}
 
+	/**
+	 * Delete the source.
+	 */
 	function deleteSource() {
 		sourcesHandler.deleteSource(source.id).then((res) => {
 			if (!res.isSuccessful) {
@@ -117,6 +144,7 @@
 </script>
 
 <div class="drawer drawer-end">
+	<!-- Togge to determine whether the dialog should be open or closed. -->
 	<input
 		id="new-source-drawer"
 		type="checkbox"
@@ -125,10 +153,13 @@
 		on:click|preventDefault={closeDrawer}
 	/>
 
+	<!-- Source dialog -->
 	<div class="drawer-side">
+		<!-- Dark overlay -->
 		<label for="new-source-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
 		<div class="lg:w-3/4 w-[95%] min-h-full bg-base-200 text-base-content">
+			<!-- Close button -->
 			<nav class="navbar py-4">
 				<div class="flex-none">
 					<button class="btn btn-square btn-ghost" title="Close" on:click={closeDrawer}>
@@ -154,6 +185,7 @@
 
 			<div class="px-8">
 				<h1 class="lg:text-4xl text-2xl font-bold py-8">
+					<!-- Favicon -->
 					<div class="dropdown dropdown-right">
 						<div tabindex="0" role="button" class="btn btn-square">
 							{#if source.favicon}
@@ -189,9 +221,10 @@
 						</div>
 						<div
 							tabindex="0"
+							role="button"
 							class="card compact dropdown-content z-[1] shadow bg-base-100 rounded-box w-64"
 						>
-							<div tabindex="0" class="card-body">
+							<div role="button" tabindex="0" class="card-body">
 								<input
 									type="text"
 									placeholder="URL to page with desired favicon"
@@ -202,10 +235,13 @@
 						</div>
 					</div>
 
+					<!-- Dialog header -->
 					{#if isNewSource}
 						New Source
 					{:else}
 						{source.name}
+
+						<!-- Link to source page -->
 						<button class="btn btn-ghost btn-square" on:click={openSource}>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -225,24 +261,28 @@
 					{/if}
 				</h1>
 
+				<!-- Source name -->
 				<ValidatedInput
-					name={'Source Name'}
+					label={'Source Name'}
 					placeholder={'Super cool company'}
 					bind:validation={validation.nameValidation}
 					bind:value={source.name}
 				/>
 
+				<!-- Source URL -->
 				<ValidatedInput
-					name={'URL'}
+					label={'URL'}
 					placeholder={'example.com'}
 					bind:validation={validation.urlValidation}
 					bind:value={source.url}
 				/>
 
+				<!-- Advanced source settings section -->
 				<div class="py-4">
 					<details class="collapse bg-base-200 collapse-arrow border border-slate-300">
 						<summary class="collapse-title font-medium">Advanced Settings</summary>
 						<div class="collapse-content">
+							<!-- Pagination CSS selector input -->
 							<label class="form-control w-full max-w">
 								<div class="label">
 									<span class="label-text items-center"
@@ -276,6 +316,7 @@
 								/>
 							</label>
 
+							<!-- CSS path selector input -->
 							<label class="form-control w-full max-w">
 								<div class="label items-center">
 									<span class="label-text"
@@ -312,6 +353,7 @@
 					</details>
 				</div>
 
+				<!-- Save source button -->
 				<div class="py-8 flex-none">
 					<button
 						class="btn btn-active btn-primary {isSaving ? 'btn-disabled' : ''}"
@@ -325,11 +367,17 @@
 					<a href="/" class="btn btn-active">Cancel</a>
 				</div>
 
+				<!-- Danger zone section for extra actions on existing sources -->
 				{#if !isNewSource}
 					<div class="py-4">
-						<div tabindex="0" class="collapse collapse-open bg-base-200 border border-red-400">
+						<div
+							role="button"
+							tabindex="0"
+							class="collapse collapse-open bg-base-200 border border-red-400"
+						>
 							<div class="collapse-title font-medium">Danger Zone</div>
 							<div class="collapse-content">
+								<!-- Reset cache button -->
 								<div class="form-control w-full max-w flex-row flex justify-between py-2">
 									<div class="label grow">
 										<span class="label-text"
@@ -341,6 +389,8 @@
 										Reset Cache
 									</button>
 								</div>
+
+								<!-- Delete source button -->
 								<div class="form-control w-full max-w flex-row flex justify-between py-2">
 									<div class="label grow">
 										<span class="label-text">Delete the source and all associated data.</span>
@@ -361,6 +411,7 @@
 	</div>
 </div>
 
+<!-- Confirmation dialog to delete source -->
 <dialog id="confirm_remove_modal" class="modal">
 	<div class="modal-box">
 		<form method="dialog">

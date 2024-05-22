@@ -1,23 +1,36 @@
+<!--
+  @component
+  ## To make this work:
+  You MUST SET `peer` tailwind class, to the previous HTML element manually
+
+  ### Notes:
+  you may need to style your parent element by adding `flex flex-row-reverse`, add some `gap` and so on... because this component is just a tooltip, not a container
+-->
+
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { Postings } from '../types/postings';
-	import { NotificationHandler, NotificationType } from '../types/notifications';
+	import { NotificationHandler, NotificationType, type Notification } from '../types/notifications';
 	import SvelteMarkdown from 'svelte-markdown';
 
 	let notificationHandler = new NotificationHandler();
+
 	let notifications = notificationHandler.notifications;
 
 	notificationHandler.subscribe((_) => {
 		notifications = notificationHandler.notifications;
 	});
 
-	function removeNotification(notification) {
+	/**
+	 * Delete a specific notification
+	 * @param notification notification to delete
+	 */
+	function removeNotification(notification: Notification) {
 		notificationHandler.remove(notification);
 	}
 </script>
 
 <div class="absolute bottom-6 left-6 right-6 gap-y-4 grid grid-cols-1 max-w-[35em] w-[88%]">
 	{#each notifications as notification}
+		<!-- Show different notification types in different colors -->
 		<div
 			role="alert"
 			class="alert {notification.type == NotificationType.Error
@@ -57,6 +70,8 @@
 					/>
 				</svg>
 			{/if}
+
+			<!-- Collapsible details -->
 			<div>
 				<details class="collapse">
 					<summary class="collapse-title font-bold">
@@ -69,6 +84,8 @@
 					{/if}
 				</details>
 			</div>
+
+			<!-- Close button -->
 			<button
 				title="Close"
 				on:click={() => removeNotification(notification)}

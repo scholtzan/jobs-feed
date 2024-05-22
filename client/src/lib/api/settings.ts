@@ -2,9 +2,17 @@ import { error, success } from '.';
 import { Settings } from '../types/settings';
 import { constants } from '../constants';
 
+/**
+ * Functions to make calls against the settings API.
+ */
 export class SettingsApi {
 	constructor() {}
 
+	/**
+	 * Make API call to update stored settings.
+	 * @param settings settings data to store
+	 * @returns request response
+	 */
 	public updateSettings = async (settings: Settings) => {
 		return fetch(`/api/${constants.API_VERSION}/settings`, {
 			method: 'PUT',
@@ -21,6 +29,10 @@ export class SettingsApi {
 		});
 	};
 
+	/**
+	 * Make API call to get stored settings data.
+	 * @returns request response
+	 */
 	public getSettings = async () => {
 		return fetch(`/api/${constants.API_VERSION}/settings`, {
 			method: 'GET'
@@ -41,6 +53,10 @@ export class SettingsApi {
 		});
 	};
 
+	/**
+	 * Make API call to get available OpenAI models.
+	 * @returns request response
+	 */
 	public getModels = async () => {
 		return fetch(`/api/${constants.API_VERSION}/settings/models`, {
 			method: 'GET'

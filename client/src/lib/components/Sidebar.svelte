@@ -1,6 +1,10 @@
+<!--
+  @component
+  Sidebar showing available sources
+-->
 <script lang="ts">
-	import { Postings } from '../types/postings';
-	import { Sources } from '../types/sources';
+	import { Posting, PostingsHandler } from '../types/postings';
+	import { SourcesHandler } from '../types/sources';
 	import { NotificationHandler } from '../types/notifications';
 	import { goto } from '$app/navigation';
 	import { SettingsHandler } from '../types/settings';
@@ -9,31 +13,36 @@
 	import { get } from 'svelte/store';
 
 	let notificationHandler = new NotificationHandler();
-	let sourceContextMenu = null;
-	let lastSourceContextMenu = null;
-	let sourceNameContextMenu = null;
-	let contextMenuPosition = { x: 0, y: 0 };
-	let postingsHandler = new Postings();
-	let sourcesHandler = new Sources();
+	let postingsHandler = new PostingsHandler();
+	let sourcesHandler = new SourcesHandler();
 	let settingsHandler = new SettingsHandler();
+
+	// context menu state
+	let sourceContextMenu: null | number = null;
+	let lastSourceContextMenu: null | number = null;
+	let sourceNameContextMenu: null | string = null;
+	let contextMenuPosition = { x: 0, y: 0 };
+
 	let settings = settingsHandler.settings;
 	let newPostings: Posting[] = postingsHandler.postings;
 	let postingsToday = postingsHandler.getTodaysPostings();
 	let postingsPerSource = postingsHandler.postingsBySource();
 	let storedSources = sourcesHandler.sortedSources();
 	let selected = sourcesHandler.selectedSource;
+
+	// side bar state
 	let isRefreshing = false;
 	let isSidebarVisible = false;
 
-	settingsHandler.subscribe((value) => {
+	settingsHandler.subscribe((_value) => {
 		settings = settingsHandler.settings;
 	});
 
-	sourcesHandler.subscribe((value) => {
+	sourcesHandler.subscribe((_value) => {
 		storedSources = sourcesHandler.sortedSources();
 	});
 
-	sourcesHandler.subscribeSelectedSource((value) => {
+	sourcesHandler.subscribeSelectedSource((_value) => {
 		selected = sourcesHandler.selectedSource;
 	});
 
@@ -45,7 +54,11 @@
 		postingsPerSource = postingsHandler.postingsBySource();
 	});
 
-	function refreshPostings(source_id: number | null = null) {
+	/**
+	 * Refresh postings by requesting server to scrape sources.
+	 * @param source_id [optional] ID of source to refresh postings for
+	 */
+	function refreshPostings(source_id: number | null = null): void {
 		isRefreshing = true;
 		var doneRefreshing = 0;
 		for (var source of storedSources) {
@@ -84,14 +97,28 @@
 		}
 	}
 
-	function contextMenu(event, sourceId, sourceName) {
+	/**
+	 * Show context menu based on right-click event on a source entry.
+	 * @param event right-click event, used to postition the context menu
+	 * @param sourceId ID of source that was right-clicked on
+	 * @param sourceName name of source that was clicked on
+	 */
+	function contextMenu(
+		event: MouseEvent,
+		sourceId: null | number,
+		sourceName: null | string
+	): void {
 		event.preventDefault();
 		sourceContextMenu = sourceId;
 		sourceNameContextMenu = sourceName;
 		contextMenuPosition = { x: event.pageX, y: event.pageY };
 	}
 
-	function deleteSource(sourceId) {
+	/**
+	 * Remove a specific source.
+	 * @param sourceId ID of source to remove
+	 */
+	function deleteSource(sourceId: number | null): void {
 		lastSourceContextMenu = null;
 		sourcesHandler.deleteSource(sourceId).then((res) => {
 			if (!res.isSuccessful) {
@@ -100,7 +127,11 @@
 		});
 	}
 
-	function openSource(sourceId: number) {
+	/**
+	 * Open the URL to a specific source.
+	 * @param sourceId ID of source to open URL for
+	 */
+	function openSource(sourceId: number | null) {
 		let source = sourcesHandler.sourceById(sourceId);
 
 		if (source != undefined) {
@@ -110,6 +141,9 @@
 		}
 	}
 
+	/**
+	 * Hide or show source side bar.
+	 */
 	function toggleSidebar() {
 		isSidebarVisible = !get(showSidebar);
 		showSidebar.set(isSidebarVisible);
@@ -120,6 +154,7 @@
 	<aside class="h-screen sticky top-0 flex flex-col bg-base-200">
 		<!-- Header -->
 		<div class="flex gap-x-20 justify-between p-2 h-16 border-b border-base-300 align-bottom">
+			<!-- Button to toggle source side bar -->
 			<button
 				class="btn btn-ghost btn-square lg:hidden visible {isSidebarVisible ? 'btn-active' : ''}"
 				title="Show sources"
@@ -141,6 +176,7 @@
 				</svg>
 			</button>
 
+			<!-- Logo -->
 			<a title="Jobs Feed" href="/" class="h-12 w-12 lg:block hidden">
 				<svg
 					width="100%"
@@ -189,6 +225,7 @@
 				</svg>
 			</a>
 
+			<!-- Button to add new source -->
 			<div class="flex flex-row justify-end">
 				<a title="Add Source" class="btn btn-ghost btn-square" href="/source/new">
 					<svg
@@ -207,6 +244,7 @@
 					</svg>
 				</a>
 
+				<!-- Button to manage filters -->
 				<a title="Set Filters" class="btn btn-ghost btn-square" href="/filter">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -224,6 +262,7 @@
 					</svg>
 				</a>
 
+				<!-- Button to refresh postings -->
 				<button
 					title={settings.api_key
 						? 'Refresh Postings'
@@ -258,6 +297,7 @@
 			<!-- Links -->
 			<div class="flex flex-col divide-y divide-base-300">
 				<ul class="menu menu-sm px-0">
+					<!-- Button to show today's postings -->
 					<li class="font-bold">
 						<button
 							title="Postings Added Today"
@@ -288,6 +328,7 @@
 						</button>
 					</li>
 
+					<!-- Button to show all postings -->
 					<li class="font-bold">
 						<button
 							title="All Postings"
@@ -319,6 +360,7 @@
 					</li>
 
 					<li class="font-bold">
+						<!-- Button to show bookmarked postings -->
 						<button
 							title="Bookmarked Postings"
 							on:click={() => {
@@ -346,6 +388,7 @@
 					<h2 class="menu-title">Sources</h2>
 
 					{#if storedSources.length == 0}
+						<!-- Show add source button if no source has been created so far -->
 						<div class="flex justify-center">
 							<a href="/source/new" class="btn btn-sm btn-active w-1/2">
 								<svg
@@ -368,6 +411,7 @@
 					{/if}
 
 					{#each storedSources as source}
+						<!-- Source buttons -->
 						<li class="font-bold">
 							<button
 								title={source.name}
@@ -378,6 +422,7 @@
 								class={selected == source.id ? 'active' : ''}
 								on:contextmenu={(e) => contextMenu(e, source.id, source.name)}
 							>
+								<!-- Source favicon -->
 								<img
 									alt=""
 									height="16"
@@ -388,12 +433,13 @@
 								/>
 								{source.name}
 
-								{#if source.id in postingsPerSource && postingsPerSource[source.id].filter((p) => !p.seen).length > 0}
+								{#if source.id != null && source.id in postingsPerSource && postingsPerSource[source.id].filter((p) => !p.seen).length > 0}
 									<div class="badge badge-neutral">
 										{postingsPerSource[source.id].filter((p) => !p.seen).length}
 									</div>
 								{/if}
 
+								<!-- Indicator whether source postings are refreshing -->
 								{#if source.refreshing}
 									<span
 										title="Looking for new job postings."
@@ -416,7 +462,7 @@
 											/>
 										</svg>
 									</div>
-								{:else if source.content.length >= constants.SOURCE_CONTENT_LENGTH_WARN}
+								{:else if source.content != null && source.content.length >= constants.SOURCE_CONTENT_LENGTH_WARN}
 									<div
 										title="High source volume. Some postings might be missing"
 										class="badge badge-neutral"
@@ -433,6 +479,7 @@
 	</aside>
 </div>
 
+<!-- Context menu -->
 {#if sourceContextMenu != null}
 	<ul
 		id="contextMenu"
