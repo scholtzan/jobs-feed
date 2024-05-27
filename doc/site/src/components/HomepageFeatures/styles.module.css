@@ -1,0 +1,18 @@
+.features {
+  display: flex;
+  align-items: left;
+  padding: 2rem 0;
+  width: 100%;
+  margin-top: 3rem;
+}
+
+.featuresLogo {
+  width: 2rem;
+  margin-right: 4px;
+}
+
+.featuresHeading {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 3rem;
+}

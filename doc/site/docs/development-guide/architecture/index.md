@@ -1,0 +1,1 @@
+# Notes around the Architecture
