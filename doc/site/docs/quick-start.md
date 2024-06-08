@@ -4,44 +4,20 @@ sidebar_position: 2
 
 # Quick Start
 
-Let's discover **Docusaurus in less than 5 minutes**.
+## Installation
 
-## Getting Started
+Jobs Feed can be quickly set up using [Docker](https://www.docker.com/). 
 
-Get started by **creating a new site**.
+1. Download the source code from [Github](https://github.com/scholtzan/jobs-feed)
+2. Build the Docker image: `docker-compose up jobs_feed`
+3. Run the Docker container: `docker-compose run jobs_feed`
+4. Open http://127.0.0.1:3000
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+## Getting Started with Jobs Feed
 
-### What you'll need
+Jobs Feed requires an OpenAI API key, which can be found on the [OpenAI API keys page](https://platform.openai.com/api-keys).
+This API key will be used to extract relevant job postings from career pages.
 
-- [Node.js](https://nodejs.org/en/download/) version 18.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+Copy the API key and go to the [preferences page in Jobs Feed](http://127.0.0.1:3000/preferences/). Insert the API key and select the preferred [OpenAI model](https://platform.openai.com/docs/models).
 
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+Jobs Feed is now ready to be used. Add some filters to narrow down relevant job postings and a add new sources. 
