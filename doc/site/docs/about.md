@@ -18,3 +18,12 @@ Stay up-to-date with the latest job postings, optimize your job search process, 
 * **Company Suggestions:** Receive suggestions for similar companies that may offer relevant roles.
 * **Personalized Recommendations:** Upvote or downvote job postings to refine future recommendations and see more of what you like.
 
+## Roadmap
+
+* **Automatic Pagination Detection:** To automatically find pagination links on source pages.
+* **Scheduled Job Pulling:** To pull job postings on a regular schedule.
+* **Source Grouping:** Ability to group sources for better organization.
+* **Translations:** Add support for multiple languages.
+* **Different Layouts:** Provide different layout options for displaying job postings.
+* **Alerts and Email Summaries:** To send alerts or email summaries of new job postings.
+* **User Management:** To support multiple users with different roles and permissions.

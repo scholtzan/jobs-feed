@@ -63,7 +63,7 @@ impl Embeddings {
 		return Err(anyhow!("Could not get embedding"));
 	}
 
-	/// Compute the similarity between one embedding vecotr and a set of embedding vectors.
+	/// Compute the similarity between one embedding vector and a set of embedding vectors.
 	/// Similarity score based on https://www.simonwenkel.com/notes/ai/metrics/cosine_distance.html
 	///
 	/// Returns the similarity score.

@@ -57,7 +57,7 @@ Follow the [Installation From Source](#from-source) steps.
 * Run `make run -j 2`
   * This will run both the server, and re-built the client whenever changes to its source code are made
   * Use the `ENVIRONMENT` variable to switch between `release` and `debug`: `make run -j 2 -e ENVIRONMENT=release`
-    * Both environments use serve data from different databases
+    * Both environments serve data from different databases
 * Run `make format` to apply formatting and linting to the source code
 
 To make changes to the database schema install [SeaORM](https://www.sea-ql.org/SeaORM/): `cargo install sea-orm-cli`
