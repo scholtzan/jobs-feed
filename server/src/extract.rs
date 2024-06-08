@@ -145,7 +145,7 @@ impl PostingsExtractor {
 	/// Create and return a new posting handler instance.
 	pub fn new(url: String, source_id: i32, settings: settings::Model, selector: Option<String>, pagination: Option<String>, filters: Vec<filter::Model>, cached_content: Option<String>) -> Self {
 		// open a headles browser instance
-		let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(120_000)).build().unwrap();
+		let opt = LaunchOptionsBuilder::default().headless(true).idle_browser_timeout(Duration::from_millis(240_000)).build().unwrap();
 		let browser = Browser::new(opt).unwrap();
 
 		PostingsExtractor {
@@ -169,8 +169,6 @@ impl PostingsExtractor {
 		self.parse_source_content().await?;
 		// use the previously cached content to determine content that has been added since last extraction
 		let content_diff = self.new_source_content();
-
-		eprintln!("{:?}", content_diff);
 
 		if !content_diff.parsed_pages.is_empty() {
 			// extract job postings from the new page content

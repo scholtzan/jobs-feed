@@ -103,7 +103,7 @@ export class PostingsHandler {
 		} else {
 			return this.api.refreshPostings(source_id).then((res) => {
 				if (res.isSuccessful) {
-					this.postings = res.data as Posting[];
+					this.postings = this.postings.concat(res.data as Posting[]);
 					this.store();
 				}
 
