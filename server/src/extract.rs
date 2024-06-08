@@ -170,6 +170,8 @@ impl PostingsExtractor {
 		// use the previously cached content to determine content that has been added since last extraction
 		let content_diff = self.new_source_content();
 
+		eprintln!("{:?}", content_diff);
+
 		if !content_diff.parsed_pages.is_empty() {
 			// extract job postings from the new page content
 			let postings = self.extract_postings(&content_diff, db).await?;
@@ -204,6 +206,7 @@ impl PostingsExtractor {
 		}
 
 		let head = tab.wait_for_element("head")?.get_content()?;
+
 		if head == "<head><meta name=\"color-scheme\" content=\"light dark\"></head>" {
 			// raw JSON content, return as is
 			let parsed_page = ParsedPage {
@@ -232,7 +235,13 @@ impl PostingsExtractor {
 	fn parse_source_pages(&self, tab: Arc<Tab>, prev_content: &ParsedPage) -> Result<Vec<ParsedPage>> {
 		// select relevant part of the page to get postings from
 		let selector = match &self.selector {
-			Some(s) => s,
+			Some(s) => {
+				if s.trim() != "" {
+					s
+				} else {
+					"body"
+				}
+			}
 			None => "body",
 		};
 
