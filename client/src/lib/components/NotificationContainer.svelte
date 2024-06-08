@@ -28,7 +28,7 @@
 	}
 </script>
 
-<div class="absolute bottom-6 left-6 right-6 gap-y-4 grid grid-cols-1 max-w-[35em] w-[88%]">
+<div class="absolute top-6 right-6 gap-y-4 grid grid-cols-1 max-w-[35em] w-[88%]">
 	{#each notifications as notification}
 		<!-- Show different notification types in different colors -->
 		<div
