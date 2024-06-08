@@ -17,6 +17,7 @@ export class PostingsHandler {
 	 */
 	constructor() {
 		this.postings = get(postings);
+		postings.subscribe(() => (this.postings = get(postings)));
 		this.api = new PostingsApi();
 	}
 

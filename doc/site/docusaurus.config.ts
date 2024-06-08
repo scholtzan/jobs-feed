@@ -67,7 +67,6 @@ const config: Config = {
           position: 'left',
           label: 'Docs',
         },
-        {to: '/changelog', label: 'Changelog', position: 'right'},
         {
           href: 'https://github.com/scholtzan/jobs-feed',
           label: 'GitHub',

@@ -28,7 +28,7 @@ function HomepageHeader() {
           </div>
         </div>
         <div className="row">
-          <img className={clsx(styles.heroImage)} src="img/homepage-screenshot.png"></img>
+          <img className={clsx(styles.heroImage)} src="img/main-screen.png"></img>
         </div>
       </div>
     </header>
