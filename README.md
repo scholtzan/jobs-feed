@@ -4,7 +4,7 @@
 
 <!-- Links -->
 <p align="center">
-  <a href="https://scholtzan.github.io/jobs-feed/quick-start">
+  <a href="https://scholtzan.github.io/jobs-feed/docs/quick-start">
     <strong>Install 💻</strong>
   </a> •
   <a href="https://scholtzan.github.io/jobs-feed/">
