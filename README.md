@@ -1,5 +1,7 @@
 # jobs-feed <img src="https://github.com/scholtzan/jobs-feed/blob/main/client/static/favicon.svg" width=26>
 
+> This project is a work in progress
+
 Jobs Feed streamlines the job search process by tracking job postings from various career pages and matching users with roles that align with their skills and preferences.
 
 <img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/site/static/img/main-screen.png" width="1000">
@@ -17,7 +19,7 @@ Jobs Feed streamlines the job search process by tracking job postings from vario
 
 * Configure filters and criterias based on which job postings are selected
 
-<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/site/static/img/new-filters.png" width="800">
+<img src="https://github.com/scholtzan/jobs-feed/blob/main/doc/site/static/img/new-filter.png" width="800">
   
 * Suggestions of similar companies that might offer relevant roles
 
