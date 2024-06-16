@@ -17,14 +17,13 @@ jobs:
         with:
           node-version: 18
       - name: Install dependencies
-        run: |
-          cd docs/site
-          npm install
+        working-directory: docs/site
+        run: npm install
       - name: Build site
-        run: |
-          cd docs/site
-          npm run build
+        working-directory: docs/site
+        run: npm run build
       - name: Upload Build Artifact
+        working-directory: docs/site
         uses: actions/upload-pages-artifact@v3
         with:
           path: build
@@ -41,5 +40,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
+        working-directory: docs/site
         id: deployment
         uses: actions/deploy-pages@v4
