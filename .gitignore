@@ -3,3 +3,4 @@ migration/target/
 node_modules/
 package-lock.json
 server/dist
+docs/demos
