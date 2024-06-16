@@ -18,10 +18,12 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: |
-          cd docs/site 
+          cd docs/site
           npm install
       - name: Build site
-        run: npm run build
+        run: |
+          cd docs/site
+          npm run build
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
         with:
