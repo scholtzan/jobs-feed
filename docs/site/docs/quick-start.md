@@ -10,8 +10,7 @@ Jobs Feed can be quickly set up using [Docker](https://www.docker.com/).
 
 1. Download the source code from [Github](https://github.com/scholtzan/jobs-feed)
 2. Build the Docker image: `docker-compose up jobs_feed`
-3. Run the Docker container: `docker-compose run jobs_feed`
-4. Open http://127.0.0.1:3000
+3. Open http://127.0.0.1:3000
 
 ## Getting Started with Jobs Feed
 

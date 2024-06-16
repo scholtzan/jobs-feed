@@ -38,7 +38,6 @@ Jobs Feed streamlines the job search process by tracking job postings from vario
 ### Docker
 
 * Build the docker image: `docker-compose up jobs_feed`
-* Run the docker container: `docker-compose run jobs_feed`
 * Jobs Feed will be running here: http://127.0.0.1:3000
 
 ### From Source
